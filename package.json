@@ -1,0 +1,65 @@
+{
+  "name": "hosts-editor",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron-dist/main.js",
+  "description": "Hosts Editor Desktop App built with Vite and Electron",
+  "author": "Robert Michalski",
+  "scripts": {
+    "dev": "concurrently \"yarn dev:vite\" \"yarn dev:electron\"",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && ELECTRON_START_URL=http://localhost:5173 npx electron electron-dist/main.js",
+    "build:main": "tsc -p tsconfig.electron.json",
+    "build": "vite build && yarn build:main",
+    "start": "concurrently \"vite preview\" \"electron electron-dist/main.js\"",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "class-variance-authority": "^0.7.1",
+    "electron": "^38.1.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.63.0",
+    "sudo-prompt": "^9.2.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^24.5.2",
+    "@types/react": "^18.2.7",
+    "@types/react-dom": "^18.2.4",
+    "@vitejs/plugin-react": "^5.0.3",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.36.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.4.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7",
+    "wait-on": "^9.0.1"
+  },
+  "build": {
+    "appId": "com.nurbyte.hostseditor",
+    "productName": "Hosts Editor",
+    "files": [
+      "electron-dist/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "mac": {
+      "icon": "assets/icon.icns",
+      "identity": null
+    },
+    "win": {
+      "icon": "assets/icon.ico"
+    }
+  }
+}
