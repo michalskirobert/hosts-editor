@@ -46,39 +46,43 @@ Build the app for production:
 yarn build
 ```
 
-🔑 Permissions
+## 🔑 Permissions
 
 Editing the hosts file requires administrator rights:
-• macOS/Linux – uses sudo under the hood
-• Windows – requires elevated permissions to write to
-C:\Windows\System32\drivers\etc\hosts
 
-⸻
+- **macOS/Linux** – uses `sudo` under the hood
+- **Windows** – requires elevated permissions to write to
+  `C:\Windows\System32\drivers\etc\hosts`
 
-🧩 Project Structure
+---
+
+## 🧩 Project Structure
+
 hosts-editor/
 ├── src/
 │ ├── main/ # Electron main process
 │ ├── preload/ # Secure contextBridge API
 │ ├── renderer/ # React frontend
+│ │ └── components/ # UI components (buttons, inputs, checkboxes, etc.)
 │ └── utils/ # Helpers (validation, defaults, etc.)
-├── public/
+├── public/ # Static assets
 ├── package.json
 └── README.md
 
-📡 IPC API
-
-Exposed in preload.ts:
-window.electronAPI.readHosts(); // array of lines
-window.electronAPI.readHostsRaw(); // full file as string
-window.electronAPI.writeHosts(lines: string[]); // save as lines
-
-Contributing 1. Fork the repo 2. Create a feature branch (git checkout -b feature/amazing-feature) 3. Commit changes (git commit -m 'Add amazing feature') 4. Push to the branch (git push origin feature/amazing-feature) 5. Open a Pull Request
-
 ⸻
+
+## 📡 IPC API
+
+The following API is exposed in `preload.ts`:
+
+```ts
+window.electronAPI.readHosts();       // returns array of lines
+window.electronAPI.readHostsRaw();    // returns full file as string
+window.electronAPI.writeHosts(lines); // saves lines to hosts file
 
 📄 License
 
 ## MIT License © 2025 Robert Michalski (NurByte Software Lab)
 
 ⚡ Question for you: do you want me to also include **build instructions for creating `.dmg` (macOS) and `.exe` (Windows) installers** using `electron-builder` in the README, or keep it lightweight for now?
+```
