@@ -58,6 +58,7 @@ Editing the hosts file requires administrator rights:
 
 ## 🧩 Project Structure
 
+```bash
 hosts-editor/
 ├── src/
 │ ├── main/ # Electron main process
@@ -68,6 +69,7 @@ hosts-editor/
 ├── public/ # Static assets
 ├── package.json
 └── README.md
+```
 
 ⸻
 
