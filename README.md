@@ -35,10 +35,16 @@ cd hosts-editor
 ```
 
 Install dependencies:
+
+```bash
 yarn install
+```
 
 Build the app for production:
+
+```bash
 yarn build
+```
 
 🔑 Permissions
 
