@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { isHostLine, type HostLine } from "../utils/isHostLine";
-import { Button } from "./shared/Button";
-import { AddIcon, EditIcon, SaveIcon } from "../utils/Icons";
-import { defaultHostLineValue } from "../utils/defaultValues";
 import { Checkbox } from "./shared/form/Checkbox";
 import { Input } from "./shared/form/Input";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Textarea } from "./shared/form/Textarea";
+import { ButtonsContainer } from "./ButtonsContainer";
+import { Button } from "./shared/Button";
+import { DeleteIcon } from "../utils/Icons";
 
 export const HostsEditor: React.FC = () => {
   const { control, handleSubmit, reset } = useForm<{
@@ -14,13 +14,13 @@ export const HostsEditor: React.FC = () => {
     text: string;
   }>();
 
-  const { fields } = useFieldArray({ name: "lines", control });
+  const { fields, remove } = useFieldArray({ name: "lines", control });
 
-  const [isEditingMode, setIsEditingMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [isAddingMode, setIsAddingMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const toggleEditingMode = () => setIsEditingMode((prev) => !prev);
+  const toggleEditingMode = () => setIsEditMode((prev) => !prev);
   const toggleAddingMode = () => setIsAddingMode((prev) => !prev);
 
   const loadHosts = async () => {
@@ -37,8 +37,8 @@ export const HostsEditor: React.FC = () => {
 
       const processedLines = rawLinesArray.map((line, idx) => ({
         id: idx,
-        line,
-        commented: line.trim().startsWith("#"),
+        line: line.replace("#", ""),
+        commented: !line.trim().startsWith("#"),
         isHost: isHostLine(line),
       }));
 
@@ -52,20 +52,29 @@ export const HostsEditor: React.FC = () => {
     loadHosts();
   }, []);
 
-  const handleSave = async ({ lines }: { lines: HostLine[] }) => {
+  const handleSave = async ({
+    text,
+    lines,
+  }: {
+    text: string;
+    lines: HostLine[];
+  }) => {
     if (!window.electronAPI) return;
 
     setIsLoading(true);
-
-    const toSave = lines.map((l) =>
-      l.commented
-        ? l.line.startsWith("#")
-          ? l.line
-          : "#" + l.line
-        : l.line.replace(/^#/, "")
-    );
+    let toSave: string[];
 
     try {
+      if (isEditMode) {
+        toSave = text.split(/\r?\n/);
+      } else {
+        toSave = lines.map((l) =>
+          l.commented
+            ? `#${l.line.replace(/^#/, "")}`
+            : l.line.replace(/^#/, "")
+        );
+      }
+
       await window.electronAPI.writeHosts(toSave);
       await loadHosts();
 
@@ -77,36 +86,30 @@ export const HostsEditor: React.FC = () => {
     }
   };
 
+  const onBack = () => {
+    setIsEditMode(false);
+    setIsAddingMode(false);
+  };
+
   return (
     <section className="w-[100vw]">
       <form onSubmit={handleSubmit(handleSave)}>
-        <div className="flex gap-2 sticky top-0 w-[100vw] justify-end p-5">
-          <Button
-            label="Add new host"
-            onClick={toggleAddingMode}
-            icon={<AddIcon />}
-            variant="dark"
-            hidden={isEditingMode}
-          />
-          <Button
-            label="Save"
-            icon={<SaveIcon />}
-            variant="green"
-            type="submit"
-          />
-          <Button
-            label="Edit content"
-            icon={<EditIcon />}
-            onClick={toggleEditingMode}
-            variant="primary"
-            hidden={isAddingMode}
-          />
-        </div>
+        <ButtonsContainer
+          {...{
+            isAddingMode,
+            isEditMode,
+            isSaving: isLoading,
+            toggleAddingMode,
+            toggleEditingMode,
+            loadHosts,
+            onBack,
+          }}
+        />
         <h2 className="border-b border-stroke px-4 py-4 font-medium text-dark dark:border-dark-3 dark:text-white sm:px-6 xl:px-7.5">
           Hosts Editor 0.0.1
         </h2>
         <div className="flex flex-col shadow-lg p-10 overflow-y-scroll rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
-          {isEditingMode ? (
+          {isEditMode ? (
             <Textarea
               {...{ control, name: "text", className: "h-[100vh] w-full" }}
             />
@@ -116,6 +119,16 @@ export const HostsEditor: React.FC = () => {
                 <div key={l.id} className="flex flex-row items-center gap-2">
                   <Checkbox {...{ control, name: `lines.${idx}.commented` }} />
                   <Input {...{ control, name: `lines.${idx}.line` }} />
+                  <Button
+                    {...{
+                      icon: DeleteIcon,
+                      label: "",
+                      className: "h-[35px] w-[35px]",
+                      variant: "danger",
+                      size: "small",
+                      onClick: () => remove(idx),
+                    }}
+                  />
                 </div>
               ) : (
                 <div key={l.id} className="text-gray-400 italic">
