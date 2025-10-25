@@ -1,5 +1,5 @@
 export interface HostLine {
-  id: number;
+  id?: number;
   line: string;
   commented: boolean;
   isHost: boolean;

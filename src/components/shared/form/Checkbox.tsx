@@ -1,22 +1,21 @@
 import { useController, type FieldValues } from "react-hook-form";
-import type { CheckboxProps } from "./types";
+import type { CustomCheckboxProps } from "./types";
 import { Feedback } from "./Feedback";
+import { Checkbox } from "@material-tailwind/react";
 
-export const Checkbox = <T extends FieldValues>({
+export const CustomCheckbox = <T extends FieldValues>({
   control,
   name,
   label,
   ...restProps
-}: CheckboxProps<T>) => {
+}: CustomCheckboxProps<T>) => {
   const { field, fieldState } = useController({ name, control });
 
   return (
     <div>
       <div className="flex gap-2">
         {label && <label htmlFor={name}>{label}</label>}
-        <input
-          type="checkbox"
-          className="rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+        <Checkbox
           id={name}
           {...restProps}
           checked={field.value}

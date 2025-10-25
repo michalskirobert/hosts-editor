@@ -5,5 +5,6 @@ electron_1.contextBridge.exposeInMainWorld("electronAPI", {
     readHosts: () => electron_1.ipcRenderer.invoke("read-hosts"),
     readHostsRaw: () => electron_1.ipcRenderer.invoke("read-hosts-raw"),
     writeHosts: (lines) => electron_1.ipcRenderer.invoke("write-hosts", lines),
+    setPassword: (pw) => electron_1.ipcRenderer.invoke("set-password", pw),
 });
 //# sourceMappingURL=preload.js.map
