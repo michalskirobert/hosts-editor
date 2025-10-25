@@ -36,6 +36,7 @@ export const ButtonsContainer = ({
         variant="gradient"
         color="green"
         icon={<Plus />}
+        disabled={isSaving}
         hidden={isEditMode}
       >
         Add new host
@@ -55,6 +56,7 @@ export const ButtonsContainer = ({
         color="yellow"
         variant="gradient"
         icon={<EditPencil />}
+        disabled={isSaving}
         hidden={isAddingMode || isEditMode}
       >
         Edit as text
@@ -63,6 +65,7 @@ export const ButtonsContainer = ({
         variant="gradient"
         color="blue"
         icon={<Refresh />}
+        disabled={isSaving}
         onClick={loadHosts}
       >
         Reset
@@ -72,6 +75,7 @@ export const ButtonsContainer = ({
         variant="gradient"
         color="black"
         icon={<ArrowRight />}
+        disabled={isSaving}
         hidden={!showBackButton}
       >
         Back

@@ -42,7 +42,7 @@ export default function AddFieldModal({
           window.scrollTo({ behavior: "smooth", top: 0 });
         }}
       >
-        <DialogHeader color="secondary">Add new host</DialogHeader>
+        <DialogHeader>Add new host</DialogHeader>
         <DialogBody className="flex flex-row gap-2">
           <CustomCheckbox {...{ control, name: "commented" }} />
           <CustomInput {...{ control, name: "line", label: "Host*" }} />

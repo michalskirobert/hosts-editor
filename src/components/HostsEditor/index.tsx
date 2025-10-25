@@ -111,10 +111,10 @@ export const HostsEditor: React.FC = () => {
   }, [fields, focusId]);
 
   return (
-    <section className="max-w-screen dark:bg-black">
+    <section className="max-w-screen">
       <form onSubmit={handleSubmit(handleSave)}>
         <div className="flex items-center justify-between border-b border-stroke sm:px-6 xl:px-7.5 p-3">
-          <h2 className="font-medium text-dark dark:border-dark-3 dark:text-white flex-shrink-0">
+          <h2 className="font-medium text-dark dark:border-dark-3 flex-shrink-0">
             Hosts Editor 0.0.2
           </h2>
           <ButtonsContainer
@@ -130,7 +130,7 @@ export const HostsEditor: React.FC = () => {
             }}
           />
         </div>
-        <div className="flex flex-col shadow-lg p-10 overflow-y-scroll h-[93vh] rounded-[10px] bg-white dark:bg-black shadow-1 dark:bg-gray-dark dark:shadow-card">
+        <div className="flex flex-col shadow-lg p-10 overflow-y-scroll h-[93vh] rounded-[10px] bg-white  shadow-1 dark:bg-gray-dark dark:shadow-card">
           {isEditMode ? (
             <CustomTextarea
               {...{
@@ -138,6 +138,7 @@ export const HostsEditor: React.FC = () => {
                 name: "text",
                 rows: 30,
                 resize: true,
+                disabled: isLoading,
               }}
             />
           ) : (
@@ -151,12 +152,17 @@ export const HostsEditor: React.FC = () => {
                   tabIndex={0}
                 >
                   <CustomCheckbox
-                    {...{ control, name: `lines.${idx}.commented` }}
+                    {...{
+                      control,
+                      name: `lines.${idx}.commented`,
+                      disabled: isLoading,
+                    }}
                   />
                   <CustomInput
                     {...{
                       control,
                       name: `lines.${idx}.line`,
+                      disabled: isLoading,
                     }}
                   />
                   <CustomButton
@@ -165,6 +171,7 @@ export const HostsEditor: React.FC = () => {
                     color="red"
                     size="sm"
                     icon={<Trash />}
+                    disabled={isLoading}
                     onClick={() => remove(idx)}
                   />
                 </div>

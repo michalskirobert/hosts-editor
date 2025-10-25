@@ -19,7 +19,7 @@ export const CustomCheckbox = <T extends FieldValues>({
           id={name}
           {...restProps}
           checked={field.value}
-          className={`${restProps?.className || ""} dark:!border-white`}
+          className={`${restProps?.className || ""}`}
           onChange={(e) => field.onChange(e.currentTarget.checked)}
         />
       </div>

@@ -15,7 +15,7 @@ export const CustomInput = <T extends FieldValues>({
         id={name}
         {...restProps}
         {...field}
-        className={`${restProps?.className || ""} dark:!text-white`}
+        className={`${restProps?.className || ""}`}
         type={restProps.type ? restProps.type : "text"}
         inputRef={field.ref}
       />

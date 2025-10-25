@@ -15,7 +15,7 @@ export const CustomTextarea = <T extends FieldValues>({
         id={name}
         {...restProps}
         {...field}
-        className={`${restProps?.className || ""} dark:text-white`}
+        className={`${restProps?.className || ""}`}
       />
       <Feedback {...fieldState} />
     </div>
