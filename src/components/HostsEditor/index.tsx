@@ -111,10 +111,10 @@ export const HostsEditor: React.FC = () => {
   }, [fields, focusId]);
 
   return (
-    <section className="max-w-screen">
+    <section className="max-w-screen dark:bg-black">
       <form onSubmit={handleSubmit(handleSave)}>
         <div className="flex items-center justify-between border-b border-stroke sm:px-6 xl:px-7.5 p-3">
-          <h2 className="font-medium text-dark dark:border-dark-3 dark:text-black flex-shrink-0">
+          <h2 className="font-medium text-dark dark:border-dark-3 dark:text-white flex-shrink-0">
             Hosts Editor 0.0.2
           </h2>
           <ButtonsContainer
@@ -130,13 +130,12 @@ export const HostsEditor: React.FC = () => {
             }}
           />
         </div>
-        <div className="flex flex-col shadow-lg p-10 overflow-y-scroll h-[93vh] rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
+        <div className="flex flex-col shadow-lg p-10 overflow-y-scroll h-[93vh] rounded-[10px] bg-white dark:bg-black shadow-1 dark:bg-gray-dark dark:shadow-card">
           {isEditMode ? (
             <CustomTextarea
               {...{
                 control,
                 name: "text",
-                className: "w-full text-black",
                 rows: 30,
                 resize: true,
               }}
@@ -154,7 +153,12 @@ export const HostsEditor: React.FC = () => {
                   <CustomCheckbox
                     {...{ control, name: `lines.${idx}.commented` }}
                   />
-                  <CustomInput {...{ control, name: `lines.${idx}.line` }} />
+                  <CustomInput
+                    {...{
+                      control,
+                      name: `lines.${idx}.line`,
+                    }}
+                  />
                   <CustomButton
                     className="h-[35px] w-[35px] flex flex-col items-center justify-center"
                     variant="gradient"
