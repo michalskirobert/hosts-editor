@@ -30,7 +30,7 @@ export const ButtonsContainer = ({
   const showBackButton = isAddingMode || isEditMode;
 
   return (
-    <div className="flex gap-2 sticky top-0 w-screen justify-end p-5">
+    <div className="flex gap-2 w-screen justify-end">
       <CustomButton
         onClick={toggleFieldModal}
         variant="gradient"

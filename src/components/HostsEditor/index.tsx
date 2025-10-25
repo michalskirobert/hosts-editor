@@ -111,24 +111,26 @@ export const HostsEditor: React.FC = () => {
   }, [fields, focusId]);
 
   return (
-    <section className="w-screen min-h-screen">
+    <section className="max-w-screen">
       <form onSubmit={handleSubmit(handleSave)}>
-        <ButtonsContainer
-          {...{
-            isAddingMode,
-            isEditMode,
-            isSaving: isLoading,
-            toggleAddingMode,
-            toggleEditingMode,
-            loadHosts,
-            onBack,
-            toggleFieldModal,
-          }}
-        />
-        <h2 className="border-b border-stroke px-4 py-4 font-medium text-dark dark:border-dark-3 dark:text-black sm:px-6 xl:px-7.5">
-          Hosts Editor 0.0.2
-        </h2>
-        <div className="flex flex-col shadow-lg p-10 overflow-y-scroll rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
+        <div className="flex items-center justify-between border-b border-stroke sm:px-6 xl:px-7.5 p-3">
+          <h2 className="font-medium text-dark dark:border-dark-3 dark:text-black flex-shrink-0">
+            Hosts Editor 0.0.2
+          </h2>
+          <ButtonsContainer
+            {...{
+              isAddingMode,
+              isEditMode,
+              isSaving: isLoading,
+              toggleAddingMode,
+              toggleEditingMode,
+              loadHosts,
+              onBack,
+              toggleFieldModal,
+            }}
+          />
+        </div>
+        <div className="flex flex-col shadow-lg p-10 overflow-y-scroll h-[93vh] rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
           {isEditMode ? (
             <CustomTextarea
               {...{
