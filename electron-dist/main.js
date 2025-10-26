@@ -7,8 +7,10 @@ const electron_1 = require("electron");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const sudo_prompt_1 = __importDefault(require("sudo-prompt"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require("dotenv").config();
+}
 const hostsPath = process.platform === "win32"
     ? "C:\\Windows\\System32\\drivers\\etc\\hosts"
     : "/etc/hosts";
@@ -24,11 +26,13 @@ const createWindow = () => {
             nodeIntegration: false,
         },
     });
-    if (process.env.ELECTRON_START_URL) {
+    const isDev = !!process.env.ELECTRON_START_URL;
+    if (isDev) {
         mainWindow.loadURL(process.env.ELECTRON_START_URL);
     }
     else {
-        mainWindow.loadFile(path_1.default.join(__dirname, "../dist/index.html"));
+        const indexPath = path_1.default.join(electron_1.app.getAppPath(), "dist", "index.html");
+        mainWindow.loadFile(indexPath);
     }
     if (process.env.IS_LOCALHOST === "true") {
         mainWindow.webContents.openDevTools();

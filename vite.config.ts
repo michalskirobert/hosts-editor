@@ -3,5 +3,10 @@ import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  base: "./",
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+  },
   plugins: [react(), tsconfigPaths()],
 });

@@ -2,9 +2,11 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import fs from "fs";
 import sudo from "sudo-prompt";
-import dotenv from "dotenv";
 
-dotenv.config();
+if (process.env.NODE_ENV === "development") {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require("dotenv").config();
+}
 
 const hostsPath =
   process.platform === "win32"
@@ -26,17 +28,19 @@ const createWindow = () => {
     },
   });
 
-  if (process.env.ELECTRON_START_URL) {
-    mainWindow.loadURL(process.env.ELECTRON_START_URL);
+  const isDev = !!process.env.ELECTRON_START_URL;
+
+  if (isDev) {
+    mainWindow.loadURL(process.env.ELECTRON_START_URL!);
   } else {
-    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    const indexPath = path.join(app.getAppPath(), "dist", "index.html");
+    mainWindow.loadFile(indexPath);
   }
 
   if (process.env.IS_LOCALHOST === "true") {
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.removeMenu();
-
     mainWindow.webContents.on("before-input-event", (event, input) => {
       if (
         (input.control || input.meta) &&
