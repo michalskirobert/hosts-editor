@@ -25,7 +25,11 @@ const createWindow = () => {
     alwaysOnTop: true,
     transparent: true,
   });
-  splash.loadFile(path.join(__dirname, "../public/splash.html"));
+
+  const splashPath = process.env.ELECTRON_START_URL
+    ? path.join(__dirname, "../public/splash.html")
+    : path.join(app.getAppPath(), "public/splash.html");
+  splash.loadFile(splashPath);
 
   mainWindow = new BrowserWindow({
     width: 1280,
