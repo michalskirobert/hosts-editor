@@ -8,16 +8,25 @@ if (process.env.NODE_ENV === "development") {
   require("dotenv").config();
 }
 
+let mainWindow: BrowserWindow | null = null;
+let splash: BrowserWindow | null = null;
+let sessionPassword: string | null = null;
+
 const hostsPath =
   process.platform === "win32"
     ? "C:\\Windows\\System32\\drivers\\etc\\hosts"
     : "/etc/hosts";
 
-let mainWindow: BrowserWindow | null = null;
-
-let sessionPassword: string | null = null;
-
 const createWindow = () => {
+  splash = new BrowserWindow({
+    width: 400,
+    height: 300,
+    frame: false,
+    alwaysOnTop: true,
+    transparent: true,
+  });
+  splash.loadFile(path.join(__dirname, "../public/splash.html"));
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -26,6 +35,15 @@ const createWindow = () => {
       contextIsolation: true,
       nodeIntegration: false,
     },
+    show: false,
+  });
+
+  mainWindow.once("ready-to-show", () => {
+    if (splash) {
+      splash.close();
+      splash = null;
+    }
+    mainWindow?.show();
   });
 
   const isDev = !!process.env.ELECTRON_START_URL;
@@ -33,11 +51,11 @@ const createWindow = () => {
   if (isDev) {
     mainWindow.loadURL(process.env.ELECTRON_START_URL!);
   } else {
-    const indexPath = path.join(app.getAppPath(), "dist", "index.html");
+    const indexPath = path.join(app.getAppPath(), "dist/web/index.html");
     mainWindow.loadFile(indexPath);
   }
 
-  if (process.env.IS_LOCALHOST === "true") {
+  if (isDev) {
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.removeMenu();
@@ -55,8 +73,6 @@ const createWindow = () => {
     mainWindow.webContents.on("context-menu", (e) => e.preventDefault());
   }
 };
-
-app.on("ready", createWindow);
 
 ipcMain.handle("read-hosts", async () => {
   try {
@@ -99,4 +115,10 @@ ipcMain.handle("write-hosts", async (_event, lines: string[]) => {
       resolve(true);
     });
   });
+});
+
+app.whenReady().then(createWindow);
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
 });

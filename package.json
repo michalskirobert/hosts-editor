@@ -1,6 +1,6 @@
 {
   "name": "hosts-editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "main": "electron-dist/main.js",
   "description": "Hosts Editor Desktop App built with Vite and Electron",
@@ -52,7 +52,7 @@
   },
   "build": {
     "appId": "com.nurbyte.hostseditor",
-    "productName": "Hosts Editor",
+    "productName": "Hosts Editor 1.0.1",
     "files": [
       "electron-dist/**/*",
       "dist/**/*",
