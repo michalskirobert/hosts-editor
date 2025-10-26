@@ -12,7 +12,7 @@ export const useHosts = () => {
   });
 
   const { fields, append, remove } = useFieldArray({ name: "lines", control });
-  const { modals, toggle } = useModalManager("add", "login", "register");
+  const { modals, close, toggle } = useModalManager("add", "login", "register");
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,13 +75,10 @@ export const useHosts = () => {
   const handleSaveNewField = (data: HostLine) => {
     append(data);
     setFocusId(`host-${fields.length + 1}`);
-    toggle("add");
+    close("add");
   };
 
-  const onBack = () => {
-    setIsEditMode(false);
-    toggle("add");
-  };
+  const onBack = () => setIsEditMode(false);
 
   useEffect(() => {
     loadHosts();

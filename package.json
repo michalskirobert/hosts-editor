@@ -52,10 +52,10 @@
   },
   "build": {
     "appId": "com.nurbyte.hostseditor",
-    "productName": "Hosts Editor 1.0.2",
+    "productName": "Hosts Editor",
     "files": [
       "electron-dist/**/*",
-      "dist/**/*",
+      "dist/web/**/*",
       "package.json"
     ],
     "directories": {

@@ -28,7 +28,7 @@ const createWindow = () => {
 
   const splashPath = process.env.ELECTRON_START_URL
     ? path.join(__dirname, "../public/splash.html")
-    : path.join(app.getAppPath(), "public/splash.html");
+    : path.join(app.getAppPath(), "dist/web/splash.html");
   splash.loadFile(splashPath);
 
   mainWindow = new BrowserWindow({
