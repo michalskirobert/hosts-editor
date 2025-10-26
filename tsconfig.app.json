@@ -13,7 +13,9 @@
     "paths": {
       "@shared/*": ["./src/components/shared/*"],
       "@utils/*": ["./src/utils/*"],
-      "@helpers/*": ["./src/helpers/*"]
+      "@helpers/*": ["./src/helpers/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@namespaces/*": ["./src/types/*"]
     },
 
     /* Bundler mode */

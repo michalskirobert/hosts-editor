@@ -1,5 +1,4 @@
-import { Button, type ButtonProps } from "@material-tailwind/react";
-import { Spinner } from "@utils/Icons";
+import { Button, Spinner, type ButtonProps } from "@material-tailwind/react";
 import type { ReactNode } from "react";
 
 interface Props extends Omit<ButtonProps, "color" | "children"> {
@@ -33,7 +32,7 @@ export function CustomButton({
         </>
       ) : (
         <span className="flex gap-2 items-center">
-          <Spinner /> {children}
+          <Spinner color="blue" /> {children}
         </span>
       )}
     </Button>
