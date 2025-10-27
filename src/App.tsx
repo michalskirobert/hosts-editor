@@ -34,7 +34,7 @@ export const App: React.FC = () => {
           {...{
             modals,
             isEditMode,
-            isSaving: isLoading,
+            isLoading,
             isDirty,
             loadHosts,
             onBack,
@@ -58,7 +58,7 @@ export const App: React.FC = () => {
               l.isHost ? (
                 <div
                   key={l.id}
-                  className="flex flex-row items-center gap-2"
+                  className="flex flex-row items-center gap-3"
                   id={`host-${l.id}`}
                   ref={lastInputRef}
                   tabIndex={0}
@@ -70,29 +70,30 @@ export const App: React.FC = () => {
                       disabled: isLoading,
                     }}
                   />
-                  <CustomInput
-                    {...{
-                      control,
-                      name: `lines.${idx}.ip`,
-                      disabled: isLoading,
-                    }}
-                  />
-                  <CustomInput
-                    {...{
-                      control,
-                      name: `lines.${idx}.domain`,
-                      disabled: isLoading,
-                    }}
-                  />
-                  <CustomButton
-                    className="h-[35px] w-[35px] flex flex-col items-center justify-center"
-                    variant="gradient"
-                    color="red"
-                    size="sm"
-                    icon={<Trash />}
-                    disabled={isLoading}
+                  <div className="flex flex-1 gap-2">
+                    <CustomInput
+                      {...{
+                        control,
+                        name: `lines.${idx}.ip`,
+                        disabled: isLoading,
+                      }}
+                      style={{ flex: "0 0 30%" }}
+                    />
+                    <CustomInput
+                      {...{
+                        control,
+                        name: `lines.${idx}.domain`,
+                        disabled: isLoading,
+                      }}
+                      style={{ flex: "0 0 70%" }}
+                    />
+                  </div>
+                  <button
+                    className="flex items-center justify-center ml-2 bg-red-500 p-2 rounded-lg text-white hover:bg-red-400 transition-colors duration-500"
                     onClick={() => remove(idx)}
-                  />
+                  >
+                    <Trash />
+                  </button>
                 </div>
               ) : (
                 <div key={l.id} className="text-gray-400 italic">

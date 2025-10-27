@@ -6,11 +6,12 @@ import { Input } from "@material-tailwind/react";
 export const CustomInput = <T extends FieldValues>({
   control,
   name,
+  style,
   ...restProps
 }: CustomInputProps<T>) => {
   const { field, fieldState } = useController({ name, control });
   return (
-    <div className="w-full">
+    <div className="w-full" style={style}>
       <Input
         id={name}
         {...restProps}
