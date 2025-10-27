@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+
     "paths": {
       "@shared/*": ["./src/components/shared/*"],
       "@utils/*": ["./src/utils/*"],

@@ -7,6 +7,8 @@ import {
 import { CustomButton } from "@shared/CustomButton";
 import { Check, Settings, Xmark } from "iconoir-react";
 import { useForm } from "react-hook-form";
+import { defaultSettings } from "./utils";
+import { CustomCheckbox } from "@shared/form/Checkbox";
 
 interface Props {
   open: boolean;
@@ -14,7 +16,7 @@ interface Props {
 }
 
 export const SettingsModal = ({ open, handleOpen }: Props) => {
-  const { control, handleSubmit } = useForm();
+  const { control, handleSubmit } = useForm({ defaultValues: defaultSettings });
 
   const onSave = () => {};
 
@@ -34,7 +36,27 @@ export const SettingsModal = ({ open, handleOpen }: Props) => {
           <Settings />
           Settings
         </DialogHeader>
-        <DialogBody className="flex flex-row gap-2">HEllo world</DialogBody>
+        <DialogBody>
+          <div>
+            <h2>General settings</h2>
+            <div className="flex flex-col gap-2">
+              <CustomCheckbox
+                {...{
+                  control,
+                  name: "rememberCurrentUser",
+                  label: "Remember user's data (Password, login)",
+                }}
+              />
+              <CustomButton
+                color="red"
+                variant="filled"
+                onClick={() => alert("REMOVED")}
+              >
+                Clear your data
+              </CustomButton>
+            </div>
+          </div>
+        </DialogBody>
         <DialogFooter>
           <CustomButton
             variant="text"

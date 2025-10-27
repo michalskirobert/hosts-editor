@@ -1028,9 +1028,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@material-tailwind/react@npm:2.1.4":
-  version: 2.1.4
-  resolution: "@material-tailwind/react@npm:2.1.4"
+"@material-tailwind/react@npm:^2.1.10":
+  version: 2.1.10
+  resolution: "@material-tailwind/react@npm:2.1.10"
   dependencies:
     "@floating-ui/react": "npm:0.19.0"
     classnames: "npm:2.3.2"
@@ -1044,7 +1044,7 @@ __metadata:
   peerDependencies:
     react: ^16 || ^17 || ^18
     react-dom: ^16 || ^17 || ^18
-  checksum: 10c0/ee7422028bdc24ca681837d2fb0df8ef1f2faa86217639db389871f72c73b21d5eb654cde2a7b639a5a7006fe928e0fd09e7182f24b5b8794ae601c8cdfbfa5f
+  checksum: 10c0/1ff89ea29a830789490bf1f523054eae17b3ed3043b604601e24bf07bac35810898a66b90ddcfb8492728de0462c79dc07a910ee15ff23f3dc8f12528269a232
   languageName: node
   linkType: hard
 
@@ -1663,13 +1663,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:18.3.26":
-  version: 18.3.26
-  resolution: "@types/react@npm:18.3.26"
+"@types/react@npm:18.2.42":
+  version: 18.2.42
+  resolution: "@types/react@npm:18.2.42"
   dependencies:
     "@types/prop-types": "npm:*"
+    "@types/scheduler": "npm:*"
     csstype: "npm:^3.0.2"
-  checksum: 10c0/7b62d91c33758f14637311921c92db6045b6328e2300666a35ef8130d06385e39acada005eaf317eee93228edc10ea5f0cd34a0385654d2014d24699a65bfeef
+  checksum: 10c0/2946d78c1f9a220a4dfedd7995b8bcba47235b19756bf3dd845c604bb24fff8d0ff5be81c0c98ac7f4488791e8c7e6cbcc4898c40c0209d74a1223b8fbfb994f
   languageName: node
   linkType: hard
 
@@ -1679,6 +1680,13 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/a58ba341cb9e7d74f71810a88862da7b2a6fa42e2a1fc0ce40498f6ea1d44382f0640117057da779f74c47039f7166bf48fad02dc876f94e005c7afa50f5e129
+  languageName: node
+  linkType: hard
+
+"@types/scheduler@npm:*":
+  version: 0.26.0
+  resolution: "@types/scheduler@npm:0.26.0"
+  checksum: 10c0/84626b06551ab7e1247412a2588430da5cd75263a353f1fd70593ca7331d43797937b89fe587089c6b3613d0658986087c5f0b2debef5bae831cdc1104a432ef
   languageName: node
   linkType: hard
 
@@ -1987,13 +1995,13 @@ __metadata:
   linkType: hard
 
 "axios@npm:^1.12.2":
-  version: 1.12.2
-  resolution: "axios@npm:1.12.2"
+  version: 1.13.0
+  resolution: "axios@npm:1.13.0"
   dependencies:
     follow-redirects: "npm:^1.15.6"
     form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/80b063e318cf05cd33a4d991cea0162f3573481946f9129efb7766f38fde4c061c34f41a93a9f9521f02b7c9565ccbc197c099b0186543ac84a24580017adfed
+  checksum: 10c0/2af09f8ad9db9565bf97055eb0ddd2fd4abd9a03d23157b409348c9589370a88c3ede02e11fd1268becb780a77b62bdf9488650dd7208eda57edceca1d65622e
   languageName: node
   linkType: hard
 
@@ -3720,9 +3728,9 @@ __metadata:
     "@emotion/styled": "npm:^11.14.1"
     "@eslint/js": "npm:^9.36.0"
     "@hookform/resolvers": "npm:^5.2.2"
-    "@material-tailwind/react": "npm:2.1.4"
+    "@material-tailwind/react": "npm:^2.1.10"
     "@types/node": "npm:^24.5.2"
-    "@types/react": "npm:18.3.26"
+    "@types/react": "npm:18.2.42"
     "@types/react-dom": "npm:18.3.7"
     "@types/semver": "npm:^7.7.1"
     "@types/yup": "npm:^0.32.0"

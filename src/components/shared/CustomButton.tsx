@@ -1,25 +1,25 @@
 import { Button, Spinner, type ButtonProps } from "@material-tailwind/react";
-import type { ReactNode } from "react";
 
-interface Props extends Omit<ButtonProps, "color" | "children"> {
-  children?: ReactNode;
+import type { ReactNode, Ref } from "react";
+
+interface Props extends ButtonProps {
   loading?: boolean;
   icon?: ReactNode;
   hidden?: boolean;
-  color?: ButtonProps["color"] | "black";
   tooltip?: "string";
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function CustomButton({
   loading,
   icon,
   hidden,
-  className,
   children,
-  disabled,
   tooltip,
+  className,
+  disabled,
   ...rest
-}: Props & any) {
+}: Props) {
   if (hidden) return null;
 
   return (
