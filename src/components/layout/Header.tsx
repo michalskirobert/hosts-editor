@@ -13,7 +13,8 @@ import { version } from "../../../package.json";
 interface Props {
   isEditMode: boolean;
   modals: Record<"register" | "add" | "login", boolean>;
-  isSaving: boolean;
+  isLoading: boolean;
+  isDirty: boolean;
   toggle: (name: "register" | "add" | "login") => void;
   onBack: () => void;
   toggleEditingMode: () => void;
@@ -23,7 +24,8 @@ interface Props {
 export const Header = ({
   modals,
   isEditMode,
-  isSaving,
+  isLoading,
+  isDirty,
   toggle,
   onBack,
   toggleEditingMode,
@@ -42,8 +44,9 @@ export const Header = ({
           variant="gradient"
           color="green"
           icon={<Plus />}
-          disabled={isSaving}
+          disabled={isLoading}
           hidden={isEditMode}
+          tooltip="Add a new host entry"
         >
           Add new host
         </CustomButton>
@@ -51,9 +54,11 @@ export const Header = ({
           variant="gradient"
           color="green"
           type="submit"
+          tooltip={!isDirty ? "No changes to save" : "Save changes"}
           icon={<FloppyDisk />}
-          loading={isSaving}
+          loading={isLoading}
           hidden={modals.add}
+          disabled={!isDirty}
         >
           Save
         </CustomButton>
@@ -62,8 +67,9 @@ export const Header = ({
           color="yellow"
           variant="gradient"
           icon={<EditPencil />}
-          disabled={isSaving}
+          disabled={isLoading}
           hidden={modals.add || isEditMode}
+          tooltip="Edit hosts as raw text"
         >
           Edit as text
         </CustomButton>
@@ -71,8 +77,9 @@ export const Header = ({
           variant="gradient"
           color="blue"
           icon={<Refresh />}
-          disabled={isSaving}
+          disabled={isLoading}
           onClick={loadHosts}
+          tooltip="Reload original hosts file"
         >
           Reset
         </CustomButton>
@@ -81,8 +88,9 @@ export const Header = ({
           variant="gradient"
           color="black"
           icon={<ArrowRight />}
-          disabled={isSaving}
+          disabled={isLoading}
           hidden={!showBackButton}
+          tooltip="Go back to previous view"
         >
           Back
         </CustomButton>

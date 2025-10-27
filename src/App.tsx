@@ -16,6 +16,7 @@ export const App: React.FC = () => {
     isLoading,
     lastInputRef,
     modals,
+    isDirty,
     handleSubmit,
     handleSave,
     handleSaveNewField,
@@ -34,6 +35,7 @@ export const App: React.FC = () => {
             modals,
             isEditMode,
             isSaving: isLoading,
+            isDirty,
             loadHosts,
             onBack,
             toggleEditingMode,
@@ -71,7 +73,14 @@ export const App: React.FC = () => {
                   <CustomInput
                     {...{
                       control,
-                      name: `lines.${idx}.line`,
+                      name: `lines.${idx}.ip`,
+                      disabled: isLoading,
+                    }}
+                  />
+                  <CustomInput
+                    {...{
+                      control,
+                      name: `lines.${idx}.domain`,
                       disabled: isLoading,
                     }}
                   />
@@ -87,7 +96,7 @@ export const App: React.FC = () => {
                 </div>
               ) : (
                 <div key={l.id} className="text-gray-400 italic">
-                  {l.line}
+                  {l.domain}
                 </div>
               )
             )

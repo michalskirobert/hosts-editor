@@ -7,7 +7,12 @@ import type { HostsArgs } from "@namespaces/hosts";
 import type { HostLine } from "@utils/isHostLine";
 
 export const useHosts = () => {
-  const { control, handleSubmit, reset } = useForm<HostsArgs>({
+  const {
+    control,
+    formState: { isDirty },
+    handleSubmit,
+    reset,
+  } = useForm<HostsArgs>({
     defaultValues: { lines: [], text: "" },
   });
 
@@ -91,14 +96,26 @@ export const useHosts = () => {
     }
   }, [fields, focusId]);
 
+  useEffect(() => {
+    const handler = () => {
+      handleSubmit(handleSave)();
+    };
+
+    window.electronAPI?.onTriggerSave(handler);
+
+    return () => {
+      window.electronAPI?.removeTriggerSaveListener(handler);
+    };
+  }, []);
+
   return {
     control,
     fields,
     isEditMode,
     isLoading,
-    focusId,
     modals,
     lastInputRef,
+    isDirty,
     handleSubmit,
     toggle,
     handleSave,

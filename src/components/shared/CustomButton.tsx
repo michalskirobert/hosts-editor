@@ -7,6 +7,7 @@ interface Props extends Omit<ButtonProps, "color" | "children"> {
   icon?: ReactNode;
   hidden?: boolean;
   color?: ButtonProps["color"] | "black";
+  tooltip?: "string";
 }
 
 export function CustomButton({
@@ -16,25 +17,28 @@ export function CustomButton({
   className,
   children,
   disabled,
+  tooltip,
   ...rest
 }: Props & any) {
   if (hidden) return null;
 
   return (
-    <Button
-      {...rest}
-      className={`${className ?? ""} flex items-center gap-2`}
-      disabled={disabled || loading}
-    >
-      {!loading ? (
-        <>
-          {icon} {children}
-        </>
-      ) : (
-        <span className="flex gap-2 items-center">
-          <Spinner color="blue" /> {children}
-        </span>
-      )}
-    </Button>
+    <span title={tooltip}>
+      <Button
+        {...rest}
+        className={`${className ?? ""} flex items-center gap-2`}
+        disabled={disabled || loading}
+      >
+        {!loading ? (
+          <>
+            {icon} {children}
+          </>
+        ) : (
+          <span className="flex gap-2 items-center">
+            <Spinner color="blue" /> {children}
+          </span>
+        )}
+      </Button>
+    </span>
   );
 }

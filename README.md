@@ -60,31 +60,107 @@ Editing the hosts file requires administrator rights:
 
 ```bash
 hosts-editor/
-├── src/
-│ ├── main/ # Electron main process
-│ ├── preload/ # Secure contextBridge API
-│ ├── renderer/ # React frontend
-│ │ └── components/ # UI components (buttons, inputs, checkboxes, etc.)
-│ └── utils/ # Helpers (validation, defaults, etc.)
-├── public/ # Static assets
+├── README.md
+├── assets
+│   ├── icon.icns
+│   └── icon.ico
+├── dist
+│   └── web
+│       ├── assets
+│       │   ├── index-00snpQl_.css
+│       │   └── index-Dq89rUXI.js
+│       ├── index.html
+│       ├── logo.png
+│       ├── splash.html
+│       └── vite.svg
+├── electron-dist
+│   ├── ipcHandlers.js
+│   ├── ipcHandlers.js.map
+│   ├── main.js
+│   ├── main.js.map
+│   ├── menu.js
+│   ├── menu.js.map
+│   ├── preload.js
+│   ├── preload.js.map
+│   ├── updater.js
+│   ├── updater.js.map
+│   ├── windows.js
+│   └── windows.js.map
+├── eslint.config.js
+├── index.html
+├── main
+│   ├── ipcHandlers.ts
+│   ├── main.ts
+│   ├── menu.ts
+│   ├── preload.ts
+│   ├── updater.ts
+│   └── windows.ts
 ├── package.json
-└── README.md
+├── postcss.config.js
+├── public
+│   ├── logo.png
+│   ├── splash.html
+│   └── vite.svg
+├── src
+│   ├── App.tsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── layout
+│   │   │   └── Header.tsx
+│   │   ├── modals
+│   │   │   └── AddFieldFormModal
+│   │   └── shared
+│   │       ├── CustomButton.tsx
+│   │       └── form
+│   ├── electron.d.ts
+│   ├── helpers
+│   │   └── process-lines.ts
+│   ├── hooks
+│   │   └── use-hosts.ts
+│   ├── index.css
+│   ├── main.tsx
+│   ├── types
+│   │   ├── hosts.ts
+│   │   └── modals.ts
+│   ├── utils
+│   │   ├── defaultValues.ts
+│   │   ├── isHostLine.ts
+│   │   ├── loadersManager.ts
+│   │   └── modalsManager.ts
+│   └── vite-env.d.ts
+├── stylelint.config.js
+├── tailwind.config.js
+├── tsconfig.app.json
+├── tsconfig.electron.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── vite.config.ts
+└── yarn.lock
 ```
 
 ⸻
 
 ## 📡 IPC API
 
-The following API is exposed in `preload.ts`:
-
 ```ts
-window.electronAPI.readHosts();       // returns array of lines
-window.electronAPI.readHostsRaw();    // returns full file as string
-window.electronAPI.writeHosts(lines); // saves lines to hosts file
+// --- Read operations ---
+window.electronAPI.readHosts(); // Returns an array of lines from the hosts file
+window.electronAPI.readHostsRaw(); // Returns the full hosts file as a single string
+
+// --- Write operations ---
+window.electronAPI.writeHosts(lines); // Saves an array of lines to the hosts file
+
+// --- Authentication ---
+window.electronAPI.setPassword(pw); // Stores user password securely for elevated writes
+
+// --- Menu integration ---
+window.electronAPI.onTriggerSave(); // Called when "Save" is triggered from the app menu
+window.electronAPI.removeTriggerSaveListener(); // Removes the menu save listener
+```
 
 📄 License
 
 ## MIT License © 2025 Robert Michalski (NurByte Software Lab)
 
 ⚡ Question for you: do you want me to also include **build instructions for creating `.dmg` (macOS) and `.exe` (Windows) installers** using `electron-builder` in the README, or keep it lightweight for now?
-```

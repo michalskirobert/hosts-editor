@@ -1,8 +1,10 @@
 export interface HostLine {
   id?: number;
-  line: string;
+  ip: string;
+  domain: string;
   commented: boolean;
   isHost: boolean;
+  raw?: string;
 }
 
 export const isHostLine = (line: string) => {

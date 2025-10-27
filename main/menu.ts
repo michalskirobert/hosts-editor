@@ -11,6 +11,13 @@ export function registerMenu(mainWindow: BrowserWindow) {
             submenu: [
               { role: "about" as const },
               { type: "separator" as const },
+              {
+                label: "Check for updates",
+                click: () => {
+                  mainWindow.webContents.send("check-for-updates");
+                },
+              },
+              { type: "separator" as const },
               { role: "quit" as const },
             ],
           },
@@ -23,15 +30,9 @@ export function registerMenu(mainWindow: BrowserWindow) {
         ...(isMac ? [] : [{ role: "quit" as const }]),
         { type: "separator" as const },
         {
-          label: "Login",
+          label: "Save",
           click: () => {
-            mainWindow.webContents.send("open-login-modal");
-          },
-        },
-        {
-          label: "Check for updates",
-          click: () => {
-            mainWindow.webContents.send("check-for-updates");
+            mainWindow.webContents.send("trigger-save");
           },
         },
       ] as MenuItemConstructorOptions[],

@@ -13,6 +13,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { CustomButton } from "@shared/CustomButton";
 import { Check, Xmark } from "iconoir-react";
 import type { HostLine } from "@utils/isHostLine";
+import { defaultHostLineValue } from "@utils/defaultValues";
 
 interface Props {
   open: boolean;
@@ -26,7 +27,7 @@ export default function AddFieldModal({
   handleOpen,
 }: Props) {
   const { control, handleSubmit } = useForm<HostLine>({
-    defaultValues: { commented: false, line: "", isHost: true },
+    defaultValues: defaultHostLineValue,
     resolver: yupResolver(schema),
   });
 
@@ -45,7 +46,8 @@ export default function AddFieldModal({
         <DialogHeader>Add new host</DialogHeader>
         <DialogBody className="flex flex-row gap-2">
           <CustomCheckbox {...{ control, name: "commented" }} />
-          <CustomInput {...{ control, name: "line", label: "Host*" }} />
+          <CustomInput {...{ control, name: "ip", label: "IP*" }} />
+          <CustomInput {...{ control, name: "domain", label: "Domain*" }} />
         </DialogBody>
         <DialogFooter>
           <CustomButton
