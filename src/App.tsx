@@ -3,7 +3,6 @@ import { CustomCheckbox } from "@shared/form/Checkbox";
 import { CustomInput } from "@shared/form/Input";
 import { CustomTextarea } from "@shared/form/Textarea";
 import { Trash } from "iconoir-react";
-import { CustomButton } from "@shared/CustomButton";
 import AddFieldModal from "./components/modals/AddFieldFormModal";
 import { useHosts } from "./hooks/use-hosts";
 import { Header } from "./components/layout/Header";

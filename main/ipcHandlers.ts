@@ -61,14 +61,35 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
       });
     });
   });
-
   ipcMain.on("install-update", () => {
     const { autoUpdater } = require("electron-updater");
-    autoUpdater.quitAndInstall();
+    try {
+      autoUpdater.quitAndInstall();
+    } catch (error) {
+      mainWindow.webContents.send("toast", {
+        type: "error",
+        message: String(error),
+      });
+    }
   });
-
   ipcMain.on("check-for-updates", () => {
     const { autoUpdater } = require("electron-updater");
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater
+      .checkForUpdatesAndNotify()
+      .then((result: any) => {
+        if (result && result.updateInfo && result.updateInfo.version) {
+        } else {
+          mainWindow.webContents.send("toast", {
+            type: "info",
+            message: "You are up to date.",
+          });
+        }
+      })
+      .catch((err: any) => {
+        mainWindow.webContents.send("toast", {
+          type: "error",
+          message: String(err),
+        });
+      });
   });
 }

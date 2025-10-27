@@ -6,6 +6,8 @@ import { processLines, processLinesToSave } from "@helpers/process-lines";
 import type { HostsArgs } from "@namespaces/hosts";
 import type { HostLine } from "@utils/isHostLine";
 
+import { toast } from "react-toastify";
+
 export const useHosts = () => {
   const {
     control,
@@ -17,7 +19,7 @@ export const useHosts = () => {
   });
 
   const { fields, append, remove } = useFieldArray({ name: "lines", control });
-  const { modals, close, toggle } = useModalManager("add", "login", "register");
+  const { modals, close, toggle } = useModalManager("add");
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,8 +31,8 @@ export const useHosts = () => {
 
   const loadHosts = async () => {
     if (!window.electronAPI) {
-      console.warn(
-        "Electron API undefined – uruchamiasz w przeglądarce, a nie w Electron?"
+      toast.warning(
+        "Electron API is undefined – are you running this in a browser instead of Electron?"
       );
       return;
     }
@@ -43,7 +45,7 @@ export const useHosts = () => {
 
       reset({ lines: processedLines, text: rawLinesString });
     } catch (err) {
-      console.error("Błąd wczytywania hosts:", err);
+      toast.error(`Error loading hosts: ${err}`);
     }
   };
 
@@ -69,9 +71,9 @@ export const useHosts = () => {
       await window.electronAPI.writeHosts(toSave);
       await loadHosts();
 
-      alert("Zapisano hosts!");
+      toast.success("Hosts saved successfully!");
     } catch (err) {
-      alert("Błąd zapisu: " + err);
+      toast.error("Save error: " + err);
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +107,20 @@ export const useHosts = () => {
 
     return () => {
       window.electronAPI?.removeTriggerSaveListener(handler);
+    };
+  }, []);
+
+  useEffect(() => {
+    const listener = (payload: {
+      type: "success" | "error" | "info";
+      message: string;
+    }) => {
+      toast[payload.type](payload.message);
+    };
+
+    window.electronAPI.onToast(listener);
+    return () => {
+      window.electronAPI.removeToastListener(listener);
     };
   }, []);
 

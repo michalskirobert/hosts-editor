@@ -9,6 +9,13 @@ declare global {
       setPassword: (pw: string) => Promise<boolean>;
       onTriggerSave: (callback: () => void) => void;
       removeTriggerSaveListener: (callback: () => void) => void;
+      onToast: (
+        callback: (payload: {
+          type: "success" | "error" | "info";
+          message: string;
+        }) => void
+      ) => void;
+      removeToastListener: (callback: (...args: any[]) => void) => void;
     };
   }
 }
