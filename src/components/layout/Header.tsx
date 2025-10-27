@@ -12,10 +12,10 @@ import { version } from "../../../package.json";
 
 interface Props {
   isEditMode: boolean;
-  modals: Record<"register" | "add" | "login", boolean>;
+  modals: Record<"add" | "settings", boolean>;
   isLoading: boolean;
   isDirty: boolean;
-  toggle: (name: "register" | "add" | "login") => void;
+  toggle: (name: "add" | "settings") => void;
   onBack: () => void;
   toggleEditingMode: () => void;
   loadHosts: () => Promise<void>;
@@ -35,9 +35,13 @@ export const Header = ({
 
   return (
     <nav className="flex items-center justify-between border-b border-stroke sm:px-6 xl:px-7.5 p-3">
-      <h2 className="font-medium text-dark dark:border-dark-3 flex-shrink-0">
-        Hosts Editor {version}
-      </h2>
+      <div className="flex-shrink-0 flex gap-2 items-center">
+        <img src="./logo.png" alt="NurByte" height={100} width={100} />
+        <h2 className="font-medium text-dark dark:border-dark-3">
+          Hosts Editor {version}
+        </h2>
+      </div>
+
       <div className="flex gap-2 w-screen justify-end">
         <CustomButton
           onClick={() => toggle("add")}

@@ -15,7 +15,8 @@
       "@utils/*": ["./src/utils/*"],
       "@helpers/*": ["./src/helpers/*"],
       "@hooks/*": ["./src/hooks/*"],
-      "@namespaces/*": ["./src/types/*"]
+      "@namespaces/*": ["./src/types/*"],
+      "@components/*": ["./src/components/*"]
     },
 
     /* Bundler mode */

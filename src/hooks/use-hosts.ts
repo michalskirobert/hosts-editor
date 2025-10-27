@@ -19,7 +19,7 @@ export const useHosts = () => {
   });
 
   const { fields, append, remove } = useFieldArray({ name: "lines", control });
-  const { modals, close, toggle } = useModalManager("add");
+  const { modals, open, close, toggle } = useModalManager("add", "settings");
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -121,6 +121,15 @@ export const useHosts = () => {
     window.electronAPI.onToast(listener);
     return () => {
       window.electronAPI.removeToastListener(listener);
+    };
+  }, []);
+
+  useEffect(() => {
+    const listener = () => open("settings");
+
+    window.electronAPI.onOpenSettings(listener);
+    return () => {
+      window.electronAPI.removeOpenSettingsListener(listener);
     };
   }, []);
 

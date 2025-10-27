@@ -16,6 +16,8 @@ declare global {
         }) => void
       ) => void;
       removeToastListener: (callback: (...args: any[]) => void) => void;
+      onOpenSettings: (callback: () => void) => void;
+      removeOpenSettingsListener: (callback: () => void) => void;
     };
   }
 }

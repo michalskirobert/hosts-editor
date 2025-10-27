@@ -34,11 +34,6 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
     }
   });
 
-  ipcMain.handle("set-password", (_event, pw: string) => {
-    sessionPassword = pw;
-    return true;
-  });
-
   ipcMain.handle("write-hosts", async (_event, lines: string[]) => {
     return new Promise((resolve, reject) => {
       const content = lines.join("\n");

@@ -3,9 +3,10 @@ import { CustomCheckbox } from "@shared/form/Checkbox";
 import { CustomInput } from "@shared/form/Input";
 import { CustomTextarea } from "@shared/form/Textarea";
 import { Trash } from "iconoir-react";
-import AddFieldModal from "./components/modals/AddFieldFormModal";
 import { useHosts } from "./hooks/use-hosts";
-import { Header } from "./components/layout/Header";
+import AddFieldModal from "@components/modals/addField";
+import { Header } from "@components/layout/Header";
+import { SettingsModal } from "@components/modals/settings";
 
 export const App: React.FC = () => {
   const {
@@ -112,6 +113,11 @@ export const App: React.FC = () => {
           />
         )}
       </form>
+      {modals.settings && (
+        <SettingsModal
+          {...{ open: modals.settings, handleOpen: () => toggle("settings") }}
+        />
+      )}
     </section>
   );
 };

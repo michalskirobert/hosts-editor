@@ -22,4 +22,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   removeToastListener: (callback: (...args: any[]) => void) => {
     ipcRenderer.removeListener("toast", callback);
   },
+  onOpenSettings: (callback: () => void) => {
+    ipcRenderer.on("open-settings", callback);
+  },
+  removeOpenSettingsListener: (callback: () => void) => {
+    ipcRenderer.removeListener("open-settings", callback);
+  },
 });

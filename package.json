@@ -1,6 +1,6 @@
 {
   "name": "hosts-editor",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "main": "electron-dist/main.js",
   "description": "Hosts Editor Desktop App built with Vite and Electron",
