@@ -6,7 +6,7 @@ interface Props extends ButtonProps {
   loading?: boolean;
   icon?: ReactNode;
   hidden?: boolean;
-  tooltip?: "string";
+  tooltip?: string;
   ref?: Ref<HTMLButtonElement>;
 }
 

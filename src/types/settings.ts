@@ -7,6 +7,6 @@ export type SettingsAppearanceArgs = {
 };
 
 export type Settings = {
-  rememberCurrentUser: boolean;
+  keepUserPassword: boolean;
   appearance: SettingsAppearanceArgs;
 };

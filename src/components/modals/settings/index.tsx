@@ -9,6 +9,9 @@ import { Check, Settings, Xmark } from "iconoir-react";
 import { useForm } from "react-hook-form";
 import { defaultSettings } from "./utils";
 import { CustomCheckbox } from "@shared/form/Checkbox";
+import type { Settings as SettingsArgs } from "@namespaces/settings";
+import { toast } from "react-toastify";
+import { useEffect, useMemo } from "react";
 
 interface Props {
   open: boolean;
@@ -16,22 +19,36 @@ interface Props {
 }
 
 export const SettingsModal = ({ open, handleOpen }: Props) => {
-  const { control, handleSubmit } = useForm({ defaultValues: defaultSettings });
+  const { control, reset, handleSubmit } = useForm<SettingsArgs>({
+    defaultValues: defaultSettings,
+  });
 
-  const onSave = () => {};
+  const onSave = (data: SettingsArgs) => {
+    console.log("EXEC");
+    localStorage.setItem("appData", JSON.stringify({ settings: data }));
+    toast.success("Your data has been saved");
+    handleOpen();
+  };
+
+  const clearUserData = () => {
+    localStorage.removeItem("user");
+    toast.success("User password has been deleted from the application.");
+  };
+
+  const hasUserData = useMemo(() => !!localStorage.getItem("user"), []);
+
+  useEffect(() => {
+    const data = localStorage.getItem("appData.settings");
+    console.log(data);
+
+    if (!data) return;
+
+    reset(JSON.parse(data));
+  }, []);
 
   return (
     <Dialog open={open} handler={handleOpen}>
-      <form
-        onSubmit={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-
-          handleSubmit(onSave)(ev);
-
-          window.scrollTo({ behavior: "smooth", top: 0 });
-        }}
-      >
+      <form onSubmit={handleSubmit(onSave)}>
         <DialogHeader className="flex gap-2 items-center">
           <Settings />
           Settings
@@ -43,14 +60,20 @@ export const SettingsModal = ({ open, handleOpen }: Props) => {
               <CustomCheckbox
                 {...{
                   control,
-                  name: "rememberCurrentUser",
+                  name: "keepUserPassword",
                   label: "Remember user's data (Password, login)",
                 }}
               />
               <CustomButton
                 color="red"
                 variant="filled"
-                onClick={() => alert("REMOVED")}
+                disabled={!hasUserData}
+                tooltip={
+                  !hasUserData
+                    ? "There is no saved user data"
+                    : "Your data will be permamently removed"
+                }
+                onClick={clearUserData}
               >
                 Clear your data
               </CustomButton>

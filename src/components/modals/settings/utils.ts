@@ -1,7 +1,7 @@
 import type { Settings } from "@namespaces/settings";
 
 export const defaultSettings: Settings = {
-  rememberCurrentUser: false,
+  keepUserPassword: false,
   appearance: {
     mode: "auto",
     fontSize: "medium",

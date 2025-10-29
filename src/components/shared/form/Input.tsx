@@ -14,6 +14,7 @@ export const CustomInput = <T extends FieldValues>({
     <div className="w-full" style={style}>
       <Input
         id={name}
+        crossOrigin={undefined}
         {...restProps}
         {...field}
         className={`${restProps?.className || ""}`}

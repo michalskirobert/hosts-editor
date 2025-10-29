@@ -6,7 +6,7 @@
   "description": "Hosts Editor Desktop App built with Vite and Electron",
   "author": "Robert Michalski",
   "scripts": {
-    "dev": "concurrently \"yarn dev:vite\" \"yarn dev:electron\"",
+    "dev": "concurrently \"sudo node main/host-helper.ts\" \"yarn dev:vite\" \"yarn dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "wait-on http://localhost:5173 && ELECTRON_START_URL=http://localhost:5173 npx electron electron-dist/main.js",
     "build:main": "tsc -p tsconfig.electron.json",
@@ -22,6 +22,7 @@
     "class-variance-authority": "^0.7.1",
     "electron-updater": "6.6.2",
     "iconoir-react": "^7.11.0",
+    "keytar": "^7.9.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.63.0",

@@ -10,13 +10,13 @@ export function registerMenu(mainWindow: BrowserWindow) {
       label: app.getName(),
       submenu: [
         { role: "about" as const },
-        {
-          label: "Settings",
-          accelerator: "CmdOrCtrl+,",
-          click: () => {
-            mainWindow.webContents.send("open-settings");
-          },
-        },
+        // {
+        //   label: "Settings",
+        //   accelerator: "CmdOrCtrl+,",
+        //   click: () => {
+        //     mainWindow.webContents.send("open-settings");
+        //   },
+        // },
         { type: "separator" as const },
         {
           label: "Check for updates",
@@ -48,14 +48,14 @@ export function registerMenu(mainWindow: BrowserWindow) {
     template.push({
       label: "Tools",
       submenu: [
-        {
-          label: "Settings",
-          accelerator: "Ctrl+,",
-          click: () => {
-            mainWindow.webContents.send("open-settings");
-          },
-        },
-        { type: "separator" as const },
+        // {
+        //   label: "Settings",
+        //   accelerator: "Ctrl+,",
+        //   click: () => {
+        //     mainWindow.webContents.send("open-settings");
+        //   },
+        // },
+        // { type: "separator" as const },
         {
           label: "Check for updates",
           click: () => {

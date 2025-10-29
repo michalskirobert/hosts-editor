@@ -36,6 +36,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"],
+  "include": ["src", "main/encryption.ts"],
   "typeRoots": ["./node_modules/@types"]
 }
