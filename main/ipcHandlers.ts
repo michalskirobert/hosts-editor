@@ -2,6 +2,7 @@ import { ipcMain, BrowserWindow } from "electron";
 import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
+import type { UpdateCheckResult } from "electron-updater";
 
 export function registerIpcHandlers(mainWindow: BrowserWindow) {
   const hostsPath =
@@ -68,19 +69,20 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
     }
   });
   ipcMain.on("check-for-updates", () => {
+    console.log("[ipc] check-for-updates triggered");
     const { autoUpdater } = require("electron-updater");
+
     autoUpdater
       .checkForUpdatesAndNotify()
-      .then((result: any) => {
-        if (result && result.updateInfo && result.updateInfo.version) {
-        } else {
+      .then((result: UpdateCheckResult) => {
+        if (!result?.updateInfo?.version) {
           mainWindow.webContents.send("toast", {
             type: "info",
             message: "You are up to date.",
           });
         }
       })
-      .catch((err: any) => {
+      .catch((err: Error) => {
         mainWindow.webContents.send("toast", {
           type: "error",
           message: String(err),

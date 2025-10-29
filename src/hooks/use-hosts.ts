@@ -99,37 +99,24 @@ export const useHosts = () => {
   }, [fields, focusId]);
 
   useEffect(() => {
-    const handler = () => {
-      handleSubmit(handleSave)();
-    };
+    const saveHandler = () => handleSubmit(handleSave)();
+    window.electronAPI?.onTriggerSave(saveHandler);
 
-    window.electronAPI?.onTriggerSave(handler);
-
-    return () => {
-      window.electronAPI?.removeTriggerSaveListener(handler);
-    };
-  }, []);
-
-  useEffect(() => {
-    const listener = (payload: {
+    const toastHandler = (payload: {
       type: "success" | "error" | "info";
       message: string;
     }) => {
       toast[payload.type](payload.message);
     };
+    window.electronAPI?.onToast(toastHandler);
 
-    window.electronAPI.onToast(listener);
+    const settingsHandler = () => open("settings");
+    window.electronAPI.onOpenSettings(settingsHandler);
+
     return () => {
-      window.electronAPI.removeToastListener(listener);
-    };
-  }, []);
-
-  useEffect(() => {
-    const listener = () => open("settings");
-
-    window.electronAPI.onOpenSettings(listener);
-    return () => {
-      window.electronAPI.removeOpenSettingsListener(listener);
+      window.electronAPI?.removeTriggerSaveListener(saveHandler);
+      window.electronAPI?.removeToastListener(toastHandler);
+      window.electronAPI?.removeOpenSettingsListener(settingsHandler);
     };
   }, []);
 

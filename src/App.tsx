@@ -32,7 +32,6 @@ export const App: React.FC = () => {
       <form onSubmit={handleSubmit(handleSave)}>
         <Header
           {...{
-            modals,
             isEditMode,
             isLoading,
             isDirty,

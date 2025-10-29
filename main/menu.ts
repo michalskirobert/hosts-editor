@@ -1,4 +1,10 @@
-import { Menu, MenuItemConstructorOptions, BrowserWindow, app } from "electron";
+import {
+  Menu,
+  MenuItemConstructorOptions,
+  BrowserWindow,
+  app,
+  ipcMain,
+} from "electron";
 
 export function registerMenu(mainWindow: BrowserWindow) {
   const isMac = process.platform === "darwin";
@@ -21,7 +27,7 @@ export function registerMenu(mainWindow: BrowserWindow) {
         {
           label: "Check for updates",
           click: () => {
-            mainWindow.webContents.send("check-for-updates");
+            ipcMain.emit("check-for-updates");
           },
         },
         { type: "separator" as const },
@@ -59,7 +65,7 @@ export function registerMenu(mainWindow: BrowserWindow) {
         {
           label: "Check for updates",
           click: () => {
-            mainWindow.webContents.send("check-for-updates");
+            ipcMain.emit("check-for-updates");
           },
         },
       ],
@@ -86,7 +92,7 @@ export function registerMenu(mainWindow: BrowserWindow) {
       {
         label: "Check for updates",
         click: () => {
-          mainWindow.webContents.send("check-for-updates");
+          ipcMain.emit("check-for-updates");
         },
       },
     ],

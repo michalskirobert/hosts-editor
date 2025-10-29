@@ -12,7 +12,6 @@ import { version } from "../../../package.json";
 
 interface Props {
   isEditMode: boolean;
-  modals: Record<"add" | "settings", boolean>;
   isLoading: boolean;
   isDirty: boolean;
   toggle: (name: "add" | "settings") => void;
@@ -22,7 +21,6 @@ interface Props {
 }
 
 export const Header = ({
-  modals,
   isEditMode,
   isLoading,
   isDirty,
@@ -31,8 +29,6 @@ export const Header = ({
   toggleEditingMode,
   loadHosts,
 }: Props) => {
-  const showBackButton = modals.add || isEditMode;
-
   return (
     <nav className="flex items-center justify-between border-b border-stroke sm:px-6 xl:px-7.5 p-3">
       <div className="flex-shrink-0 flex gap-2 items-center">
@@ -61,7 +57,6 @@ export const Header = ({
           tooltip={!isDirty ? "No changes to save" : "Save changes"}
           icon={<FloppyDisk />}
           loading={isLoading}
-          hidden={modals.add}
           disabled={!isDirty}
         >
           Save
@@ -72,7 +67,7 @@ export const Header = ({
           variant="gradient"
           icon={<EditPencil />}
           disabled={isLoading}
-          hidden={modals.add || isEditMode}
+          hidden={isEditMode}
           tooltip="Edit hosts as raw text"
         >
           Edit as text
@@ -93,7 +88,7 @@ export const Header = ({
           color="black"
           icon={<ArrowRight />}
           disabled={isLoading}
-          hidden={!showBackButton}
+          hidden={!isEditMode}
           tooltip="Go back to previous view"
         >
           Back

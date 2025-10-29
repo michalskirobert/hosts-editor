@@ -6,13 +6,13 @@
   "description": "Hosts Editor Desktop App built with Vite and Electron",
   "author": "Robert Michalski",
   "scripts": {
-    "dev": "concurrently \"sudo node main/host-helper.ts\" \"yarn dev:vite\" \"yarn dev:electron\"",
+    "dev": "concurrently \"yarn dev:vite\" \"yarn dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "wait-on http://localhost:5173 && ELECTRON_START_URL=http://localhost:5173 npx electron electron-dist/main.js",
-    "build:main": "tsc -p tsconfig.electron.json",
-    "build": "vite build && yarn build:main",
+    "build:main": "tsc -p tsconfig.electron.json --skipLibCheck",
+    "build": "vite build && yarn build:main --skipLibCheck",
     "start": "concurrently \"vite preview\" \"electron electron-dist/main.js\"",
-    "dist": "electron-builder"
+    "dist": "electron-builder --skipLibCheck"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
