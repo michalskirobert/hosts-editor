@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useModalManager } from "@utils/modalsManager";
 import { processLines, processLinesToSave } from "@helpers/process-lines";
@@ -7,6 +7,7 @@ import type { HostsArgs } from "@namespaces/hosts";
 import type { HostLine } from "@utils/isHostLine";
 
 import { toast } from "react-toastify";
+import { useLoadingStates } from "@utils/loadersManager";
 
 export const useHosts = () => {
   const {
@@ -20,12 +21,17 @@ export const useHosts = () => {
 
   const { fields, append, remove } = useFieldArray({ name: "lines", control });
   const { modals, open, close, toggle } = useModalManager("add", "settings");
+  const { loading, setLoadingOff, setLoadingOn } = useLoadingStates(
+    "saving",
+    "searching"
+  );
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [focusId, setFocusId] = useState<string>("");
+  const [filter, setFilter] = useState("");
 
   const lastInputRef = useRef<HTMLInputElement | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const toggleEditingMode = () => setIsEditMode((prev) => !prev);
 
@@ -58,7 +64,7 @@ export const useHosts = () => {
   }) => {
     if (!window.electronAPI) return;
 
-    setIsLoading(true);
+    setLoadingOn("saving");
     let toSave: string[];
 
     try {
@@ -75,8 +81,19 @@ export const useHosts = () => {
     } catch (err) {
       toast.error("Save error: " + err);
     } finally {
-      setIsLoading(false);
+      setLoadingOff("saving");
     }
+  };
+
+  const onSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setLoadingOn("searching");
+    timeoutRef.current = setTimeout(() => {
+      setFilter(e.target.value);
+      setLoadingOff("searching");
+    }, 500);
   };
 
   const handleSaveNewField = (data: HostLine) => {
@@ -124,10 +141,12 @@ export const useHosts = () => {
     control,
     fields,
     isEditMode,
-    isLoading,
+    loading,
     modals,
     lastInputRef,
     isDirty,
+    filter,
+    onSearchChange,
     handleSubmit,
     toggle,
     handleSave,

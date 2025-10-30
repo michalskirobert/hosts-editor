@@ -2,7 +2,7 @@ import { Button, Spinner, type ButtonProps } from "@material-tailwind/react";
 
 import type { ReactNode, Ref } from "react";
 
-interface Props extends ButtonProps {
+export interface CustomButtonProps extends ButtonProps {
   loading?: boolean;
   icon?: ReactNode;
   hidden?: boolean;
@@ -19,7 +19,7 @@ export function CustomButton({
   className,
   disabled,
   ...rest
-}: Props) {
+}: CustomButtonProps) {
   if (hidden) return null;
 
   return (

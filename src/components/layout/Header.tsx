@@ -1,19 +1,15 @@
 import { CustomButton } from "@shared/CustomButton";
 
-import {
-  Plus,
-  Refresh,
-  EditPencil,
-  FloppyDisk,
-  ArrowRight,
-} from "iconoir-react";
-
 import { version } from "../../../package.json";
+import { SearchBar } from "@components/searchBar";
+import { getHeaderButtons } from "@utils/headerButtons";
+import type { LoadersArgs } from "@namespaces/hosts";
 
 interface Props {
   isEditMode: boolean;
-  isLoading: boolean;
   isDirty: boolean;
+  loading: LoadersArgs;
+  onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   toggle: (name: "add" | "settings") => void;
   onBack: () => void;
   toggleEditingMode: () => void;
@@ -22,77 +18,41 @@ interface Props {
 
 export const Header = ({
   isEditMode,
-  isLoading,
   isDirty,
+  loading,
+  onSearchChange,
   toggle,
   onBack,
   toggleEditingMode,
   loadHosts,
 }: Props) => {
   return (
-    <nav className="flex items-center justify-between border-b border-stroke sm:px-6 xl:px-7.5 p-3">
-      <div className="flex-shrink-0 flex gap-2 items-center">
+    <nav className="flex items-center border-b border-stroke sm:px-6 xl:px-7.5 p-3 justify-between">
+      <div className="flex items-center gap-2 flex-shrink-0">
         <img src="./logo.png" alt="NurByte" height={100} width={100} />
         <h2 className="font-medium text-dark dark:border-dark-3">
           Hosts Editor {version}
         </h2>
       </div>
-
-      <div className="flex gap-2 w-screen justify-end">
-        <CustomButton
-          onClick={() => toggle("add")}
-          variant="gradient"
-          color="green"
-          icon={<Plus />}
-          disabled={isLoading}
-          hidden={isEditMode}
-          tooltip="Add a new host entry"
-        >
-          Add new host
-        </CustomButton>
-        <CustomButton
-          variant="gradient"
-          color="green"
-          type="submit"
-          tooltip={!isDirty ? "No changes to save" : "Save changes"}
-          icon={<FloppyDisk />}
-          loading={isLoading}
-          disabled={!isDirty}
-        >
-          Save
-        </CustomButton>
-        <CustomButton
-          onClick={toggleEditingMode}
-          color="yellow"
-          variant="gradient"
-          icon={<EditPencil />}
-          disabled={isLoading}
-          hidden={isEditMode}
-          tooltip="Edit hosts as raw text"
-        >
-          Edit as text
-        </CustomButton>
-        <CustomButton
-          variant="gradient"
-          color="blue"
-          icon={<Refresh />}
-          disabled={isLoading}
-          onClick={loadHosts}
-          tooltip="Reload original hosts file"
-        >
-          Reset
-        </CustomButton>
-        <CustomButton
-          onClick={onBack}
-          variant="gradient"
-          color="black"
-          icon={<ArrowRight />}
-          disabled={isLoading}
-          hidden={!isEditMode}
-          tooltip="Go back to previous view"
-        >
-          Back
-        </CustomButton>
+      <div className="flex-1 flex justify-center px-4">
+        <div className="w-full max-w-md">
+          <SearchBar {...{ onSearchChange }} />
+        </div>
+      </div>
+      <div className="flex gap-2 items-center">
+        {getHeaderButtons({
+          isEditMode,
+          loading,
+          isDirty,
+          toggle,
+          onBack,
+          toggleEditingMode,
+          loadHosts,
+        }).map(({ key, children, ...restProps }) => (
+          <CustomButton key={key} {...restProps}>
+            {children}
+          </CustomButton>
+        ))}
       </div>
     </nav>
   );

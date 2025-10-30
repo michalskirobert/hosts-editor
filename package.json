@@ -1,6 +1,6 @@
 {
   "name": "hosts-editor",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "main": "electron-dist/main.js",
   "description": "Hosts Editor Desktop App built with Vite and Electron",
@@ -12,7 +12,7 @@
     "build:main": "tsc -p tsconfig.electron.json --skipLibCheck",
     "build": "vite build && yarn build:main --skipLibCheck",
     "start": "concurrently \"vite preview\" \"electron electron-dist/main.js\"",
-    "dist": "electron-builder --skipLibCheck"
+    "dist": "electron-builder"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-export const useLoaderManagers = <T extends readonly string[]>(
+export const useLoadingStates = <T extends readonly string[]>(
   ...stateNames: T
 ) => {
   const [loading, setLoading] = useState<Record<T[number], boolean>>(
@@ -10,11 +10,19 @@ export const useLoaderManagers = <T extends readonly string[]>(
     >
   );
 
-  type ModalName = T[number];
+  type LoaderName = T[number];
 
-  const toggle = useCallback((name: ModalName) => {
+  const setLoadingOn = useCallback((name: LoaderName) => {
+    setLoading((prev) => ({ ...prev, [name]: true }));
+  }, []);
+
+  const setLoadingOff = useCallback((name: LoaderName) => {
+    setLoading((prev) => ({ ...prev, [name]: false }));
+  }, []);
+
+  const toggleLoading = useCallback((name: LoaderName) => {
     setLoading((prev) => ({ ...prev, [name]: !prev[name] }));
   }, []);
 
-  return { loading, toggle };
+  return { loading, setLoadingOn, setLoadingOff, toggleLoading };
 };
