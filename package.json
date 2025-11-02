@@ -21,6 +21,7 @@
     "@material-tailwind/react": "^2.1.10",
     "class-variance-authority": "^0.7.1",
     "draft-js": "^0.11.7",
+    "electron-log": "^5.4.3",
     "electron-updater": "6.6.2",
     "iconoir-react": "^7.11.0",
     "keytar": "^7.9.0",

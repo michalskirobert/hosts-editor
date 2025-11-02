@@ -71,8 +71,10 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
   ipcMain.on("check-for-updates", () => {
     const { autoUpdater } = require("electron-updater");
 
-    autoUpdater.logger = require("electron-log");
-    autoUpdater.logger.transports.file.level = "debug";
+    const log = require("electron-log");
+    autoUpdater.logger = log;
+    log.transports.file.level = "debug";
+
     autoUpdater.updateConfigPath = require("path").join(
       __dirname,
       "dev-app-update.yml"
