@@ -69,8 +69,15 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
     }
   });
   ipcMain.on("check-for-updates", () => {
-    console.log("[ipc] check-for-updates triggered");
     const { autoUpdater } = require("electron-updater");
+
+    autoUpdater.logger = require("electron-log");
+    autoUpdater.logger.transports.file.level = "debug";
+    autoUpdater.updateConfigPath = require("path").join(
+      __dirname,
+      "dev-app-update.yml"
+    );
+    autoUpdater.channel = "latest";
 
     autoUpdater
       .checkForUpdatesAndNotify()
@@ -79,6 +86,11 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
           mainWindow.webContents.send("toast", {
             type: "info",
             message: "You are up to date.",
+          });
+        } else {
+          mainWindow.webContents.send("toast", {
+            type: "success",
+            message: `Update available: ${result.updateInfo.version}`,
           });
         }
       })
