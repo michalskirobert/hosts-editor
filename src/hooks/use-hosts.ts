@@ -86,14 +86,7 @@ export const useHosts = () => {
   };
 
   const onSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    setLoadingOn("searching");
-    timeoutRef.current = setTimeout(() => {
-      setFilter(e.target.value);
-      setLoadingOff("searching");
-    }, 500);
+    setFilter(e.target.value);
   };
 
   const handleSaveNewField = (data: HostLine) => {

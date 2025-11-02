@@ -8,5 +8,8 @@ export default defineConfig({
     outDir: "dist/web",
     assetsDir: "assets",
   },
+  define: {
+    global: {},
+  },
   plugins: [react(), tsconfigPaths()],
 });

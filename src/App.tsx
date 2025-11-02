@@ -48,6 +48,7 @@ export const App: React.FC = () => {
             fields,
             control,
             lastInputRef,
+            highlight: filter,
             remove,
             filter,
           }}
