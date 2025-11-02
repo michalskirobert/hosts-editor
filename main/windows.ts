@@ -12,9 +12,9 @@ export function createMainWindow(): BrowserWindow {
     alwaysOnTop: true,
   });
 
-  const splashPath = process.env.ELECTRON_START_URL
-    ? path.join(__dirname, "../public/splash.html")
-    : path.join(app.getAppPath(), "dist/web/splash.html");
+  const splashPath = app.isPackaged
+    ? path.join(app.getAppPath(), "dist/web/splash.html")
+    : path.join(__dirname, "../public/splash.html");
 
   splash.loadFile(splashPath);
 
@@ -37,14 +37,13 @@ export function createMainWindow(): BrowserWindow {
     mainWindow.show();
   });
 
-  const isDev = !!process.env.ELECTRON_START_URL;
-  if (isDev) {
-    mainWindow.loadURL(process.env.ELECTRON_START_URL!);
+  if (!app.isPackaged && process.env.ELECTRON_START_URL) {
+    mainWindow.loadURL(process.env.ELECTRON_START_URL);
+    mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(app.getAppPath(), "dist/web/index.html"));
+    const indexPath = path.join(app.getAppPath(), "dist/web/index.html");
+    mainWindow.loadURL(`file://${indexPath}`);
   }
-
-  if (isDev) mainWindow.webContents.openDevTools();
 
   return mainWindow;
 }

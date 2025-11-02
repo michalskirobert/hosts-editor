@@ -57,6 +57,7 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
       });
     });
   });
+
   ipcMain.on("install-update", () => {
     const { autoUpdater } = require("electron-updater");
     try {
@@ -68,17 +69,23 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
       });
     }
   });
+
   ipcMain.on("check-for-updates", () => {
     const { autoUpdater } = require("electron-updater");
+    let log;
+    try {
+      log = require("electron-log");
+      autoUpdater.logger = log;
+      log.transports.file.level = "debug";
+    } catch (err) {
+      console.warn("electron-log not found, continuing without logging");
+    }
 
-    const log = require("electron-log");
-    autoUpdater.logger = log;
-    log.transports.file.level = "debug";
+    const updateYmlPath = path.join(__dirname, "dev-app-update.yml");
+    if (fs.existsSync(updateYmlPath)) {
+      autoUpdater.updateConfigPath = updateYmlPath;
+    }
 
-    autoUpdater.updateConfigPath = require("path").join(
-      __dirname,
-      "dev-app-update.yml"
-    );
     autoUpdater.channel = "latest";
 
     autoUpdater

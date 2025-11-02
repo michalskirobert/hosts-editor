@@ -4,7 +4,10 @@
   "private": true,
   "main": "electron-dist/main.js",
   "description": "Hosts Editor Desktop App built with Vite and Electron",
-  "author": "Robert Michalski",
+  "author": {
+    "name": "Robert Michalski",
+    "email": "rm.software.lab@gmail.com"
+  },
   "scripts": {
     "dev": "concurrently \"yarn dev:vite\" \"yarn dev:electron\"",
     "dev:vite": "vite",
@@ -12,7 +15,7 @@
     "build:main": "tsc -p tsconfig.electron.json --skipLibCheck",
     "build": "vite build && yarn build:main --skipLibCheck",
     "start": "concurrently \"vite preview\" \"electron electron-dist/main.js\"",
-    "dist": "electron-builder"
+    "dist": "node -r dotenv/config ./node_modules/.bin/electron-builder"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -45,6 +48,7 @@
     "@vitejs/plugin-react": "^5.0.3",
     "autoprefixer": "10.4.20",
     "concurrently": "^9.2.1",
+    "dotenv": "^17.2.3",
     "electron": "^38.1.2",
     "electron-builder": "^26.0.12",
     "eslint": "^9.36.0",
@@ -74,6 +78,15 @@
       "dist/web/**/*",
       "package.json"
     ],
+    "asarUnpack": [
+      "dist/web/**/*"
+    ],
+    "extraMetadata": {
+      "author": {
+        "name": "Robert Michalski",
+        "email": "rm.software.lab@gmail.com"
+      }
+    },
     "directories": {
       "buildResources": "assets"
     },
