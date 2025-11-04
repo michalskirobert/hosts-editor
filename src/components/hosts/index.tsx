@@ -29,7 +29,10 @@ export const HostsList: React.FC<HostsListProps> = ({
   const isLoading = loading.saving || loading.searching;
 
   const filteredFields = useMemo(
-    () => fields.filter((l) => `${l.ip} ${l.domain}`.includes(filter)),
+    () =>
+      fields
+        .map((item, idx) => ({ ...item, idx }))
+        .filter((l) => `${l.ip} ${l.domain}`.includes(filter)),
     [fields, filter]
   );
 
@@ -48,10 +51,10 @@ export const HostsList: React.FC<HostsListProps> = ({
             }}
           />
         ) : filteredFields.length ? (
-          filteredFields.map((l, idx) => (
+          filteredFields.map((l) => (
             <HostLine
               key={l.id}
-              idx={idx}
+              idx={l.idx}
               id={l.id}
               control={control}
               isHost={l.isHost}

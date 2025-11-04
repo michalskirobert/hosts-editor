@@ -1,5 +1,8 @@
 import { BrowserWindow, app } from "electron";
 import path from "path";
+import os from "os";
+
+let mainWindow: BrowserWindow | null = null;
 
 export function createMainWindow(): BrowserWindow {
   let splash: BrowserWindow | null = null;
@@ -18,7 +21,11 @@ export function createMainWindow(): BrowserWindow {
 
   splash.loadFile(splashPath);
 
-  const mainWindow = new BrowserWindow({
+  if (os.platform() === "linux" && process.env.APPIMAGE) {
+    app.commandLine.appendSwitch("no-sandbox");
+  }
+
+  mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     show: false,
@@ -31,10 +38,20 @@ export function createMainWindow(): BrowserWindow {
 
   mainWindow.once("ready-to-show", () => {
     if (splash) {
-      splash.close();
-      splash = null;
+      if (os.platform() === "linux") {
+        setTimeout(() => {
+          splash?.destroy();
+          splash = null;
+          mainWindow?.show();
+        }, 500);
+      } else {
+        splash.destroy();
+        splash = null;
+        mainWindow?.show();
+      }
+    } else {
+      mainWindow?.show();
     }
-    mainWindow.show();
   });
 
   if (!app.isPackaged && process.env.ELECTRON_START_URL) {
@@ -45,5 +62,21 @@ export function createMainWindow(): BrowserWindow {
     mainWindow.loadURL(`file://${indexPath}`);
   }
 
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
+
   return mainWindow;
 }
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+app.on("activate", () => {
+  if (mainWindow === null) {
+    createMainWindow();
+  }
+});

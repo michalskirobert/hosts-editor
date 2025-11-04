@@ -85,19 +85,6 @@ export function registerMenu(mainWindow: BrowserWindow) {
     ],
   });
 
-  // --- Help menu (for all platforms) ---
-  template.push({
-    label: "Help",
-    submenu: [
-      {
-        label: "Check for updates",
-        click: () => {
-          ipcMain.emit("check-for-updates");
-        },
-      },
-    ],
-  });
-
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }

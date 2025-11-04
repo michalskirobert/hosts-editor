@@ -44,7 +44,7 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
         name: "Hosts Editor",
       };
 
-      if (process.platform === "darwin") {
+      if (process.platform === "darwin" || process.platform === "linux") {
         cmd = `echo "${content}" | sudo -S tee /etc/hosts`;
         if (sessionPassword) options.password = sessionPassword;
       } else {
