@@ -23,13 +23,6 @@ declare global {
       removeToastListener: (callback: (...args: any[]) => void) => void;
       onOpenSettings: (callback: () => void) => void;
       removeOpenSettingsListener: (callback: () => void) => void;
-      removeUpdateStatusListener: (
-        callback: (ev: Event, args: UpdateEventArgs) => void
-      ) => void;
-      onUpdateProgress: (callback: (progress: number) => void) => void;
-      removeUpdateProgressListener: (
-        callback: (progress: number) => void
-      ) => void;
     };
   }
 }

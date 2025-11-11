@@ -1,12 +1,13 @@
 {
   "name": "hosts-editor",
-  "version": "1.1.0",
+  "version": "1.0.8",
   "private": true,
   "main": "electron-dist/main.js",
   "description": "Hosts Editor Desktop App built with Vite and Electron",
   "author": {
     "name": "Robert Michalski",
-    "email": "rm.software.lab@gmail.com"
+    "email": "rm.software.lab@gmail.com",
+    "url": "https://nurbyte.dev"
   },
   "scripts": {
     "dev": "concurrently \"yarn dev:vite\" \"yarn dev:electron\"",
@@ -96,7 +97,8 @@
         "zip"
       ],
       "icon": "assets/icon.icns",
-      "identity": null
+      "identity": null,
+      "hardenedRuntime": false
     },
     "win": {
       "target": [

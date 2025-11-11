@@ -63,7 +63,11 @@ export function createMainWindow(): BrowserWindow {
 
   app.whenReady().then(() => {
     globalShortcut.register("CmdOrCtrl+D+shift", () => {
-      mainWindow?.webContents.openDevTools();
+      mainWindow?.webContents.openDevTools({
+        mode: "detach",
+        activate: true,
+        title: "DEBUGGER",
+      });
     });
   });
 

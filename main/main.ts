@@ -9,7 +9,7 @@ let mainWindow = null;
 app.whenReady().then(() => {
   mainWindow = createMainWindow();
   registerMenu(mainWindow);
-  registerIpcHandlers(mainWindow);
+  registerIpcHandlers();
   setupUpdater(mainWindow);
 });
 

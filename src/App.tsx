@@ -4,7 +4,6 @@ import { Header } from "@components/layout/Header";
 import { HostsList } from "@components/hosts";
 import AddFieldModal from "@components/modals/addField";
 import { SettingsModal } from "@components/modals/settings";
-import UpdateChecker from "@components/modals/update";
 
 export const App: React.FC = () => {
   const {
@@ -69,7 +68,6 @@ export const App: React.FC = () => {
           {...{ open: modals.settings, handleOpen: () => toggle("settings") }}
         />
       )}
-      <UpdateChecker />
     </section>
   );
 };

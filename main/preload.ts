@@ -28,14 +28,4 @@ contextBridge.exposeInMainWorld("electronAPI", {
   removeOpenSettingsListener: (callback: (...args: any[]) => void) => {
     ipcRenderer.removeListener("open-settings", callback);
   },
-  onUpdateProgress: (callback: (percent: number) => void) => {
-    ipcRenderer.on("update-progress", (_event, percent: number) =>
-      callback(percent)
-    );
-  },
-  removeUpdateProgressListener: (callback: (percent: number) => void) => {
-    ipcRenderer.removeListener("update-progress", (_event, percent: number) =>
-      callback(percent)
-    );
-  },
 });

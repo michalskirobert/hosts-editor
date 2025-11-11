@@ -1,37 +1,9 @@
-import { ipcMain, BrowserWindow, dialog } from "electron";
+import { ipcMain } from "electron";
 import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
-import { autoUpdater, type UpdateCheckResult } from "electron-updater";
 
-import { mainWindow } from "./windows";
-
-async function showUpdateDialog(updateInfo: {
-  version: string;
-  releaseNotes: string | undefined;
-}) {
-  if (!mainWindow) return;
-
-  const result = await dialog.showMessageBox(mainWindow, {
-    type: "info",
-    buttons: ["Install", "Skip"],
-    defaultId: 0,
-    cancelId: 1,
-    title: `Update available: ${updateInfo.version}`,
-    message: `A new version is available!`,
-    detail:
-      updateInfo.releaseNotes?.replace(/<[^>]+>/g, "") || "No release notes.",
-    noLink: true,
-  });
-
-  if (result.response === 0) {
-    autoUpdater.downloadUpdate();
-  } else {
-    console.log("User skipped update");
-  }
-}
-
-export function registerIpcHandlers(mainWindow: BrowserWindow) {
+export function registerIpcHandlers() {
   const hostsPath =
     process.platform === "win32"
       ? path.join(
@@ -83,60 +55,5 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
         resolve(true);
       });
     });
-  });
-
-  ipcMain.on("install-update", () => {
-    const { autoUpdater } = require("electron-updater");
-    try {
-      autoUpdater.quitAndInstall();
-    } catch (error) {
-      mainWindow.webContents.send("toast", {
-        type: "error",
-        message: String(error),
-      });
-    }
-  });
-
-  ipcMain.on("check-for-updates", () => {
-    const { autoUpdater } = require("electron-updater");
-    let log;
-    try {
-      log = require("electron-log");
-      autoUpdater.logger = log;
-      log.transports.file.level = "debug";
-    } catch (err) {
-      console.warn("electron-log not found, continuing without logging");
-    }
-
-    autoUpdater.channel = "latest";
-
-    autoUpdater
-      .checkForUpdatesAndNotify()
-      .then((result: UpdateCheckResult) => {
-        if (!result?.updateInfo?.version) {
-          mainWindow.webContents.send("toast", {
-            type: "info",
-            message: "You are up to date.",
-          });
-        } else {
-          autoUpdater.on(
-            "download-progress",
-            (progressObj: import("electron-updater").ProgressInfo) => {
-              const percent = progressObj.percent || 0;
-              mainWindow.webContents.send("update-progress", percent);
-            }
-          );
-          showUpdateDialog({
-            releaseNotes: result.updateInfo.releaseNotes?.toString(),
-            version: result.updateInfo.version,
-          });
-        }
-      })
-      .catch((err: Error) => {
-        mainWindow.webContents.send("toast", {
-          type: "error",
-          message: String(err),
-        });
-      });
   });
 }
