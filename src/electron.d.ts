@@ -26,6 +26,10 @@ declare global {
       removeUpdateStatusListener: (
         callback: (ev: Event, args: UpdateEventArgs) => void
       ) => void;
+      onUpdateProgress: (callback: (progress: number) => void) => void;
+      removeUpdateProgressListener: (
+        callback: (progress: number) => void
+      ) => void;
     };
   }
 }

@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onTriggerSave: (callback: () => void) => {
     ipcRenderer.on("trigger-save", callback);
   },
-  removeTriggerSaveListener: (callback: () => void) => {
+  removeTriggerSaveListener: (callback: (...args: any[]) => void) => {
     ipcRenderer.removeListener("trigger-save", callback);
   },
   onToast: (
@@ -25,7 +25,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onOpenSettings: (callback: () => void) => {
     ipcRenderer.on("open-settings", callback);
   },
-  removeOpenSettingsListener: (callback: () => void) => {
+  removeOpenSettingsListener: (callback: (...args: any[]) => void) => {
     ipcRenderer.removeListener("open-settings", callback);
+  },
+  onUpdateProgress: (callback: (percent: number) => void) => {
+    ipcRenderer.on("update-progress", (_event, percent: number) =>
+      callback(percent)
+    );
+  },
+  removeUpdateProgressListener: (callback: (percent: number) => void) => {
+    ipcRenderer.removeListener("update-progress", (_event, percent: number) =>
+      callback(percent)
+    );
   },
 });

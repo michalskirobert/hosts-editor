@@ -1,4 +1,4 @@
-import { autoUpdater } from "electron-updater";
+import { autoUpdater, ProgressInfo } from "electron-updater";
 import { BrowserWindow, ipcMain, app } from "electron";
 
 export function setupUpdater(mainWindow: BrowserWindow) {
@@ -7,11 +7,8 @@ export function setupUpdater(mainWindow: BrowserWindow) {
     return;
   }
 
-  console.log("app.isPackaged =", app.isPackaged);
-
-  // Only check for updates in production
-  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-    if ((err as any).code !== "ENOENT") {
+  autoUpdater.checkForUpdatesAndNotify().catch((err: any) => {
+    if (err.code !== "ENOENT") {
       console.error("Update check failed:", err);
     } else {
       console.log(
@@ -32,13 +29,20 @@ export function setupUpdater(mainWindow: BrowserWindow) {
     }
   });
 
+  autoUpdater.on("download-progress", (progressObj: ProgressInfo) => {
+    if (mainWindow && mainWindow.webContents) {
+      const percent = progressObj.percent || 0;
+      mainWindow.webContents.send("update-progress", percent);
+    }
+  });
+
   ipcMain.on("install-update", () => {
     autoUpdater.quitAndInstall();
   });
 
   ipcMain.on("check-for-updates", () => {
-    autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-      if ((err as any).code !== "ENOENT") {
+    autoUpdater.checkForUpdatesAndNotify().catch((err: any) => {
+      if (err.code !== "ENOENT") {
         console.error("Update check failed:", err);
       } else {
         console.log(

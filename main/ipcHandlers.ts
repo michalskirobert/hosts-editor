@@ -25,10 +25,8 @@ async function showUpdateDialog(updateInfo: {
   });
 
   if (result.response === 0) {
-    // User clicked Install
     autoUpdater.downloadUpdate();
   } else {
-    // User clicked Skip
     console.log("User skipped update");
   }
 }
@@ -121,6 +119,13 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
             message: "You are up to date.",
           });
         } else {
+          autoUpdater.on(
+            "download-progress",
+            (progressObj: import("electron-updater").ProgressInfo) => {
+              const percent = progressObj.percent || 0;
+              mainWindow.webContents.send("update-progress", percent);
+            }
+          );
           showUpdateDialog({
             releaseNotes: result.updateInfo.releaseNotes?.toString(),
             version: result.updateInfo.version,
