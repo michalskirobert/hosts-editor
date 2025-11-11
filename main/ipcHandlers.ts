@@ -19,7 +19,8 @@ async function showUpdateDialog(updateInfo: {
     cancelId: 1,
     title: `Update available: ${updateInfo.version}`,
     message: `A new version is available!`,
-    detail: updateInfo.releaseNotes || "No release notes.",
+    detail:
+      updateInfo.releaseNotes?.replace(/<[^>]+>/g, "") || "No release notes.",
     noLink: true,
   });
 
