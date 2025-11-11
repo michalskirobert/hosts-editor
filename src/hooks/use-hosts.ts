@@ -31,7 +31,6 @@ export const useHosts = () => {
   const [filter, setFilter] = useState("");
 
   const lastInputRef = useRef<HTMLInputElement | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const toggleEditingMode = () => setIsEditMode((prev) => !prev);
 

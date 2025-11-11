@@ -10,11 +10,13 @@ export function setupUpdater(mainWindow: BrowserWindow) {
   console.log("app.isPackaged =", app.isPackaged);
 
   // Only check for updates in production
-  autoUpdater.checkForUpdatesAndNotify().catch(err => {
-    if ((err as any).code !== 'ENOENT') {
+  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    if ((err as any).code !== "ENOENT") {
       console.error("Update check failed:", err);
     } else {
-      console.log("Update config file not found, skipping update check (ENOENT)");
+      console.log(
+        "Update config file not found, skipping update check (ENOENT)"
+      );
     }
   });
 
@@ -35,11 +37,13 @@ export function setupUpdater(mainWindow: BrowserWindow) {
   });
 
   ipcMain.on("check-for-updates", () => {
-    autoUpdater.checkForUpdatesAndNotify().catch(err => {
-      if ((err as any).code !== 'ENOENT') {
+    autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+      if ((err as any).code !== "ENOENT") {
         console.error("Update check failed:", err);
       } else {
-        console.log("Update config file not found, skipping update check (ENOENT)");
+        console.log(
+          "Update config file not found, skipping update check (ENOENT)"
+        );
       }
     });
   });

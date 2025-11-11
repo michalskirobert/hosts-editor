@@ -1,8 +1,8 @@
-import { BrowserWindow, app } from "electron";
+import { BrowserWindow, app, globalShortcut } from "electron";
 import path from "path";
 import os from "os";
 
-let mainWindow: BrowserWindow | null = null;
+export let mainWindow: BrowserWindow | null = null;
 
 export function createMainWindow(): BrowserWindow {
   let splash: BrowserWindow | null = null;
@@ -56,11 +56,16 @@ export function createMainWindow(): BrowserWindow {
 
   if (!app.isPackaged && process.env.ELECTRON_START_URL) {
     mainWindow.loadURL(process.env.ELECTRON_START_URL);
-    mainWindow.webContents.openDevTools();
   } else {
     const indexPath = path.join(app.getAppPath(), "dist/web/index.html");
     mainWindow.loadURL(`file://${indexPath}`);
   }
+
+  app.whenReady().then(() => {
+    globalShortcut.register("CmdOrCtrl+D+shift", () => {
+      mainWindow?.webContents.openDevTools();
+    });
+  });
 
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -79,4 +84,8 @@ app.on("activate", () => {
   if (mainWindow === null) {
     createMainWindow();
   }
+});
+
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
 });

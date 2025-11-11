@@ -15,7 +15,7 @@
     "build:main": "tsc -p tsconfig.electron.json --skipLibCheck",
     "build": "vite build && yarn build:main --skipLibCheck",
     "start": "concurrently \"vite preview\" \"electron electron-dist/main.js\"",
-    "dist": "node -r dotenv/config ./node_modules/.bin/electron-builder"
+    "dist": "CI=true node -r dotenv/config ./node_modules/.bin/electron-builder --publish always"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

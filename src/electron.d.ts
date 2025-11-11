@@ -1,3 +1,5 @@
+import type { UpdateEventArgs } from "@components/modals/update/types";
+
 export {};
 
 declare global {
@@ -7,6 +9,9 @@ declare global {
       readHostsRaw: () => Promise<string>;
       writeHosts: (lines: string[]) => Promise<boolean>;
       setPassword: (pw: string) => Promise<boolean>;
+      onUpdateStatus: (
+        callback: (ev: Event, args: UpdateEventArgs) => void
+      ) => void;
       onTriggerSave: (callback: () => void) => void;
       removeTriggerSaveListener: (callback: () => void) => void;
       onToast: (
@@ -18,6 +23,9 @@ declare global {
       removeToastListener: (callback: (...args: any[]) => void) => void;
       onOpenSettings: (callback: () => void) => void;
       removeOpenSettingsListener: (callback: () => void) => void;
+      removeUpdateStatusListener: (
+        callback: (ev: Event, args: UpdateEventArgs) => void
+      ) => void;
     };
   }
 }

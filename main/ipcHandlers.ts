@@ -81,11 +81,6 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
       console.warn("electron-log not found, continuing without logging");
     }
 
-    const updateYmlPath = path.join(__dirname, "dev-app-update.yml");
-    if (fs.existsSync(updateYmlPath)) {
-      autoUpdater.updateConfigPath = updateYmlPath;
-    }
-
     autoUpdater.channel = "latest";
 
     autoUpdater
