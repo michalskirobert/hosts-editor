@@ -1,8 +1,36 @@
-import { ipcMain, BrowserWindow } from "electron";
+import { ipcMain, BrowserWindow, dialog } from "electron";
 import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
-import type { UpdateCheckResult } from "electron-updater";
+import { autoUpdater, type UpdateCheckResult } from "electron-updater";
+
+import { mainWindow } from "./windows";
+
+async function showUpdateDialog(updateInfo: {
+  version: string;
+  releaseNotes: string | undefined;
+}) {
+  if (!mainWindow) return;
+
+  const result = await dialog.showMessageBox(mainWindow, {
+    type: "info",
+    buttons: ["Install", "Skip"],
+    defaultId: 0,
+    cancelId: 1,
+    title: `Update available: ${updateInfo.version}`,
+    message: `A new version is available!`,
+    detail: updateInfo.releaseNotes || "No release notes.",
+    noLink: true,
+  });
+
+  if (result.response === 0) {
+    // User clicked Install
+    autoUpdater.downloadUpdate();
+  } else {
+    // User clicked Skip
+    console.log("User skipped update");
+  }
+}
 
 export function registerIpcHandlers(mainWindow: BrowserWindow) {
   const hostsPath =
@@ -92,9 +120,9 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
             message: "You are up to date.",
           });
         } else {
-          mainWindow.webContents.send("toast", {
-            type: "success",
-            message: `Update available: ${result.updateInfo.version}`,
+          showUpdateDialog({
+            releaseNotes: result.updateInfo.releaseNotes?.toString(),
+            version: result.updateInfo.version,
           });
         }
       })
