@@ -39,6 +39,17 @@ export function setupUpdater(mainWindow: BrowserWindow) {
     }
   );
 
+  autoUpdater.on("update-not-available", ({ version }) =>
+    dialog.showMessageBox(mainWindow, {
+      type: "info",
+      buttons: ["Roger that"],
+      defaultId: 0,
+      cancelId: 1,
+      title: `The newest version: ${version}`,
+      message: `Your version is currently up to date.`,
+    })
+  );
+
   ipcMain.on("check-for-updates", () => {
     autoUpdater.checkForUpdates().catch((error: Error) => {
       toast({ type: "error", message: error.message });
