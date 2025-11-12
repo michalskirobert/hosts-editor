@@ -4,7 +4,7 @@ import { toast } from "./toast";
 
 export function setupUpdater(mainWindow: BrowserWindow) {
   if (!app.isPackaged) {
-    console.log("Dev mode: update checks disabled");
+    toast({ type: "warning", message: "Dev mode: update checks disabled" });
     return;
   }
 

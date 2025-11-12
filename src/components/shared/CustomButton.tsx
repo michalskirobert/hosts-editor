@@ -35,7 +35,7 @@ export function CustomButton({
           </>
         ) : (
           <span className="flex gap-2 items-center">
-            <Spinner color="blue" /> {children}
+            <Spinner color="blue" className="h-5 w-5" /> {children}
           </span>
         )}
       </Button>

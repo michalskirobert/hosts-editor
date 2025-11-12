@@ -2,7 +2,7 @@ import React from "react";
 import type { ForwardedRef } from "react";
 import { CustomCheckbox } from "@shared/form/Checkbox";
 import { CustomInput } from "@shared/form/Input";
-import { Trash } from "iconoir-react";
+import { Hashtag, Trash } from "iconoir-react";
 
 interface HostLineProps {
   idx: number;
@@ -42,6 +42,7 @@ export const HostLine: React.FC<HostLineProps> = ({
         {...{
           control,
           name: `lines.${idx}.commented`,
+          icon: <Hashtag className="h-4 w-4" />,
         }}
       />
       <div className="flex flex-1 gap-2">
