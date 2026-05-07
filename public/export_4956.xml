@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EForm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CategoryId>7051</CategoryId>
+  <DefaultPresentationType>Normal</DefaultPresentationType>
+  <DefaultLetterType>wniosek#8651</DefaultLetterType>
+  <DefaultLetterContent>123</DefaultLetterContent>
+  <ExternalSystemId>2</ExternalSystemId>
+  <FormData>
+    <FormSource>{
+  "nodes": [
+    {
+      "id": "section-1e24718443e94407bdfb85e01f127c60",
+      "sectionName": "Nowa sekcja",
+      "appearance": {
+        "field": {
+          "label": {
+            "isBold": false,
+            "isItalic": false,
+            "isUnderline": false,
+            "textAlign": "left",
+            "fontSize": "normal",
+            "color": "#000"
+          }
+        }
+      },
+      "order": 1,
+      "fields": [
+        {
+          "id": "a17867fb-7527-48d5-8135-c69b6590e453",
+          "kind": "input_text",
+          "xmlNodeId": "0001",
+          "xmlNodeLabel": "F0001tekst",
+          "parentXmlNodeLabel": "",
+          "parentXmlNode": null,
+          "droppableId": "section-1e24718443e94407bdfb85e01f127c60",
+          "multipleGroupId": "",
+          "subSections": [],
+          "label": "tekst",
+          "name": null,
+          "placeholder": "",
+          "tooltip": "",
+          "xmlNode": null,
+          "isVisible": 10,
+          "isShowXPathCRWDE": false,
+          "isVisibleXPath": "",
+          "isVisibleXPathCRWDE": "",
+          "isEditable": 10,
+          "initialValueType": 20,
+          "initialValue": "",
+          "isRepeatAbility": 20,
+          "isRepetitionsEditable": 10,
+          "minNumberOfRepetitions": 1,
+          "maxNumberOfRepetitions": 2,
+          "newFormulas": [],
+          "appearance": {
+            "field": {
+              "label": {
+                "onTheBorder": false,
+                "isBold": false,
+                "isItalic": false,
+                "isUnderline": false,
+                "textAlign": "left",
+                "fontSize": "normal",
+                "color": "#000"
+              },
+              "input": {
+                "isBorderThick": false,
+                "backgroundColor": "#fff",
+                "valueTextAlign": "left"
+              }
+            }
+          },
+          "minNumberOfCharacters": {
+            "isActive": false,
+            "quantity": 0,
+            "alertType": 10,
+            "isOwnAlert": false,
+            "ownAlertText": "Pole wymaga wprowadzenia minimalnej liczby znaków"
+          },
+          "maxNumberOfCharacters": {
+            "isActive": false,
+            "quantity": 0,
+            "alertType": 10,
+            "isOwnAlert": false,
+            "ownAlertText": "Przekroczono dopuszczalną liczbę znaków do wprowadzenia"
+          },
+          "fieldRequired": {
+            "formula": "",
+            "isRequired": 10,
+            "alertType": 10,
+            "isOwnAlert": false,
+            "ownAlertText": "Pole wymaga podania danych",
+            "isShowFormulaCRWDE": false,
+            "formulaCRWDE": ""
+          },
+          "groupFieldId": "section-1e24718443e94407bdfb85e01f127c60",
+          "duplicateFields": []
+        }
+      ],
+      "isVisible": 10,
+      "isVisibleXPath": "",
+      "isVisibleXPathCRWDE": "",
+      "isShowXPathCRWDE": false,
+      "xmlNode": null
+    }
+  ]
+}</FormSource>
+    <StepsCreator>[
+  {
+    "id": "27442a71-8ae2-40ef-9fa9-21136deb93b1",
+    "name": "Nowa sekcja",
+    "order": 1,
+    "sections": [
+      {
+        "id": "section-1e24718443e94407bdfb85e01f127c60",
+        "name": "Nowa sekcja",
+        "order": 1
+      }
+    ]
+  }
+]</StepsCreator>
+  </FormData>
+  <FormNameStyleProps>{}</FormNameStyleProps>
+  <IsDeclaration>false</IsDeclaration>
+  <IsEDelivery>false</IsEDelivery>
+  <IsLoginRequired>true</IsLoginRequired>
+  <IsSignRequired>true</IsSignRequired>
+  <IsPaymentRequired>false</IsPaymentRequired>
+  <Name>DM_31102025_test_ePUAP</Name>
+  <OfficeId>1</OfficeId>
+  <PatternRepoUrl>https://dev-eformularze-api.sputnik.pl:8101/api/repozytorium-wzorcow/4956/</PatternRepoUrl>
+  <Payments>[]</Payments>
+  <Type>EPUAP</Type>
+  <Values>{"values": [{"xmlNode": {"id": "a17867fb-7527-48d5-8135-c69b6590e453", "tag": "", "name": "tekst", "type": "custom", "value": "", "itemId": "d1d08288-501d-4891-974f-cb504f6bea5c", "xmlName": "F0001tekst", "itemName": "F0001tekst", "controlType": "input_text", "sectionName": "Nowa sekcja", "subSections": [], "validations": [], "isAttachment": false, "attributeName": "", "attachmentValues": []}}], "crwdeValues": [], "sectionValidations": [], "generalLetterValues": [{"xmlNode": {"tag": "#ASW#DataDokumentu#", "name": "meta:Czas", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39202", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/inst:NazwaInstytucji", "itemName": "meta:Czas", "controlType": "input_text"}}, {"xmlNode": {"id": "institution_name", "tag": "#ASW#Nazwa#", "name": "inst:NazwaInstytucji", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39202", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/inst:NazwaInstytucji", "itemName": "inst:NazwaInstytucji", "controlType": "input_text"}}, {"xmlNode": {"tag": "#ASW#AdresatKodPocztowy#", "name": "adr:KodPocztowy", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39202", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/inst:NazwaInstytucji", "itemName": "adr:KodPocztowy", "controlType": "input_text"}}, {"xmlNode": {"tag": "#ASW#AdresatPoczta#", "name": "adr:Poczta", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39202", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/inst:NazwaInstytucji", "itemName": "adr:Poczta", "controlType": "input_text"}}, {"xmlNode": {"tag": "#ASW#AdresatMiejscowosc#", "name": "adr:Miejscowosc", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39202", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/inst:NazwaInstytucji", "itemName": "adr:Miejscowosc", "controlType": "input_text"}}, {"xmlNode": {"tag": "#ASW#AdresatUlica#", "name": "adr:Ulica", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39202", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/inst:NazwaInstytucji", "itemName": "adr:Ulica", "controlType": "input_text"}}, {"xmlNode": {"tag": "#ASW#AdresatBudynek#", "name": "adr:Budynek", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39202", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/inst:NazwaInstytucji", "itemName": "adr:Budynek", "controlType": "input_text"}}, {"xmlNode": {"tag": "#ASW#AdresatLokal#", "name": "adr:Lokal", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39202", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/inst:NazwaInstytucji", "itemName": "adr:Lokal", "controlType": "input_text"}}, {"xmlNode": {"id": "pesel", "tag": "#ASW#Pesel#", "name": "oso:PESEL", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "oso:PESEL", "controlType": "input_text"}}, {"xmlNode": {"id": "nip", "tag": "#ASW#Nip#", "name": "oso:NIP", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "oso:NIP", "controlType": "input_text"}}, {"xmlNode": {"id": "first_name", "tag": "#ASW#Imie#", "name": "oso:Imie", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "oso:Imie", "controlType": "input_text"}}, {"xmlNode": {"id": "surname", "tag": "#ASW#Nazwisko#", "name": "oso:Nazwisko", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "oso:Nazwisko", "controlType": "input_text"}}, {"xmlNode": {"id": "zip_code", "tag": "#ASW#KodPocztowyKoresp#", "name": "adr:KodPocztowy", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "adr:KodPocztowy", "controlType": "input_text"}}, {"xmlNode": {"id": "epuap_county_contact_gouvernment", "tag": "#ASW#PocztaKoresp#", "name": "adr:Poczta", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "adr:Poczta", "controlType": "input_text"}}, {"xmlNode": {"id": "city", "tag": "#ASW#MiejscowoscKoresp#", "name": "adr:Miejscowosc", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "adr:Miejscowosc", "controlType": "dictionary"}}, {"xmlNode": {"id": "street", "tag": "#ASW#UlicaKoresp#", "name": "adr:Ulica", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "adr:Ulica", "controlType": "dictionary"}}, {"xmlNode": {"id": "building_no", "tag": "#ASW#NrBudynkuKoresp#", "name": "adr:Budynek", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "adr:Budynek", "controlType": "input_text"}}, {"xmlNode": {"id": "phone", "tag": "#ASW#Telefon#", "name": "adr:Telefon", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "adr:Telefon", "controlType": "input_text"}}, {"xmlNode": {"id": "apartment_no", "tag": "#ASW#NrLokaluKoresp#", "name": "adr:Lokal", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "adr:Lokal", "controlType": "input_text"}}, {"xmlNode": {"id": "email", "tag": "#ASW#Email#", "name": "adr:Email", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "adr:Email", "controlType": "input_text"}}, {"xmlNode": {"id": "letter_title", "tag": "#ASW#TytulPisma#", "name": "wnio:Tytul", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:Tytul", "controlType": "input_text"}}, {"xmlNode": {"id": "different_letter_type_field", "tag": "#ASW#RodzajPismaInny#", "name": "wnio:RodzajPismaInny", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:RodzajPismaInny", "controlType": "input_text"}}, {"xmlNode": {"id": "general_letter_type_field", "tag": "#ASW#RodzajPisma#", "name": "wnio:RodzajPisma", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:RodzajPisma", "controlType": "dictionary"}}, {"xmlNode": {"id": "letter_content", "tag": "#ASW#TrescPisma#", "name": "wnio:Informacja", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:Informacja", "controlType": "input_text"}}, {"xmlNode": {"id": "regon", "tag": "#ASW#Regon#", "name": "wnio:Regon", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:Regon", "controlType": "input_text"}}, {"xmlNode": {"id": "epuap_mailbox_address", "tag": "#ASW#SkrzynkaEpuap#", "name": "wnio:SkrytkaEpuap", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:SkrytkaEpuap", "controlType": "input_text"}}, {"xmlNode": {"id": "province", "tag": "#ASW#WojewodztwoKoresp#", "name": "wnio:Wojewodztwo", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:Wojewodztwo", "controlType": "dictionary"}}, {"xmlNode": {"id": "district", "tag": "#ASW#PowiatKoresp#", "name": "wnio:Powiat", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:Powiat", "controlType": "dictionary"}}, {"xmlNode": {"id": "commune", "tag": "#ASW#GminaKoresp#", "name": "wnio:Gmina", "value": "", "itemId": "73a7992a-5b41-442c-99bf-0df0d7a39203", "xmlName": "wnio:Dokument/wnio:DaneDokumentu/str:Adresaci/meta:Podmiot/inst:Instytucja/adr:Adres/adr:KodPocztowy", "itemName": "wnio:Gmina", "controlType": "dictionary"}}]}</Values>
+  <XmlNamespaces>{"namespaces": [], "defaultRootName": "Dokument"}</XmlNamespaces>
+  <XmlNodeIds>0</XmlNodeIds>
+</EForm>
