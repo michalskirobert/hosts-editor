@@ -10,8 +10,8 @@ interface HostLineProps {
   control: any;
   isHost: boolean;
   domain: string;
-  remove: (idx: number) => void;
   lastInputRef?: ForwardedRef<HTMLDivElement>;
+  remove: (idx: number) => void;
 }
 
 export const HostLine: React.FC<HostLineProps> = ({
@@ -51,14 +51,12 @@ export const HostLine: React.FC<HostLineProps> = ({
             control,
             name: `lines.${idx}.ip`,
           }}
-          style={{ flex: "0 0 30%" }}
         />
         <CustomInput
           {...{
             control,
             name: `lines.${idx}.domain`,
           }}
-          style={{ flex: "0 0 70%" }}
         />
       </div>
       <button

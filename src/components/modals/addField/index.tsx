@@ -11,7 +11,7 @@ import { schema } from "./schema";
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CustomButton } from "@shared/CustomButton";
-import { Check, Xmark } from "iconoir-react";
+import { Check, Hashtag, Xmark } from "iconoir-react";
 import type { HostLine } from "@utils/isHostLine";
 import { defaultHostLineValue } from "@utils/defaultValues";
 
@@ -44,8 +44,16 @@ export default function AddFieldModal({
         }}
       >
         <DialogHeader>Add new host</DialogHeader>
-        <DialogBody className="flex flex-row gap-2">
-          <CustomCheckbox {...{ control, name: "commented" }} />
+        <DialogBody className="flex flex-row gap-2 items-start">
+          <div className="mt-7">
+            <CustomCheckbox
+              {...{
+                control,
+                name: "commented",
+                icon: <Hashtag className="h-4 w-4" />,
+              }}
+            />
+          </div>
           <CustomInput {...{ control, name: "ip", label: "IP*" }} />
           <CustomInput {...{ control, name: "domain", label: "Domain*" }} />
         </DialogBody>
