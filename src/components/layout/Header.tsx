@@ -4,6 +4,7 @@ import { version } from "../../../package.json";
 import { SearchBar } from "@components/searchBar";
 import { getHeaderButtons } from "@utils/headerButtons";
 import type { LoadersArgs } from "@namespaces/hosts";
+import { processVersion } from "@utils/processVersion";
 
 interface Props {
   isEditMode: boolean;
@@ -37,7 +38,7 @@ export const Header = ({
           className="m-0 p-0"
         />
         <h2 className="font-medium text-dark opacity-60 dark:border-dark-3 ml-3">
-          {version}
+          {processVersion(version)}
         </h2>
       </div>
       <div className="flex-1 flex justify-center px-4">
