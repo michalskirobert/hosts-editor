@@ -1,8 +1,6 @@
-import { CustomButton } from "@shared/CustomButton";
-
 import { version } from "../../../package.json";
 import { SearchBar } from "@components/searchBar";
-import { getHeaderButtons } from "@utils/headerButtons";
+import { HeaderButtons } from "@components/layout/HeaderButtons";
 import type { LoadersArgs } from "@namespaces/hosts";
 import { processVersion } from "@utils/processVersion";
 
@@ -47,19 +45,17 @@ export const Header = ({
         </div>
       </div>
       <div className="flex gap-2 items-center">
-        {getHeaderButtons({
-          isEditMode,
-          loading,
-          isDirty,
-          toggle,
-          onBack,
-          toggleEditingMode,
-          loadHosts,
-        }).map(({ key, children, ...restProps }) => (
-          <CustomButton key={key} {...restProps}>
-            {children}
-          </CustomButton>
-        ))}
+        <HeaderButtons
+          {...{
+            isEditMode,
+            loading,
+            isDirty,
+            toggle,
+            onBack,
+            toggleEditingMode,
+            loadHosts,
+          }}
+        />
       </div>
     </nav>
   );
