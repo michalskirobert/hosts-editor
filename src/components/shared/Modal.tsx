@@ -33,21 +33,22 @@ export const Modal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/20 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/20 backdrop-blur-sm p-4 animate-[fadeIn_140ms_ease-out]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div
         className={`
-          relative flex flex-col overflow-hidden
-          border border-slate-200/80
-          bg-white
-          shadow-[0_20px_50px_rgba(15,23,42,0.12)]
-          transition-all duration-300
-          ${sizeClassMap[size]}
-          ${size === "fullscreen" ? "" : "rounded-3xl"}
-        `}
+  relative flex flex-col overflow-hidden
+  border border-slate-200/80
+  bg-white
+  shadow-[0_20px_50px_rgba(15,23,42,0.12)]
+  transition-all duration-300
+  animate-[modalIn_180ms_ease-out]
+  ${sizeClassMap[size]}
+  ${size === "fullscreen" ? "" : "rounded-3xl"}
+`}
       >
         <header className="flex items-center justify-between border-b border-slate-200 bg-slate-50/80 px-6 py-4">
           <h2
