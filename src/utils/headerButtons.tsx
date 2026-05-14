@@ -67,8 +67,10 @@ export const getHeaderButtons = ({
     color: "blue",
     variant: "gradient",
     onClick: loadHosts,
-    disabled: loading.saving || loading.searching,
-    tooltip: "Reload original hosts file",
+    disabled: loading.saving || loading.searching || !isDirty,
+    tooltip: !isDirty
+      ? "There is no change to reset"
+      : "Reload original hosts file",
   },
   {
     key: "back",

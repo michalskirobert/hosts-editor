@@ -8,8 +8,8 @@ export function createMainWindow(): BrowserWindow {
   let splash: BrowserWindow | null = null;
 
   splash = new BrowserWindow({
-    width: 400,
-    height: 300,
+    width: 600,
+    height: 600,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -36,23 +36,18 @@ export function createMainWindow(): BrowserWindow {
     },
   });
 
-  mainWindow.once("ready-to-show", () => {
-    if (splash) {
-      if (os.platform() === "linux") {
-        setTimeout(() => {
-          splash?.destroy();
-          splash = null;
-          mainWindow?.show();
-        }, 500);
-      } else {
-        splash.destroy();
+  const destroySplash = () =>
+    setTimeout(() => {
+      if (splash) {
+        splash?.destroy();
         splash = null;
         mainWindow?.show();
+      } else {
+        mainWindow?.show();
       }
-    } else {
-      mainWindow?.show();
-    }
-  });
+    }, 1500);
+
+  mainWindow.once("ready-to-show", destroySplash);
 
   if (!app.isPackaged && process.env.ELECTRON_START_URL) {
     mainWindow.loadURL(process.env.ELECTRON_START_URL);
