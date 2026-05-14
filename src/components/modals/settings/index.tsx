@@ -1,11 +1,7 @@
-import {
-  Dialog,
-  DialogBody,
-  DialogFooter,
-  DialogHeader,
-} from "@material-tailwind/react";
-import { CustomButton } from "@shared/buttons";
-import { Check, Settings, Xmark } from "iconoir-react";
+import { Modal } from "@shared/Modal";
+
+import { CustomButton } from "@shared/button";
+import { Check, Xmark } from "iconoir-react";
 import { useForm } from "react-hook-form";
 import { defaultSettings } from "./utils";
 import { CustomCheckbox } from "@shared/form/Checkbox";
@@ -47,59 +43,55 @@ export const SettingsModal = ({ open, handleOpen }: Props) => {
   }, []);
 
   return (
-    <Dialog open={open} handler={handleOpen}>
-      <form onSubmit={handleSubmit(onSave)}>
-        <DialogHeader className="flex gap-2 items-center">
-          <Settings />
-          Settings
-        </DialogHeader>
-        <DialogBody>
-          <div>
-            <h2>General settings</h2>
-            <div className="flex flex-col gap-2">
-              <CustomCheckbox
-                {...{
-                  control,
-                  name: "keepUserPassword",
-                  label: "Remember user's data (Password, login)",
-                }}
-              />
+    <form onSubmit={handleSubmit(onSave)}>
+      <Modal
+        {...{
+          title: "Settings",
+          isOpen: open,
+          onClose: handleOpen,
+          size: "md",
+          footer: (
+            <>
               <CustomButton
-                color="red"
-                variant="filled"
-                disabled={!hasUserData}
-                tooltip={
-                  !hasUserData
-                    ? "There is no saved user data"
-                    : "Your data will be permamently removed"
-                }
-                onClick={clearUserData}
+                color="danger"
+                onClick={handleOpen}
+                className="mr-1"
+                icon={<Xmark />}
               >
-                Clear your data
+                Cancel
               </CustomButton>
-            </div>
+              <CustomButton type="submit" color="success" icon={<Check />}>
+                Save changes
+              </CustomButton>
+            </>
+          ),
+        }}
+      >
+        <div>
+          <h2>General settings</h2>
+          <div className="flex flex-col gap-2">
+            <CustomCheckbox
+              {...{
+                control,
+                name: "keepUserPassword",
+                label: "Remember user's data (Password, login)",
+              }}
+            />
+            <CustomButton
+              color="danger"
+              disabled={!hasUserData}
+              tooltip={
+                !hasUserData
+                  ? "There is no saved user data"
+                  : "Your data will be permamently removed"
+              }
+              onClick={clearUserData}
+            >
+              Clear your data
+            </CustomButton>
           </div>
-        </DialogBody>
-        <DialogFooter>
-          <CustomButton
-            variant="text"
-            color="red"
-            onClick={handleOpen}
-            className="mr-1"
-            icon={<Xmark />}
-          >
-            Cancel
-          </CustomButton>
-          <CustomButton
-            type="submit"
-            variant="filled"
-            color="green"
-            icon={<Check />}
-          >
-            Save changes
-          </CustomButton>
-        </DialogFooter>
-      </form>
-    </Dialog>
+        </div>
+      </Modal>
+    </form>
   );
 };

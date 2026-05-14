@@ -1,19 +1,14 @@
-import {
-  Dialog,
-  DialogHeader,
-  DialogBody,
-  DialogFooter,
-} from "@material-tailwind/react";
 import { CustomCheckbox } from "@shared/form/Checkbox";
 import { CustomInput } from "@shared/form/Input";
 import { useForm } from "react-hook-form";
 import { schema } from "./schema";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { CustomButton } from "@shared/buttons";
+import { CustomButton } from "@shared/button";
 import { Check, Hashtag, Xmark } from "iconoir-react";
 import type { HostLine } from "@utils/isHostLine";
 import { defaultHostLineValue } from "@utils/defaultValues";
+import { Modal } from "@shared/Modal";
 
 interface Props {
   open: boolean;
@@ -26,57 +21,61 @@ export default function AddFieldModal({
   handleSaveNewField,
   handleOpen,
 }: Props) {
-  const { control, handleSubmit } = useForm<HostLine>({
+  const { control, trigger, getValues } = useForm<HostLine>({
     defaultValues: defaultHostLineValue,
     resolver: yupResolver(schema),
   });
 
+  const onSave = async () => {
+    const isValid = await trigger();
+
+    if (!isValid) return;
+
+    const data = getValues();
+
+    handleSaveNewField(data);
+    window.scrollTo({ behavior: "smooth", top: 0 });
+  };
+
   return (
-    <Dialog open={open} handler={handleOpen}>
-      <form
-        onSubmit={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-
-          handleSubmit(handleSaveNewField)(ev);
-
-          window.scrollTo({ behavior: "smooth", top: 0 });
-        }}
-      >
-        <DialogHeader>Add new host</DialogHeader>
-        <DialogBody className="flex flex-row gap-2 items-start">
-          <div className="mt-7">
-            <CustomCheckbox
-              {...{
-                control,
-                name: "commented",
-                icon: <Hashtag className="h-4 w-4" />,
-              }}
-            />
-          </div>
-          <CustomInput {...{ control, name: "ip", label: "IP*" }} />
-          <CustomInput {...{ control, name: "domain", label: "Domain*" }} />
-        </DialogBody>
-        <DialogFooter>
+    <Modal
+      title="Add new host"
+      isOpen={open}
+      onClose={handleOpen}
+      footer={
+        <>
           <CustomButton
-            variant="text"
-            color="red"
+            type="button"
+            color="success"
+            icon={<Check />}
+            onClick={onSave}
+          >
+            Save
+          </CustomButton>
+          <CustomButton
+            color="danger"
             onClick={handleOpen}
             className="mr-1"
             icon={<Xmark />}
           >
             Cancel
           </CustomButton>
-          <CustomButton
-            type="submit"
-            variant="filled"
-            color="green"
-            icon={<Check />}
-          >
-            Save
-          </CustomButton>
-        </DialogFooter>
-      </form>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="flex align-center gap-2 mb-4">
+        <div className="mt-7">
+          <CustomCheckbox
+            {...{
+              control,
+              name: "commented",
+              icon: <Hashtag className="h-4 w-4" />,
+            }}
+          />
+        </div>
+        <CustomInput {...{ control, name: "ip", label: "IP*" }} />
+        <CustomInput {...{ control, name: "domain", label: "Domain*" }} />
+      </div>
+    </Modal>
   );
 }
