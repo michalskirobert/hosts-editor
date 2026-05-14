@@ -4,7 +4,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from "@material-tailwind/react";
-import { CustomButton } from "@shared/CustomButton";
+import { CustomButton } from "@shared/buttons";
 import { Check, Settings, Xmark } from "iconoir-react";
 import { useForm } from "react-hook-form";
 import { defaultSettings } from "./utils";

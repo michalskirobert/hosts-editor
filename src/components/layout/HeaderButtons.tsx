@@ -1,5 +1,5 @@
 import type { LoadersArgs } from "@namespaces/hosts";
-import { CustomButton } from "@shared/CustomButton";
+import { CustomButton } from "@shared/button";
 import {
   Plus,
   Refresh,
@@ -48,7 +48,7 @@ export const HeaderButtons = ({
           color: "primary",
           type: "submit",
           tooltip: !isDirty ? "No changes to save" : "Save changes",
-          loading: loading.saving,
+          loading: loading.saving || true,
           disabled: !isDirty || loading.searching,
         }}
       />
@@ -58,7 +58,6 @@ export const HeaderButtons = ({
           children: "Edit as text",
           icon: <EditPencil />,
           color: "warning",
-          variant: "gradient",
           onClick: toggleEditingMode,
           disabled: loading.saving || loading.searching,
           hidden: isEditMode,

@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { schema } from "./schema";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { CustomButton } from "@shared/CustomButton";
+import { CustomButton } from "@shared/buttons";
 import { Check, Hashtag, Xmark } from "iconoir-react";
 import type { HostLine } from "@utils/isHostLine";
 import { defaultHostLineValue } from "@utils/defaultValues";
