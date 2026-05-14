@@ -48,7 +48,7 @@ export const HeaderButtons = ({
           color: "primary",
           type: "submit",
           tooltip: !isDirty ? "No changes to save" : "Save changes",
-          loading: loading.saving || true,
+          loading: loading.saving,
           disabled: !isDirty || loading.searching,
         }}
       />
