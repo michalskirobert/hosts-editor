@@ -22,13 +22,18 @@ export const CustomInput = <T extends FieldValues>({
       )}
       <div
         className={`
-          rounded-xl border bg-white transition-all duration-200
+          rounded-xl border
+          bg-white/70 backdrop-blur-md
+          shadow-sm
+          transition-all duration-200
+          border-slate-200/60
           ${
             fieldState.invalid
-              ? "border-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_0_4px_rgba(239,68,68,0.14)]"
-              : "border-slate-200 focus-within:border-blue-500 focus-within:shadow-[0_0_0_4px_rgba(59,130,246,0.15)]"
+              ? "!border-red-400 focus-within:border-red-400 focus-within:shadow-[0_0_0_2px_rgba(239,68,68,0.14)]"
+              : "focus-within:border-blue-400 focus-within:shadow-[0_0_0_2px_rgba(59,130,246,0.10)]"
           }
           hover:border-slate-300
+          hover:bg-white/80
         `}
       >
         <input
@@ -39,7 +44,8 @@ export const CustomInput = <T extends FieldValues>({
             w-full rounded-xl bg-transparent px-4 py-3
             text-sm text-slate-900 outline-none
             placeholder:text-slate-400
-            disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400
+            transition-colors duration-200
+            disabled:cursor-not-allowed disabled:bg-slate-100/50 disabled:text-slate-400
             ${restProps?.className || ""}
           `}
           type={restProps.type ? restProps.type : "text"}

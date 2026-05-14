@@ -60,10 +60,22 @@ export const HostLine: React.FC<HostLineProps> = ({
         />
       </div>
       <button
-        className="flex items-center justify-center ml-2 bg-red-500 p-2 rounded-lg text-white hover:bg-red-400 transition-colors duration-500"
+        className="
+          relative ml-2 flex h-10 w-10 items-center justify-center
+          rounded-xl border border-red-200/40
+          bg-red-500/90 text-white
+          shadow-sm shadow-red-500/20
+          transition-all duration-200
+          hover:-translate-y-[1px]
+          hover:bg-red-500
+          hover:shadow-md hover:shadow-red-500/25
+          active:translate-y-0
+          focus:outline-none
+          focus-visible:ring-2 focus-visible:ring-red-400/30
+        "
         onClick={() => remove(idx)}
       >
-        <Trash />
+        <Trash className="h-4 w-4" />
       </button>
     </div>
   );

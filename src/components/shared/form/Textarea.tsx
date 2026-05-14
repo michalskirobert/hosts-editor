@@ -22,9 +22,11 @@ export const CustomTextarea = <T extends FieldValues>({
       <div
         className={`
           rounded-xl border bg-white transition-all duration-200
-          ${fieldState.invalid ? "border-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_0_4px_rgba(239,68,68,0.14)]" : "border-slate-200"}
-          focus-within:border-blue-500
-          focus-within:shadow-[0_0_0_4px_rgba(59,130,246,0.15)]
+          ${
+            fieldState.invalid
+              ? "border-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_0_2px_rgba(239,68,68,0.14)]"
+              : "border-slate-200 focus-within:border-blue-500 focus-within:shadow-[0_0_0_2px_rgba(59,130,246,0.15)]"
+          }
           hover:border-slate-300
         `}
       >

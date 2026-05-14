@@ -28,16 +28,18 @@ export const Header = ({
   return (
     <nav className="flex items-center border-b border-stroke sm:px-6 xl:px-7.5 p-3 justify-between">
       <div className="flex items-center flex-shrink-0">
-        <img
-          src="./hosts_editor.png"
-          alt="NurByte"
-          height={50}
-          width={50}
-          className="m-0 p-0"
-        />
-        <h2 className="font-medium text-dark opacity-60 dark:border-dark-3 ml-3">
-          {processVersion(version)}
-        </h2>
+        <div className="flex items-center gap-2">
+          <img
+            src="./header_logo.jpg"
+            alt="NurByte"
+            height={45}
+            width={45}
+            className="m-0 p-0"
+          />
+          <span className="font-medium text-dark opacity-60 dark:border-dark-3">
+            Hosts editor <b>{processVersion(version)}</b>
+          </span>
+        </div>
       </div>
       <div className="flex-1 flex justify-center px-4">
         <div className="w-full max-w-md">
