@@ -10,11 +10,12 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
+      "@electron/*": ["./main/*"],
       "@shared/*": ["./src/components/shared/*"],
       "@utils/*": ["./src/utils/*"],
       "@helpers/*": ["./src/helpers/*"],
       "@hooks/*": ["./src/hooks/*"],
-      "@namespaces/*": ["./src/types/*"],
+      "@typings/*": ["./src/types/*"],
       "@components/*": ["./src/components/*"]
     },
     "moduleResolution": "bundler",

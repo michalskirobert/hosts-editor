@@ -29,14 +29,14 @@ export function setupUpdater(mainWindow: BrowserWindow) {
           .then((returnValue) => {
             if (returnValue.response === 0)
               shell.openExternal(
-                "https://github.com/michalskirobert/hosts-editor/releases/latest"
+                "https://github.com/michalskirobert/hosts-editor/releases/latest",
               );
           })
           .catch((error: Error) => {
             toast({ type: "error", message: error.message });
           });
       }
-    }
+    },
   );
 
   autoUpdater.on("update-not-available", ({ version }) =>
@@ -47,7 +47,7 @@ export function setupUpdater(mainWindow: BrowserWindow) {
       cancelId: 1,
       title: `The newest version: ${version}`,
       message: `Your version is currently up to date.`,
-    })
+    }),
   );
 
   ipcMain.on("check-for-updates", () => {

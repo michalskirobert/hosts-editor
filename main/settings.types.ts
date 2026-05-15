@@ -3,10 +3,9 @@ export type SettingsAppearanceFontSize = "small" | "medium" | "large";
 
 export type SettingsAppearanceArgs = {
   mode: SettingsAppearanceMode;
-  fontSize: SettingsAppearanceFontSize;
+  fullscreen: boolean;
 };
 
 export type Settings = {
-  keepUserPassword: boolean;
   appearance: SettingsAppearanceArgs;
 };

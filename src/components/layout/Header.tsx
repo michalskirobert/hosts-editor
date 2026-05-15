@@ -1,7 +1,7 @@
 import { version } from "../../../package.json";
 import { SearchBar } from "@components/searchBar";
 import { HeaderButtons } from "@components/layout/HeaderButtons";
-import type { LoadersArgs } from "@namespaces/hosts";
+import type { LoadersArgs } from "@typings/hosts";
 import { processVersion } from "@utils/processVersion";
 
 interface Props {

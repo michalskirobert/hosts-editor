@@ -1,9 +1,8 @@
-import type { Settings } from "@namespaces/settings";
+import type { Settings } from "@electron/settings.types";
 
 export const defaultSettings: Settings = {
-  keepUserPassword: false,
   appearance: {
     mode: "auto",
-    fontSize: "medium",
+    fullscreen: false,
   },
 };

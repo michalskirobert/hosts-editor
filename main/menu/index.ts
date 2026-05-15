@@ -36,6 +36,18 @@ export function registerMenu(mainWindow: BrowserWindow) {
     ],
   });
 
+  template.push({
+    label: "Settings",
+    submenu: [
+      {
+        label: "General",
+        click: () => mainWindow.webContents.send("toggle-settings-modal"),
+      },
+      { type: "separator" as const },
+      { role: "togglefullscreen" as const },
+    ],
+  });
+
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }

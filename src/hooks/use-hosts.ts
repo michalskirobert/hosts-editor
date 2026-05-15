@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { useModalManager } from "@utils/modalsManager";
 import { processLines, processLinesToSave } from "@helpers/process-lines";
 
-import type { HostsArgs } from "@namespaces/hosts";
+import type { HostsArgs } from "@typings/hosts";
 import type { HostLine } from "@utils/isHostLine";
 
 import { toast } from "react-toastify";
@@ -23,7 +23,7 @@ export const useHosts = () => {
   const { modals, open, close, toggle } = useModalManager("add", "settings");
   const { loading, setLoadingOff, setLoadingOn } = useLoadingStates(
     "saving",
-    "searching"
+    "searching",
   );
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -37,7 +37,7 @@ export const useHosts = () => {
   const loadHosts = async () => {
     if (!window.electronAPI) {
       toast.warning(
-        "Electron API is undefined – are you running this in a browser instead of Electron?"
+        "Electron API is undefined – are you running this in a browser instead of Electron?",
       );
       return;
     }
@@ -120,12 +120,12 @@ export const useHosts = () => {
     window.electronAPI?.onToast(toastHandler);
 
     const settingsHandler = () => open("settings");
-    window.electronAPI.onOpenSettings(settingsHandler);
+    window.electronAPI.toggleSettingsModal(settingsHandler);
 
     return () => {
       window.electronAPI?.removeTriggerSaveListener(saveHandler);
       window.electronAPI?.removeToastListener(toastHandler);
-      window.electronAPI?.removeOpenSettingsListener(settingsHandler);
+      window.electronAPI?.removeToggleSettingsModalListener(settingsHandler);
     };
   }, []);
 

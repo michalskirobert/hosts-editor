@@ -1,0 +1,12 @@
+{
+  "limit": 5,
+  "tabs": [
+    {
+      "id": "hosts_file",
+      "order": 0,
+      "label": "Hosts",
+      "isRemovable": false,
+      "data": {}
+    }
+  ]
+}

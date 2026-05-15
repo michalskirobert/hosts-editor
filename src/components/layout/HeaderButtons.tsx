@@ -1,4 +1,4 @@
-import type { LoadersArgs } from "@namespaces/hosts";
+import type { LoadersArgs } from "@typings/hosts";
 import { CustomButton } from "@shared/button";
 import {
   Plus,

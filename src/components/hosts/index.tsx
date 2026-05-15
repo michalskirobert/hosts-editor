@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { HostLine } from "@components/hosts/HostLine";
 import type { Control, FieldArrayWithId } from "react-hook-form";
-import type { HostsArgs, LoadersArgs } from "@namespaces/hosts";
+import type { HostsArgs, LoadersArgs } from "@typings/hosts";
 import { CustomLoadingBlocker } from "@shared/LoadingBlocker";
 import { HighlightWithinTextareaComponent } from "@shared/form/HighlitWithinTextarea";
 
@@ -33,7 +33,7 @@ export const HostsList: React.FC<HostsListProps> = ({
       fields
         .map((item, idx) => ({ ...item, idx }))
         .filter((l) => `${l.ip} ${l.domain}`.includes(filter)),
-    [fields, filter]
+    [fields, filter],
   );
 
   return (

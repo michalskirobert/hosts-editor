@@ -14,6 +14,8 @@ export const CustomCheckbox = <T extends FieldValues>({
 }: CustomCheckboxProps<T>) => {
   const { field, fieldState } = useController({ name, control });
 
+  console.log(field);
+
   return (
     <div className="space-y-2">
       <label

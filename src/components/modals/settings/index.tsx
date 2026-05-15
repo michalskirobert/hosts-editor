@@ -4,10 +4,11 @@ import { CustomButton } from "@shared/button";
 import { Check, Xmark } from "iconoir-react";
 import { useForm } from "react-hook-form";
 import { defaultSettings } from "./utils";
-import { CustomCheckbox } from "@shared/form/Checkbox";
-import type { Settings as SettingsArgs } from "@namespaces/settings";
+import type { Settings } from "@electron/settings.types";
 import { toast } from "react-toastify";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
+import { CustomSelect } from "@shared/form/Select";
+import { CustomCheckbox } from "@shared/form/Checkbox";
 
 interface Props {
   open: boolean;
@@ -15,33 +16,27 @@ interface Props {
 }
 
 export const SettingsModal = ({ open, handleOpen }: Props) => {
-  const { control, reset, handleSubmit } = useForm<SettingsArgs>({
+  const { control, reset, handleSubmit } = useForm<Settings>({
     defaultValues: defaultSettings,
   });
 
-  const onSave = (data: SettingsArgs) => {
-    console.log("EXEC");
-    localStorage.setItem("appData", JSON.stringify({ settings: data }));
-    toast.success("Your data has been saved");
+  const onSave = useCallback(async (data: Settings) => {
+    const res = await window.electronAPI.updateSettings(data);
+
+    if (!res) return;
+
+    toast.success("Your settings has been saved");
     handleOpen();
-  };
-
-  const clearUserData = () => {
-    localStorage.removeItem("user");
-    toast.success("User password has been deleted from the application.");
-  };
-
-  const hasUserData = useMemo(() => !!localStorage.getItem("user"), []);
-
-  useEffect(() => {
-    const data = localStorage.getItem("appData.settings");
-    console.log(data);
-
-    if (!data) return;
-
-    reset(JSON.parse(data));
   }, []);
 
+  useEffect(() => {
+    const load = async () => {
+      const data = await window.electronAPI.readSettings();
+      reset(data);
+    };
+
+    load();
+  }, [reset]);
   return (
     <form onSubmit={handleSubmit(onSave)}>
       <Modal
@@ -68,27 +63,32 @@ export const SettingsModal = ({ open, handleOpen }: Props) => {
         }}
       >
         <div>
-          <h2>General settings</h2>
+          <h2 className="text-xl font-bold">General settings</h2>
           <div className="flex flex-col gap-2">
-            <CustomCheckbox
-              {...{
-                control,
-                name: "keepUserPassword",
-                label: "Remember user's data (Password, login)",
-              }}
-            />
-            <CustomButton
-              color="danger"
-              disabled={!hasUserData}
-              tooltip={
-                !hasUserData
-                  ? "There is no saved user data"
-                  : "Your data will be permamently removed"
-              }
-              onClick={clearUserData}
-            >
-              Clear your data
-            </CustomButton>
+            <div className="mt-2">
+              <h3 className="mb-2 text-lg">Appearance</h3>
+              <div className="flex gap-2 flex-col">
+                <CustomCheckbox
+                  {...{
+                    control,
+                    name: "appearance.fullscreen",
+                    label: "Fullscreen",
+                  }}
+                />
+                <CustomSelect
+                  {...{
+                    control,
+                    name: "appearance.mode",
+                    label: "View mode",
+                    options: [
+                      { label: "Auto", value: "auto" },
+                      { label: "Dark mode", value: "dark_mode" },
+                      { label: "Light mode", value: "light_mode" },
+                    ],
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </Modal>

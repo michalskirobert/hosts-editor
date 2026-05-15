@@ -1,7 +1,14 @@
-import { ipcMain } from "electron";
+import { ipcMain, app } from "electron";
 import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
+import { Settings } from "./settings.types";
+import { toast } from "./toast";
+
+const resolveJsonFilePath = (fileName: string) =>
+  app.isPackaged
+    ? path.join(app.getAppPath(), `dist/web/${fileName}.json`)
+    : path.join(__dirname, `../public/${fileName}.json`);
 
 export function registerIpcHandlers() {
   const hostsPath =
@@ -11,7 +18,7 @@ export function registerIpcHandlers() {
           "System32",
           "drivers",
           "etc",
-          "hosts"
+          "hosts",
         )
       : "/etc/hosts";
 
@@ -32,6 +39,35 @@ export function registerIpcHandlers() {
     } catch (err) {
       return `# ERROR: ${err}`;
     }
+  });
+
+  ipcMain.handle("read-settings", async () => {
+    try {
+      const res = fs.readFileSync(resolveJsonFilePath("settings"), "utf-8");
+
+      return JSON.parse(res);
+    } catch (err) {
+      return `# ERROR: ${err}`;
+    }
+  });
+
+  ipcMain.handle("update-settings", async (_event, data: Settings) => {
+    return new Promise((resolve, reject) => {
+      const filePath = resolveJsonFilePath("settings");
+
+      if (!filePath) {
+        toast({
+          message: "Settings cannot be saved! File is missing!",
+          type: "error",
+        });
+        reject();
+        return;
+      }
+
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+
+      resolve(true);
+    });
   });
 
   ipcMain.handle("write-hosts", async (_event, lines: string[]) => {
