@@ -1,6 +1,6 @@
 {
   "appearance": {
-    "mode": "light_mode",
-    "fullscreen": true
+    "fullscreen": false,
+    "mode": "auto"
   }
 }

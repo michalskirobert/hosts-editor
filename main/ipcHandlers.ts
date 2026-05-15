@@ -3,12 +3,6 @@ import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
 import { Settings } from "./settings.types";
-import { toast } from "./toast";
-
-const resolveJsonFilePath = (fileName: string) =>
-  app.isPackaged
-    ? path.join(app.getAppPath(), `dist/web/${fileName}.json`)
-    : path.join(__dirname, `../public/${fileName}.json`);
 
 const defaultSettingsPath = app.isPackaged
   ? path.join(app.getAppPath(), "dist/web/settings.json")
