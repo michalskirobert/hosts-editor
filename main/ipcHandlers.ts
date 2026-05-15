@@ -10,6 +10,12 @@ const resolveJsonFilePath = (fileName: string) =>
     ? path.join(app.getAppPath(), `dist/web/${fileName}.json`)
     : path.join(__dirname, `../public/${fileName}.json`);
 
+const defaultSettingsPath = app.isPackaged
+  ? path.join(app.getAppPath(), "dist/web/settings.json")
+  : path.join(__dirname, "../public/settings.json");
+
+const userSettingsPath = path.join(app.getPath("userData"), "settings.json");
+
 export function registerIpcHandlers() {
   const hostsPath =
     process.platform === "win32"
@@ -43,31 +49,33 @@ export function registerIpcHandlers() {
 
   ipcMain.handle("read-settings", async () => {
     try {
-      const res = fs.readFileSync(resolveJsonFilePath("settings"), "utf-8");
+      if (!fs.existsSync(userSettingsPath)) {
+        const defaults = fs.readFileSync(defaultSettingsPath, "utf-8");
 
+        fs.writeFileSync(userSettingsPath, defaults, "utf-8");
+
+        return JSON.parse(defaults);
+      }
+
+      const res = fs.readFileSync(userSettingsPath, "utf-8");
       return JSON.parse(res);
     } catch (err) {
-      return `# ERROR: ${err}`;
+      return { error: String(err) };
     }
   });
 
   ipcMain.handle("update-settings", async (_event, data: Settings) => {
-    return new Promise((resolve, reject) => {
-      const filePath = resolveJsonFilePath("settings");
+    try {
+      fs.writeFileSync(
+        userSettingsPath,
+        JSON.stringify(data, null, 2),
+        "utf-8",
+      );
 
-      if (!filePath) {
-        toast({
-          message: "Settings cannot be saved! File is missing!",
-          type: "error",
-        });
-        reject();
-        return;
-      }
-
-      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
-
-      resolve(true);
-    });
+      return true;
+    } catch (err) {
+      return false;
+    }
   });
 
   ipcMain.handle("write-hosts", async (_event, lines: string[]) => {
