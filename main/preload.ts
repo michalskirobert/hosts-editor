@@ -30,4 +30,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   removeToastListener: (callback: (...args: any[]) => void) => {
     ipcRenderer.removeListener("toast", callback);
   },
+  toggleFullscreen: (value: boolean) =>
+    ipcRenderer.invoke("toggle-fullscreen", value),
 });

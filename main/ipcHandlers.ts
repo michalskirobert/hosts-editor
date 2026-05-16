@@ -1,4 +1,4 @@
-import { ipcMain, app } from "electron";
+import { ipcMain, app, BrowserWindow } from "electron";
 import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
@@ -92,5 +92,13 @@ export function registerIpcHandlers() {
         resolve(true);
       });
     });
+  });
+
+  ipcMain.handle("toggle-fullscreen", (_event, value: boolean) => {
+    const win = BrowserWindow.getAllWindows()[0];
+
+    if (!win) return;
+
+    win.setFullScreen(value);
   });
 }

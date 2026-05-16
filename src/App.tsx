@@ -1,5 +1,5 @@
 import React from "react";
-import { useHosts } from "./hooks/use-hosts";
+import { useHosts } from "./hooks/useHosts";
 import { Header } from "@components/layout/Header";
 import { HostsList } from "@components/hosts";
 import AddFieldModal from "@components/modals/addField";

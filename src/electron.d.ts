@@ -26,6 +26,7 @@ declare global {
         }) => void,
       ) => void;
       removeToastListener: (callback: (...args: any[]) => void) => void;
+      toggleFullscreen: (value: boolean) => Promise<void>;
     };
   }
 }

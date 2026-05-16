@@ -138,7 +138,6 @@ export const useHosts = () => {
   useEffect(() => {
     const initializeTheme = async () => {
       const settings = await window.electronAPI.readSettings();
-
       applyTheme(settings.appearance.mode);
     };
 
