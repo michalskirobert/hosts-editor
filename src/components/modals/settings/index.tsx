@@ -65,20 +65,20 @@ export const SettingsModal = ({ open, setSettings, handleOpen }: Props) => {
             footer: (
               <>
                 <CustomButton
-                  color="danger"
-                  onClick={handleOpen}
-                  className="mr-1"
-                  icon={<Xmark />}
-                >
-                  Cancel
-                </CustomButton>
-                <CustomButton
                   type="submit"
                   color="success"
                   icon={<Check />}
                   loading={isLoading}
                 >
                   Save changes
+                </CustomButton>
+                <CustomButton
+                  color="danger"
+                  onClick={handleOpen}
+                  className="mr-1"
+                  icon={<Xmark />}
+                >
+                  Cancel
                 </CustomButton>
               </>
             ),
