@@ -15,6 +15,8 @@ export const App: React.FC = () => {
     modals,
     isDirty,
     filter,
+    settings,
+    setSettings,
     onSearchChange,
     handleSubmit,
     handleSave,
@@ -27,7 +29,7 @@ export const App: React.FC = () => {
   } = useHosts();
 
   return (
-    <section className="max-w-screen">
+    <section className="max-w-screen dark:bg-zinc-950">
       <form onSubmit={handleSubmit(handleSave)}>
         <Header
           {...{
@@ -39,6 +41,7 @@ export const App: React.FC = () => {
             toggleEditingMode,
             toggle,
             onSearchChange,
+            settings,
           }}
         />
         <HostsList
@@ -65,7 +68,11 @@ export const App: React.FC = () => {
       </form>
       {modals.settings && (
         <SettingsModal
-          {...{ open: modals.settings, handleOpen: () => toggle("settings") }}
+          {...{
+            open: modals.settings,
+            handleOpen: () => toggle("settings"),
+            setSettings,
+          }}
         />
       )}
     </section>

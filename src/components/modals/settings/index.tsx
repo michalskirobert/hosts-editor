@@ -14,10 +14,11 @@ import { CustomLoadingBlocker } from "@shared/LoadingBlocker";
 
 interface Props {
   open: boolean;
+  setSettings: (settings: Settings) => void;
   handleOpen: () => void;
 }
 
-export const SettingsModal = ({ open, handleOpen }: Props) => {
+export const SettingsModal = ({ open, setSettings, handleOpen }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { control, reset, handleSubmit } = useForm<Settings>({
@@ -35,6 +36,7 @@ export const SettingsModal = ({ open, handleOpen }: Props) => {
 
       toast.success("Your settings has been saved");
       applyTheme(data.appearance.mode);
+      setSettings(data);
       handleOpen();
     } catch (error) {
       toast.error("Settings cannot be saved!");

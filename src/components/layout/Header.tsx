@@ -3,11 +3,13 @@ import { SearchBar } from "@components/searchBar";
 import { HeaderButtons } from "@components/layout/HeaderButtons";
 import type { LoadersArgs } from "@typings/hosts";
 import { processVersion } from "@utils/processVersion";
+import type { Settings } from "@electron/types/settings";
 
 interface Props {
   isEditMode: boolean;
   isDirty: boolean;
   loading: LoadersArgs;
+  settings: Settings;
   onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   toggle: (name: "add" | "settings") => void;
   onBack: () => void;
@@ -19,6 +21,7 @@ export const Header = ({
   isEditMode,
   isDirty,
   loading,
+  settings,
   onSearchChange,
   toggle,
   onBack,
@@ -38,7 +41,11 @@ export const Header = ({
       <div className="flex items-center flex-shrink-0">
         <div className="flex items-center gap-3">
           <img
-            src="./header_logo.jpg"
+            src={
+              settings.appearance.mode === "dark"
+                ? "./header_logo_dark.jpg"
+                : "./header_logo.jpg"
+            }
             alt="NurByte"
             height={42}
             width={42}

@@ -9,6 +9,8 @@ import type { HostLine } from "@utils/isHostLine";
 import { toast } from "react-toastify";
 import { useLoadingStates } from "@utils/loadersManager";
 import { applyTheme } from "@utils/applyTheme";
+import type { Settings } from "@electron/types/settings";
+import { defaultSettings } from "@components/modals/settings/utils";
 
 export const useHosts = () => {
   const {
@@ -30,6 +32,7 @@ export const useHosts = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [focusId, setFocusId] = useState<string>("");
   const [filter, setFilter] = useState("");
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
 
   const lastInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -139,6 +142,7 @@ export const useHosts = () => {
     const initializeTheme = async () => {
       const settings = await window.electronAPI.readSettings();
       applyTheme(settings.appearance.mode);
+      setSettings(settings);
     };
 
     void initializeTheme();
@@ -153,6 +157,8 @@ export const useHosts = () => {
     lastInputRef,
     isDirty,
     filter,
+    settings,
+    setSettings,
     onSearchChange,
     handleSubmit,
     toggle,

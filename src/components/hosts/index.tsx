@@ -38,7 +38,7 @@ export const HostsList: React.FC<HostsListProps> = ({
 
   return (
     <CustomLoadingBlocker {...{ isLoading }}>
-      <div className="flex flex-col p-10 overflow-y-scroll h-[93vh] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm">
+      <div className="flex flex-col p-10 overflow-y-scroll h-[93vh] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm">
         {isEditMode ? (
           <HighlightWithinTextareaComponent
             {...{
