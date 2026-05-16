@@ -26,18 +26,35 @@ export const Header = ({
   loadHosts,
 }: Props) => {
   return (
-    <nav className="flex items-center border-b border-stroke sm:px-6 xl:px-7.5 p-3 justify-between">
+    <nav
+      className="
+        flex items-center justify-between
+        p-3 sm:px-6 xl:px-7.5
+        border-b border-zinc-200 dark:border-zinc-800
+        bg-white dark:bg-zinc-950
+        text-zinc-900 dark:text-zinc-100
+      "
+    >
       <div className="flex items-center flex-shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <img
             src="./header_logo.jpg"
             alt="NurByte"
-            height={45}
-            width={45}
-            className="m-0 p-0"
+            height={42}
+            width={42}
+            className="rounded-lg shadow-sm"
           />
-          <span className="font-medium text-dark opacity-60 dark:border-dark-3">
-            Hosts editor <b>{processVersion(version)}</b>
+          <span
+            className="
+              text-sm font-medium
+              text-zinc-700 dark:text-zinc-200
+              tracking-wide
+            "
+          >
+            Hosts editor
+            <b className="text-zinc-900 dark:text-white">
+              {processVersion(version)}
+            </b>
           </span>
         </div>
       </div>
