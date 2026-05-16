@@ -8,6 +8,7 @@ import type { HostLine } from "@utils/isHostLine";
 
 import { toast } from "react-toastify";
 import { useLoadingStates } from "@utils/loadersManager";
+import { applyTheme } from "@utils/applyTheme";
 
 export const useHosts = () => {
   const {
@@ -97,7 +98,7 @@ export const useHosts = () => {
   const onBack = () => setIsEditMode(false);
 
   useEffect(() => {
-    loadHosts();
+    void loadHosts();
   }, []);
 
   useEffect(() => {
@@ -108,8 +109,9 @@ export const useHosts = () => {
   }, [fields, focusId]);
 
   useEffect(() => {
-    const saveHandler = () => handleSubmit(handleSave)();
-    window.electronAPI?.onTriggerSave(saveHandler);
+    const saveHandler = () => {
+      void handleSubmit(handleSave)();
+    };
 
     const toastHandler = (payload: {
       type: "success" | "error" | "info";
@@ -117,16 +119,30 @@ export const useHosts = () => {
     }) => {
       toast[payload.type](payload.message);
     };
-    window.electronAPI?.onToast(toastHandler);
 
-    const settingsHandler = () => open("settings");
-    window.electronAPI.toggleSettingsModal(settingsHandler);
+    const settingsHandler = () => {
+      open("settings");
+    };
+
+    window.electronAPI?.onTriggerSave(saveHandler);
+    window.electronAPI?.onToast(toastHandler);
+    window.electronAPI?.toggleSettingsModal(settingsHandler);
 
     return () => {
       window.electronAPI?.removeTriggerSaveListener(saveHandler);
       window.electronAPI?.removeToastListener(toastHandler);
       window.electronAPI?.removeToggleSettingsModalListener(settingsHandler);
     };
+  }, [handleSubmit, open]);
+
+  useEffect(() => {
+    const initializeTheme = async () => {
+      const settings = await window.electronAPI.readSettings();
+
+      applyTheme(settings.appearance.mode);
+    };
+
+    void initializeTheme();
   }, []);
 
   return {

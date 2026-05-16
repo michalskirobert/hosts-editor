@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { Settings } from "./settings.types";
+import { Settings } from "./types/settings";
 
 contextBridge.exposeInMainWorld("electronAPI", {
   readHosts: () => ipcRenderer.invoke("read-hosts"),

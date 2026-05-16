@@ -1,4 +1,4 @@
-import { Settings } from "../settings.types";
+import { Settings } from "../types/settings";
 
 export const defaultSettings: Settings = {
   appearance: {

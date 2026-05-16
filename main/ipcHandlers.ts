@@ -2,7 +2,7 @@ import { ipcMain, app } from "electron";
 import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
-import { Settings } from "./settings.types";
+import { Settings } from "./types/settings";
 import { defaultSettings } from "./utils/settings";
 
 const userSettingsPath = path.join(app.getPath("userData"), "settings.json");

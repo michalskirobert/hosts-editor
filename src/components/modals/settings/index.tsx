@@ -4,11 +4,12 @@ import { CustomButton } from "@shared/button";
 import { Check, Xmark } from "iconoir-react";
 import { useForm } from "react-hook-form";
 import { defaultSettings } from "./utils";
-import type { Settings } from "@electron/settings.types";
+import type { Settings } from "@electron/types/settings";
 import { toast } from "react-toastify";
 import { useCallback, useEffect } from "react";
 import { CustomSelect } from "@shared/form/Select";
 import { CustomCheckbox } from "@shared/form/Checkbox";
+import { applyTheme } from "@utils/applyTheme";
 
 interface Props {
   open: boolean;
@@ -26,12 +27,14 @@ export const SettingsModal = ({ open, handleOpen }: Props) => {
     if (!res) return;
 
     toast.success("Your settings has been saved");
+    applyTheme(data.appearance.mode);
     handleOpen();
   }, []);
 
   useEffect(() => {
     const load = async () => {
       const data = await window.electronAPI.readSettings();
+      console.log(data);
       reset(data);
     };
 
@@ -82,8 +85,8 @@ export const SettingsModal = ({ open, handleOpen }: Props) => {
                     label: "View mode",
                     options: [
                       { label: "Auto", value: "auto" },
-                      { label: "Dark mode", value: "dark_mode" },
-                      { label: "Light mode", value: "light_mode" },
+                      { label: "Dark mode", value: "dark" },
+                      { label: "Light mode", value: "light" },
                     ],
                   }}
                 />

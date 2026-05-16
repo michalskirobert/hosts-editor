@@ -1,4 +1,4 @@
-import type { Settings } from "@electron/settings.types";
+import type { Settings } from "@electron/types/settings";
 
 export const defaultSettings: Settings = {
   appearance: {

@@ -1,5 +1,5 @@
 import type { UpdateEventArgs } from "@components/modals/update/types";
-import type { Settings } from "@electron/settings.types";
+import type { Settings } from "@electron/types/settings";
 
 export {};
 

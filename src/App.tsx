@@ -27,7 +27,7 @@ export const App: React.FC = () => {
   } = useHosts();
 
   return (
-    <section className="max-w-screen">
+    <section className="max-w-screen dark:bg-red-600">
       <form onSubmit={handleSubmit(handleSave)}>
         <Header
           {...{
