@@ -95,10 +95,12 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle("toggle-fullscreen", (_event, value: boolean) => {
-    const win = BrowserWindow.getAllWindows()[0];
+    const win = BrowserWindow.getFocusedWindow();
 
-    if (!win) return;
+    if (!win) return false;
 
     win.setFullScreen(value);
+
+    return true;
   });
 }
