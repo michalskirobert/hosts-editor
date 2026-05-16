@@ -3,10 +3,7 @@ import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
 import { Settings } from "./settings.types";
-
-const defaultSettingsPath = app.isPackaged
-  ? path.join(app.getAppPath(), "dist/web/settings.json")
-  : path.join(__dirname, "../public/settings.json");
+import { defaultSettings } from "./utils/settings";
 
 const userSettingsPath = path.join(app.getPath("userData"), "settings.json");
 
@@ -44,11 +41,13 @@ export function registerIpcHandlers() {
   ipcMain.handle("read-settings", async () => {
     try {
       if (!fs.existsSync(userSettingsPath)) {
-        const defaults = fs.readFileSync(defaultSettingsPath, "utf-8");
+        fs.writeFileSync(
+          userSettingsPath,
+          JSON.stringify(defaultSettings),
+          "utf-8",
+        );
 
-        fs.writeFileSync(userSettingsPath, defaults, "utf-8");
-
-        return JSON.parse(defaults);
+        return defaultSettings;
       }
 
       const res = fs.readFileSync(userSettingsPath, "utf-8");

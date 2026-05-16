@@ -2,7 +2,7 @@ import { BrowserWindow, app, globalShortcut } from "electron";
 import path from "path";
 import os from "os";
 import fs from "fs";
-import { Settings } from "./settings.types";
+import { defaultSettings } from "./utils/settings";
 
 export let mainWindow: BrowserWindow | null = null;
 
@@ -27,9 +27,7 @@ export function createMainWindow(): BrowserWindow {
     app.commandLine.appendSwitch("no-sandbox");
   }
 
-  let settings: Settings = {
-    appearance: { fullscreen: false, mode: "auto" },
-  };
+  let settings = defaultSettings;
 
   const settingsPath = path.join(app.getPath("userData"), "settings.json");
 
