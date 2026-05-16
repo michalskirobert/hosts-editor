@@ -1,6 +1,8 @@
 import { BrowserWindow, app, globalShortcut } from "electron";
 import path from "path";
 import os from "os";
+import fs from "fs";
+import { Settings } from "./settings.types";
 
 export let mainWindow: BrowserWindow | null = null;
 
@@ -25,10 +27,23 @@ export function createMainWindow(): BrowserWindow {
     app.commandLine.appendSwitch("no-sandbox");
   }
 
+  let settings: Settings = {
+    appearance: { fullscreen: false, mode: "auto" },
+  };
+
+  const settingsPath = path.join(app.getPath("userData"), "settings.json");
+
+  if (fs.existsSync(settingsPath)) {
+    const res = fs.readFileSync(settingsPath, "utf-8");
+
+    settings = JSON.parse(res);
+  }
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     show: false,
+    fullscreen: settings.appearance.fullscreen,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
