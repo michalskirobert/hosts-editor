@@ -55,10 +55,10 @@ export const Header = ({
             className="
               text-sm font-medium
               text-zinc-700 dark:text-zinc-200
-              tracking-wide
+              tracking-wide flex gap-1
             "
           >
-            Hosts editor
+            <span>Hosts editor</span>
             <b className="text-zinc-900 dark:text-white">
               {processVersion(version)}
             </b>
