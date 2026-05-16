@@ -15,7 +15,7 @@ export const CustomInput = <T extends FieldValues>({
       {label && (
         <label
           htmlFor={name}
-          className="block text-sm font-medium text-slate-700 transition-colors duration-200 ml-1"
+          className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 transition-colors duration-200 ml-1"
         >
           {label}
         </label>
@@ -23,17 +23,17 @@ export const CustomInput = <T extends FieldValues>({
       <div
         className={`
           rounded-xl border
-          bg-white/70 backdrop-blur-md
+          bg-white dark:bg-zinc-900/60
           shadow-sm
           transition-all duration-200
-          border-slate-200/60
+          border-zinc-200 dark:border-zinc-800
+          hover:border-zinc-300 dark:hover:border-zinc-700
+          hover:bg-white/80 dark:hover:bg-zinc-900/80
           ${
             fieldState.invalid
-              ? "!border-red-400 focus-within:border-red-400 focus-within:shadow-[0_0_0_2px_rgba(239,68,68,0.14)]"
-              : "focus-within:border-blue-400 focus-within:shadow-[0_0_0_2px_rgba(59,130,246,0.10)]"
+              ? "!border-red-500 dark:!border-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_0_2px_rgba(239,68,68,0.18)]"
+              : "focus-within:border-blue-500 focus-within:shadow-[0_0_0_2px_rgba(59,130,246,0.15)]"
           }
-          hover:border-slate-300
-          hover:bg-white/80
         `}
       >
         <input
@@ -42,10 +42,10 @@ export const CustomInput = <T extends FieldValues>({
           id={name}
           className={`
             w-full rounded-xl bg-transparent px-4 py-3
-            text-sm text-slate-900 outline-none
-            placeholder:text-slate-400
+            text-sm text-zinc-900 dark:text-zinc-100 outline-none
+            placeholder:text-zinc-400 dark:placeholder:text-zinc-500
             transition-colors duration-200
-            disabled:cursor-not-allowed disabled:bg-slate-100/50 disabled:text-slate-400
+            disabled:cursor-not-allowed disabled:bg-zinc-100/50 disabled:text-zinc-400
             ${restProps?.className || ""}
           `}
           type={restProps.type ? restProps.type : "text"}

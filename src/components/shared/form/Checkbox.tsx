@@ -14,8 +14,6 @@ export const CustomCheckbox = <T extends FieldValues>({
 }: CustomCheckboxProps<T>) => {
   const { field, fieldState } = useController({ name, control });
 
-  console.log(field);
-
   return (
     <div className="space-y-2">
       <label
@@ -23,11 +21,11 @@ export const CustomCheckbox = <T extends FieldValues>({
         className={clsx(
           `
             group inline-flex cursor-pointer items-center gap-3
-            rounded-xl bg-white px-1 py-1
+            rounded-xl bg-white dark:bg-zinc-900 px-1 py-1
             transition-all duration-200
-            hover:bg-slate-50
+            hover:bg-zinc-50 dark:hover:bg-zinc-800/60
           `,
-          fieldState.invalid && "text-red-500",
+          fieldState.invalid && "text-red-500 dark:text-red-400",
           disabled && "cursor-not-allowed opacity-50",
           className,
         )}
@@ -46,20 +44,20 @@ export const CustomCheckbox = <T extends FieldValues>({
           className={clsx(
             `
               relative flex h-6 w-6 items-center justify-center
-              rounded-lg border border-slate-300
-              bg-white
+              rounded-lg border border-zinc-300 dark:border-zinc-700
+              bg-white dark:bg-zinc-900
               transition-all duration-200
-              group-hover:border-slate-400
-              peer-checked:border-blue-500
-              peer-checked:bg-blue-500
+              group-hover:border-zinc-400 dark:group-hover:border-zinc-600
+              peer-checked:border-zinc-700 dark:peer-checked:border-zinc-300
+              peer-checked:bg-zinc-900 dark:peer-checked:bg-zinc-100
               peer-checked:text-white
               peer-checked:shadow-sm
             `,
             fieldState.invalid &&
-              "peer-checked:border-red-400 peer-checked:bg-red-500/90",
+              "peer-checked:border-red-400 dark:peer-checked:border-red-400 peer-checked:bg-red-500/90 dark:peer-checked:bg-red-500/90",
           )}
         >
-          <span className="flex items-center justify-center text-white transition-all duration-200">
+          <span className="flex items-center justify-center text-zinc-100 dark:text-zinc-900 transition-all duration-200">
             {icon ? (
               <span className="flex h-4 w-4 items-center justify-center [&>svg]:h-4 [&>svg]:w-4">
                 {icon}
@@ -82,7 +80,9 @@ export const CustomCheckbox = <T extends FieldValues>({
         </div>
 
         {label && (
-          <span className="text-sm font-medium text-slate-700">{label}</span>
+          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            {label}
+          </span>
         )}
       </label>
 

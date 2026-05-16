@@ -49,7 +49,7 @@ export const CustomSelect = <T extends FieldValues>({
         return (
           <div className="w-full space-y-2">
             {label && (
-              <label className="ml-1 block text-sm font-medium text-slate-700 transition-colors duration-200">
+              <label className="ml-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300 transition-colors duration-200">
                 {label}
               </label>
             )}
@@ -64,20 +64,20 @@ export const CustomSelect = <T extends FieldValues>({
                   className={clsx(
                     `
                       relative w-full rounded-xl border
-                      bg-white/70 backdrop-blur-md
+                      bg-white dark:bg-zinc-900/60
                       px-4 py-3 pr-11
-                      text-left text-sm text-slate-900
+                      text-left text-sm text-zinc-900 dark:text-zinc-100
                       shadow-sm
                       transition-all duration-200
                       outline-none
-                      hover:border-slate-300
-                      hover:bg-white/80
+                      hover:border-zinc-300 dark:hover:border-zinc-700
+                      hover:bg-white/80 dark:hover:bg-zinc-900/80
                       disabled:cursor-not-allowed
                       disabled:opacity-50
                     `,
                     fieldState.invalid
-                      ? "!border-red-400 focus:border-red-400 focus:shadow-[0_0_0_2px_rgba(239,68,68,0.14)]"
-                      : "border-slate-200/60 focus:border-blue-400 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.10)]",
+                      ? "!border-red-500 dark:!border-red-500 focus:border-red-500 focus:shadow-[0_0_0_2px_rgba(239,68,68,0.18)]"
+                      : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.15)]",
                     className,
                   )}
                 >
@@ -90,7 +90,7 @@ export const CustomSelect = <T extends FieldValues>({
                     {selectedOption?.label || placeholder}
                   </span>
 
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-zinc-400 dark:text-zinc-500">
                     <NavArrowDown className="h-4 w-4" />
                   </span>
                 </ListboxButton>
@@ -100,9 +100,9 @@ export const CustomSelect = <T extends FieldValues>({
                   transition
                   className="
                     z-50 mt-2 max-h-64 w-[var(--button-width)] overflow-auto
-                    rounded-2xl border border-slate-200/70
-                    bg-white/85 p-1 backdrop-blur-xl
-                    shadow-[0_12px_40px_rgba(15,23,42,0.12)]
+                    rounded-2xl border border-zinc-200 dark:border-zinc-800
+                    bg-white/95 dark:bg-zinc-900/95 p-1
+                    shadow-[0_12px_40px_rgba(0,0,0,0.25)]
                     transition duration-150 ease-out
                     data-[closed]:scale-95
                     data-[closed]:opacity-0
@@ -123,11 +123,13 @@ export const CustomSelect = <T extends FieldValues>({
                               `
                                 flex cursor-pointer items-center justify-between
                                 rounded-xl px-3 py-2.5
-                                text-sm text-slate-700
+                                text-sm text-zinc-700 dark:text-zinc-200
                                 transition-all duration-150
                               `,
-                              focus && "bg-blue-500/10 text-slate-900",
-                              isSelected && "font-medium text-blue-600",
+                              focus &&
+                                "bg-blue-500/10 text-zinc-900 dark:text-zinc-100",
+                              isSelected &&
+                                "font-medium text-blue-500 dark:text-blue-400",
                             )}
                           >
                             <span className="truncate">{option.label}</span>
