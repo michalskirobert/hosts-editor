@@ -14,9 +14,9 @@
     "dev:vite": "vite",
     "dev:electron": "wait-on http://localhost:5173 && ELECTRON_START_URL=http://localhost:5173 npx electron electron-dist/main.js",
     "build:main": "tsc -p tsconfig.electron.json --skipLibCheck",
-    "build": "vite build && yarn build:main --skipLibCheck",
+    "build": " VITE_ENV=PRODUCTION vite build && yarn build:main --skipLibCheck",
     "start": "concurrently \"vite preview\" \"electron electron-dist/main.js\"",
-    "dist": "CI=true VITE_ENV=PRODUCTION node -r dotenv/config ./node_modules/.bin/electron-builder --publish always"
+    "dist": "CI=true node -r dotenv/config ./node_modules/.bin/electron-builder --publish always"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
