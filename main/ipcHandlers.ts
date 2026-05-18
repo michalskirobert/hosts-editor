@@ -40,14 +40,15 @@ export function registerIpcHandlers() {
 
   ipcMain.handle("read-settings", async () => {
     try {
-      const systemAppearanceMode: SettingsAppearanceMode =
-        nativeTheme.shouldUseDarkColors ? "dark" : "light";
+      const preferred: SettingsAppearanceMode = nativeTheme.shouldUseDarkColors
+        ? "dark"
+        : "light";
 
       const processedDefaultSettings: Settings = {
         ...defaultSettings,
         appearance: {
           ...defaultSettings.appearance,
-          mode: systemAppearanceMode,
+          preferred,
         },
       };
 
@@ -70,9 +71,21 @@ export function registerIpcHandlers() {
 
   ipcMain.handle("update-settings", async (_event, data: Settings) => {
     try {
+      const preferred: SettingsAppearanceMode = nativeTheme.shouldUseDarkColors
+        ? "dark"
+        : "light";
+
+      const bodyRequest: Settings = {
+        ...data,
+        appearance: {
+          ...data.appearance,
+          preferred,
+        },
+      };
+
       fs.writeFileSync(
         userSettingsPath,
-        JSON.stringify(data, null, 2),
+        JSON.stringify(bodyRequest, null, 2),
         "utf-8",
       );
 

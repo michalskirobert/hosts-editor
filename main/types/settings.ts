@@ -3,6 +3,7 @@ export type SettingsAppearanceFontSize = "small" | "medium" | "large";
 
 export type SettingsAppearanceArgs = {
   mode: SettingsAppearanceMode;
+  preferred: Exclude<SettingsAppearanceMode, "auto">;
   fullscreen: boolean;
 };
 

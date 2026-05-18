@@ -4,5 +4,6 @@ export const defaultSettings: Settings = {
   appearance: {
     mode: "auto",
     fullscreen: false,
+    preferred: "light",
   },
 };

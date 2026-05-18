@@ -4,6 +4,7 @@ import { HeaderButtons } from "@components/layout/HeaderButtons";
 import type { LoadersArgs } from "@typings/hosts";
 import { processVersion } from "@utils/processVersion";
 import type { Settings } from "@electron/types/settings";
+import { getLogoPath } from "./utils";
 
 interface Props {
   isEditMode: boolean;
@@ -41,11 +42,7 @@ export const Header = ({
       <div className="flex items-center flex-shrink-0">
         <div className="flex items-center gap-3">
           <img
-            src={
-              settings.appearance.mode === "dark"
-                ? "./header_logo_dark.jpg"
-                : "./header_logo.jpg"
-            }
+            src={getLogoPath(settings.appearance)}
             alt="NurByte"
             height={42}
             width={42}
