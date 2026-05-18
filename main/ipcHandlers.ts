@@ -1,8 +1,8 @@
-import { ipcMain, app, BrowserWindow } from "electron";
+import { ipcMain, app, BrowserWindow, nativeTheme } from "electron";
 import fs from "fs";
 import path from "path";
 import sudo from "sudo-prompt";
-import { Settings } from "./types/settings";
+import { Settings, SettingsAppearanceMode } from "./types/settings";
 import { defaultSettings } from "./utils/settings";
 
 const userSettingsPath = path.join(app.getPath("userData"), "settings.json");
@@ -40,14 +40,25 @@ export function registerIpcHandlers() {
 
   ipcMain.handle("read-settings", async () => {
     try {
+      const systemAppearanceMode: SettingsAppearanceMode =
+        nativeTheme.shouldUseDarkColors ? "dark" : "light";
+
+      const processedDefaultSettings: Settings = {
+        ...defaultSettings,
+        appearance: {
+          ...defaultSettings.appearance,
+          mode: systemAppearanceMode,
+        },
+      };
+
       if (!fs.existsSync(userSettingsPath)) {
         fs.writeFileSync(
           userSettingsPath,
-          JSON.stringify(defaultSettings),
+          JSON.stringify(processedDefaultSettings),
           "utf-8",
         );
 
-        return defaultSettings;
+        return processedDefaultSettings;
       }
 
       const res = fs.readFileSync(userSettingsPath, "utf-8");
