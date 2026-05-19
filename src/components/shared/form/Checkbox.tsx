@@ -36,7 +36,7 @@ export const CustomCheckbox = <T extends FieldValues>({
           checked={!!field.value}
           disabled={disabled}
           onChange={(e) => field.onChange(e.currentTarget.checked)}
-          className="peer sr-only"
+          className="peer absolute h-0 w-0 opacity-0 pointer-events-none"
           {...restProps}
         />
 
