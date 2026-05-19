@@ -19,8 +19,6 @@ export function registerIpcHandlers() {
         )
       : "/etc/hosts";
 
-  let sessionPassword: string | null = null;
-
   ipcMain.handle("read-hosts", async () => {
     try {
       const content = fs.readFileSync(hostsPath, "utf-8");
@@ -106,7 +104,6 @@ export function registerIpcHandlers() {
 
       if (process.platform === "darwin" || process.platform === "linux") {
         cmd = `echo "${content}" | sudo -S tee /etc/hosts`;
-        if (sessionPassword) options.password = sessionPassword;
       } else {
         cmd = `echo "${content}" > C:\\Windows\\System32\\drivers\\etc\\hosts`;
       }
