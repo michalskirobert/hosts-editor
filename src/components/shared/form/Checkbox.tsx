@@ -20,7 +20,7 @@ export const CustomCheckbox = <T extends FieldValues>({
         htmlFor={name}
         className={clsx(
           `
-            group inline-flex cursor-pointer items-center gap-3
+            group inline-flex cursor-pointer items-center gap-3 relative
             rounded-xl bg-white dark:bg-zinc-900 px-1 py-1
             transition-all duration-200
             hover:bg-zinc-50 dark:hover:bg-zinc-800/60
