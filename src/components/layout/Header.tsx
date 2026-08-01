@@ -44,8 +44,8 @@ export const Header = ({
           <img
             src={getLogoPath(settings.appearance)}
             alt="NurByte"
-            height={42}
-            width={42}
+            height={60}
+            width={60}
             className="rounded-lg shadow-sm"
           />
           <span

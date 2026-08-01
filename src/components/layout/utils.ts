@@ -1,8 +1,8 @@
 import type { SettingsAppearanceArgs } from "@electron/types/settings";
 
 export const getLogoPath = ({ mode, preferred }: SettingsAppearanceArgs) => {
-  const lightLogo = "./header_logo.jpg";
-  const darkLogo = "./header_logo_dark.jpg";
+  const lightLogo = "./header_logo.png";
+  const darkLogo = "./header_logo.png";
 
   const resolvedMode = mode === "auto" ? preferred : mode;
 
