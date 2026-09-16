@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { TabList } from "../../features/tabs/TabList";
 import type { Page } from "../../types/navigation";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
+import hostsEditorLogo from "@renderer/assets/hosts_editor.png";
 
 interface SideButtonProps {
   readonly active: boolean;
@@ -37,7 +38,7 @@ export const Sidebar = () => {
     <aside className="relative w-69 shrink-0 border-r border-slate-200 bg-white px-3 pb-4 pt-6 dark:border-white/8 dark:bg-[#0d131d]">
       <div className="mb-7 flex items-center gap-3 px-3">
         <img
-          src={"/hosts_editor.png"}
+          src={hostsEditorLogo}
           alt="Hosts Editor"
           className="h-11 w-11 rounded-xl object-contain"
         />
