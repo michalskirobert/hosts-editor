@@ -1,7 +1,7 @@
 import { ipcMain, app, BrowserWindow, nativeTheme } from "electron";
 import fs from "fs";
 import path from "path";
-import sudo from "sudo-prompt";
+import { execFile } from "child_process";
 import { Settings, SettingsAppearanceMode } from "./types/settings";
 import { defaultSettings } from "./utils/settings";
 
@@ -61,6 +61,7 @@ export function registerIpcHandlers() {
       }
 
       const res = fs.readFileSync(userSettingsPath, "utf-8");
+
       return JSON.parse(res);
     } catch (err) {
       return { error: String(err) };
@@ -94,22 +95,43 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle("write-hosts", async (_event, lines: string[]) => {
+    const content = lines.join("\n");
+
+    if (process.platform === "darwin") {
+      return new Promise((resolve, reject) => {
+        const encodedContent = Buffer.from(content, "utf-8").toString("base64");
+
+        const shellCommand = `printf '%s' '${encodedContent}' | /usr/bin/base64 -D > /etc/hosts`;
+
+        const escapedCommand = shellCommand
+          .replace(/\\/g, "\\\\")
+          .replace(/"/g, '\\"');
+
+        const script = `do shell script "${escapedCommand}" with administrator privileges`;
+
+        execFile("/usr/bin/osascript", ["-e", script], (err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          resolve(true);
+        });
+      });
+    }
+
     return new Promise((resolve, reject) => {
-      const content = lines.join("\n");
+      const command =
+        process.platform === "win32"
+          ? `echo "${content}" > C:\\Windows\\System32\\drivers\\etc\\hosts`
+          : `printf '%s' "${content}" | sudo tee /etc/hosts > /dev/null`;
 
-      let cmd = "";
-      let options: { name: string; password?: string } = {
-        name: "Hosts Editor",
-      };
+      execFile("/bin/sh", ["-c", command], (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
 
-      if (process.platform === "darwin" || process.platform === "linux") {
-        cmd = `echo "${content}" | sudo -S tee /etc/hosts`;
-      } else {
-        cmd = `echo "${content}" > C:\\Windows\\System32\\drivers\\etc\\hosts`;
-      }
-
-      sudo.exec(cmd, options, (err) => {
-        if (err) return reject(err);
         resolve(true);
       });
     });

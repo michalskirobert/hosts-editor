@@ -1,6 +1,6 @@
 {
   "name": "hosts-editor",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "main": "electron-dist/main.js",
   "description": "Hosts Editor Desktop App built with Vite and Electron",
@@ -34,7 +34,6 @@
     "react-highlight-within-textarea": "^3.2.2",
     "react-hook-form": "^7.63.0",
     "react-toastify": "^11.0.5",
-    "sudo-prompt": "^9.2.1",
     "vite-tsconfig-paths": "^5.1.4",
     "yup": "^1.7.1"
   },
