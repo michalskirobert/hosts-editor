@@ -20,7 +20,7 @@ export const registerIpc = (
   ipcMain.handle(IPC.tabCreate, (_event, name: string, text: string) =>
     storage.createTab(name, text),
   );
-  ipcMain.handle(IPC.tabSave, (_event, tab: HostTab) => storage.saveTab(tab));
+  ipcMain.handle(IPC.tabSave, (_event, tab: HostTab) => storage.saveTab(tab, false));
   ipcMain.handle(IPC.tabDelete, (_event, id: string, deleteBackups: boolean) =>
     storage.deleteTab(id, deleteBackups),
   );

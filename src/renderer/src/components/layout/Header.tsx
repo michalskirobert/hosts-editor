@@ -17,8 +17,8 @@ export const Header = () => {
     state.page === "editor"
       ? tab
         ? dirty
-          ? "Unsaved changes"
-          : "Saved"
+          ? "System hosts out of date"
+          : "System hosts up to date"
         : "Create a tab or import your system hosts to begin"
       : state.page === "backups"
         ? "Automatic and manual snapshots for every tab"

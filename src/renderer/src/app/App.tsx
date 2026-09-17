@@ -15,7 +15,7 @@ const AppContent = () => {
       <Sidebar />
       <main className="min-w-0 flex-1">
         <Header />
-        <div className="scroll h-[calc(100vh-76px)] overflow-auto p-7">
+        <div className="scroll h-[calc(100vh-76px)] overflow-auto px-5">
           {state.page === "editor" && <EditorPage />}
           {state.page === "backups" && <BackupsPage />}
           {state.page === "settings" && <SettingsPage />}

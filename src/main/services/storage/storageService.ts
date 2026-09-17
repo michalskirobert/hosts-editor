@@ -72,9 +72,9 @@ export class StorageService {
     return tab;
   }
 
-  async saveTab(tab: HostTab): Promise<HostTab> {
+  async saveTab(tab: HostTab, createAutoBackup = true): Promise<HostTab> {
     const existing = await this.tryReadTab(tab.id);
-    if (existing) await this.createBackup(existing, "auto-save");
+    if (existing && createAutoBackup) await this.createBackup(existing, "auto-save");
     const next: HostTab = {
       ...tab,
       name: this.normalizeName(tab.name),

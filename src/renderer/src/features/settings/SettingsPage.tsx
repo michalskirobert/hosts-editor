@@ -6,7 +6,7 @@ export const SettingsPage = () => {
   const { state, patchState, saveSettings } = useHostsEditorContext();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
+    <div className="mx-auto max-w-3xl space-y-5 py-5">
       <Panel title="Appearance">
         <div className="grid grid-cols-3 gap-3">
           {(["system", "light", "dark"] as const).map((theme) => (

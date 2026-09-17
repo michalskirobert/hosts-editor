@@ -5,7 +5,7 @@ export const BackupsPage = () => {
   const { state, patchState, createManualBackup } = useHostsEditorContext();
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-5xl py-5">
       <div className="mb-4 flex justify-end gap-2">
         <button
           onClick={() => {

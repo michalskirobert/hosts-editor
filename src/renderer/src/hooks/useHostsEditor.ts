@@ -47,6 +47,22 @@ export const useHostsEditor = () => {
     }
   }, [patchState, tab]);
 
+  useEffect(() => {
+    if (state.tabs.length === 0) return;
+    const timeout = window.setTimeout(() => {
+      void Promise.all(state.tabs.map((item) => window.hostsEditor.saveTab(item))).catch(
+        (error: unknown) => {
+          patchState({
+            message: `JSON auto-save failed: ${error instanceof Error ? error.message : String(error)}`,
+          });
+        },
+      );
+    }, 350);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [patchState, state.tabs]);
+
   const setLines = (lines: readonly HostLine[]): void => {
     if (tab) patchTab({ ...tab, lines });
   };
@@ -69,11 +85,17 @@ export const useHostsEditor = () => {
     if (!current) return;
     patchState({ busy: true, message: "" });
     try {
+      await Promise.all(
+        state.tabs
+          .filter((item) => item.id !== current.id)
+          .map((item) => window.hostsEditor.saveTab(item)),
+      );
       const result = await window.hostsEditor.saveTabAndApply(current);
       patchTab(result);
+      const appliedTabs = state.tabs.map((item) => (item.id === result.id ? result : item));
       patchState({
         raw: serializeLines(result.lines),
-        saved: { ...state.saved, [result.id]: tabFingerprint(result) },
+        saved: Object.fromEntries(appliedTabs.map((item) => [item.id, tabFingerprint(item)])),
         message: `Saved “${result.name}” and updated system hosts`,
       });
     } catch (error: unknown) {
@@ -182,7 +204,6 @@ export const useHostsEditor = () => {
       : [...state.tabs, restored];
     patchState({
       tabs,
-      saved: { ...state.saved, [restored.id]: tabFingerprint(restored) },
       selected: restored.id,
       raw: serializeLines(restored.lines),
       dialog: { kind: "none" },

@@ -55,3 +55,8 @@ textarea {
     @apply inline-flex items-center justify-center rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-white/10;
   }
 }
+
+a,
+button {
+  cursor: pointer;
+}

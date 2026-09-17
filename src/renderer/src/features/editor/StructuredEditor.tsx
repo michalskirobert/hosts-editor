@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import type { HostLine } from "../../../../shared/types";
 
@@ -27,6 +27,7 @@ export const StructuredEditor = ({ lines, query, onChange }: StructuredEditorPro
         line.kind === "host" ? (
           <div
             key={line.id}
+            data-host-id={line.id}
             className="grid grid-cols-[54px_160px_1fr_1fr_44px] items-center gap-3 border-b border-slate-100 px-4 py-2 dark:border-white/6"
           >
             <button
@@ -48,6 +49,7 @@ export const StructuredEditor = ({ lines, query, onChange }: StructuredEditorPro
               }}
             />
             <input
+              data-hostname-input
               className="mono rounded-lg bg-transparent px-2 py-2 text-sm hover:bg-slate-50 dark:hover:bg-white/5"
               value={line.hostname}
               onChange={(event) => {
@@ -81,27 +83,6 @@ export const StructuredEditor = ({ lines, query, onChange }: StructuredEditorPro
           </div>
         ),
       )}
-      <button
-        type="button"
-        onClick={() => {
-          onChange([
-            ...lines,
-            {
-              id: crypto.randomUUID(),
-              kind: "host",
-              enabled: true,
-              address: "127.0.0.1",
-              hostname: "",
-              comment: "",
-              raw: "",
-            },
-          ]);
-        }}
-        className="m-4 flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm dark:border-white/10"
-      >
-        <Plus size={16} />
-        Add host
-      </button>
     </div>
   );
 };
