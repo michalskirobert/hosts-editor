@@ -21,8 +21,8 @@ export const Header = () => {
           : "System hosts up to date"
         : "Create a tab or import your system hosts to begin"
       : state.page === "backups"
-        ? "Automatic and manual snapshots for every tab"
-        : "Appearance, fullscreen and updates";
+        ? "Manual snapshots and restore points"
+        : "Appearance, backups, updates and support";
 
   return (
     <header className="flex h-19 items-center justify-between border-b border-slate-200 bg-white/70 px-7 dark:border-white/8 dark:bg-[#090d14]/80">

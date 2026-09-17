@@ -4,4 +4,5 @@ export interface AppSettings {
   readonly theme: ThemeMode;
   readonly fullscreen: boolean;
   readonly checkForUpdates: boolean;
+  readonly autoBackupOnSave: boolean;
 }

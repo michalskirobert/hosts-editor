@@ -1,4 +1,4 @@
-import { ArchiveRestore, FileCode2, Settings } from "lucide-react";
+import { ArchiveRestore, CircleAlert, FileCode2, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { TabList } from "../../features/tabs/TabList";
@@ -29,6 +29,7 @@ const SideButton = ({ active, label, icon, onClick }: SideButtonProps) => (
 
 export const Sidebar = () => {
   const { state, patchState, loadBackups } = useHostsEditorContext();
+  const updateAvailable = state.update.status === "available";
 
   const openPage = (page: Page): void => {
     patchState({ page });
@@ -66,14 +67,24 @@ export const Sidebar = () => {
       <SideButton
         active={state.page === "settings"}
         label="Settings"
-        icon={<Settings size={17} />}
+        icon={
+          <span className="relative">
+            <Settings size={17} />
+            {updateAvailable && (
+              <CircleAlert
+                size={11}
+                className="absolute -right-2 -top-2 fill-amber-500 text-amber-500"
+              />
+            )}
+          </span>
+        }
         onClick={() => {
           openPage("settings");
         }}
       />
       <TabList />
       <div className="absolute bottom-4 left-3 right-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs dark:border-white/8 dark:bg-white/4">
-        <div className="mb-1 font-medium text-emerald-600">● Safe write + recovery backup</div>
+        <div className="mb-1 font-medium text-emerald-600">● Safe write · manual backups</div>
         <div className="truncate text-slate-400">{state.hostsPath}</div>
       </div>
     </aside>

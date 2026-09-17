@@ -2,6 +2,7 @@ import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
 import { Header } from "../components/layout/Header";
 import { Sidebar } from "../components/layout/Sidebar";
 import { AppDialog } from "../components/ui/AppDialog";
+import { Toast } from "../components/ui/Toast";
 import { HostsEditorProvider } from "../context/HostsEditorContext";
 import { BackupsPage } from "../features/backups/BackupsPage";
 import { EditorPage } from "../features/editor/EditorPage";
@@ -22,6 +23,7 @@ const AppContent = () => {
         </div>
       </main>
       <AppDialog />
+      <Toast />
     </div>
   );
 };

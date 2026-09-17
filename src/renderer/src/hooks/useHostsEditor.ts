@@ -35,7 +35,13 @@ export const useHostsEditor = () => {
       applyTheme(payload.settings.theme);
       if (payload.settings.checkForUpdates) {
         void window.hostsEditor.checkUpdate().then((update) => {
-          patchState({ update });
+          patchState({
+            update,
+            message:
+              update.status === "available"
+                ? `Update ${update.version ?? "available"} found. Open Settings to download it.`
+                : "",
+          });
         });
       }
     });

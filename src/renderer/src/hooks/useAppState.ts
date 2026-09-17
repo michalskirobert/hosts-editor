@@ -44,7 +44,12 @@ const initialState: AppState = {
   raw: "",
   query: "",
   page: "editor",
-  settings: { theme: "system", fullscreen: false, checkForUpdates: true },
+  settings: {
+    theme: "system",
+    fullscreen: false,
+    checkForUpdates: true,
+    autoBackupOnSave: false,
+  },
   backups: [],
   hostsPath: "",
   version: "",

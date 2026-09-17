@@ -12,7 +12,12 @@ import type {
   HostTab,
 } from "../../../shared/types";
 
-const defaults: AppSettings = { theme: "system", fullscreen: false, checkForUpdates: true };
+const defaults: AppSettings = {
+  theme: "system",
+  fullscreen: false,
+  checkForUpdates: true,
+  autoBackupOnSave: false,
+};
 
 interface StoredBackup {
   readonly reason: BackupReason;
@@ -72,7 +77,7 @@ export class StorageService {
     return tab;
   }
 
-  async saveTab(tab: HostTab, createAutoBackup = true): Promise<HostTab> {
+  async saveTab(tab: HostTab, createAutoBackup = false): Promise<HostTab> {
     const existing = await this.tryReadTab(tab.id);
     if (existing && createAutoBackup) await this.createBackup(existing, "auto-save");
     const next: HostTab = {

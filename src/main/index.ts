@@ -23,6 +23,7 @@ const bootstrap = async (): Promise<void> => {
         theme: "system",
         fullscreen: false,
         checkForUpdates: true,
+        autoBackupOnSave: false,
       }).catch((error: unknown) => {
         console.error("Failed to recreate the application window:", error);
       });

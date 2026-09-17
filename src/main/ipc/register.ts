@@ -26,7 +26,8 @@ export const registerIpc = (
   );
   ipcMain.handle(IPC.hostsImport, () => hosts.read());
   ipcMain.handle(IPC.tabSaveAndApply, async (_event, tab: HostTab) => {
-    const saved = await storage.saveTab(tab);
+    const settings = await storage.getSettings();
+    const saved = await storage.saveTab(tab, settings.autoBackupOnSave);
     await hosts.apply(await storage.listTabs());
     return saved;
   });

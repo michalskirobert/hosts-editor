@@ -1,7 +1,5 @@
-import { app } from "electron";
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
@@ -36,75 +34,57 @@ export class HostsService {
       throw new Error("Refusing to replace the system hosts file with empty content.");
     }
 
-    await this.systemBackup();
-
-    const temp = path.join(
-      os.tmpdir(),
-      `hosts-editor-${String(process.pid)}-${String(Date.now())}`,
-    );
-    await fs.writeFile(temp, content, {
-      encoding: "utf8",
-      mode: 0o644,
-    });
-
-    try {
-      if (process.platform === "darwin") {
-        await this.mac(temp);
-      } else if (process.platform === "win32") {
-        await this.windows(temp);
-      } else {
-        await this.linux(temp);
-      }
-    } finally {
-      await fs.rm(temp, { force: true }).catch(() => undefined);
+    if (process.platform === "darwin") {
+      await this.mac(content);
+    } else if (process.platform === "win32") {
+      await this.windows(content);
+    } else {
+      await this.linux(content);
     }
   }
 
-  private async systemBackup(): Promise<void> {
-    const dir = path.join(app.getPath("userData"), "v2", "system-backups");
-
-    await fs.mkdir(dir, { recursive: true });
-
-    const current = await fs.readFile(this.path());
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-
-    await fs.writeFile(path.join(dir, `hosts-${timestamp}`), current);
-  }
-
-  private async mac(temp: string): Promise<void> {
-    const escapeForAppleScript = (value: string): string =>
-      value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  private async mac(content: string): Promise<void> {
+    const encodedContent = Buffer.from(content, "utf8").toString("base64");
 
     const command = [
-      `/bin/cp "${escapeForAppleScript(temp)}" /etc/hosts`,
+      `/bin/echo '${encodedContent}' | /usr/bin/base64 -D > /etc/hosts`,
       "/usr/sbin/chown root:wheel /etc/hosts",
       "/bin/chmod 644 /etc/hosts",
+      "/usr/bin/dscacheutil -flushcache",
+      "/usr/bin/killall -HUP mDNSResponder || true",
     ].join(" && ");
 
-    const script =
-      `do shell script "${escapeForAppleScript(command)}" ` + "with administrator privileges";
+    const escapedCommand = command.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
+    const script = `do shell script "${escapedCommand}" with administrator privileges`;
 
     await exec("/usr/bin/osascript", ["-e", script]);
   }
 
-  private async linux(temp: string): Promise<void> {
-    try {
-      await exec("pkexec", ["/bin/cp", temp, "/etc/hosts"]);
+  private async linux(content: string): Promise<void> {
+    const encodedContent = Buffer.from(content, "utf8").toString("base64");
 
-      await exec("pkexec", ["/bin/chmod", "644", "/etc/hosts"]);
+    const command =
+      `echo '${encodedContent}' | base64 --decode > /etc/hosts && ` + "chmod 644 /etc/hosts";
+
+    try {
+      await exec("pkexec", ["/bin/sh", "-c", command]);
     } catch (error: unknown) {
       throw new Error(`Linux elevation failed. PolicyKit/pkexec is required. ${String(error)}`);
     }
   }
 
-  private async windows(temp: string): Promise<void> {
-    const escapedTemp = temp.replace(/'/g, "''");
+  private async windows(content: string): Promise<void> {
+    const encodedContent = Buffer.from(content, "utf16le").toString("base64");
     const escapedHostsPath = this.path().replace(/'/g, "''");
 
-    const copyCommand =
-      `Copy-Item -LiteralPath '${escapedTemp}' ` + `-Destination '${escapedHostsPath}' -Force`;
+    const writeCommand =
+      `$content = [System.Text.Encoding]::Unicode.GetString(` +
+      `[System.Convert]::FromBase64String('${encodedContent}')); ` +
+      `[System.IO.File]::WriteAllText(` +
+      `'${escapedHostsPath}', $content, [System.Text.Encoding]::UTF8)`;
 
-    const encodedCommand = Buffer.from(copyCommand, "utf16le").toString("base64");
+    const encodedCommand = Buffer.from(writeCommand, "utf16le").toString("base64");
 
     const elevationCommand = [
       "Start-Process",
