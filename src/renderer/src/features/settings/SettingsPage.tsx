@@ -39,8 +39,13 @@ export const SettingsPage = () => {
             checked={state.settings.fullscreen}
             onChange={(event) => {
               const fullscreen = event.target.checked;
-              void saveSettings({ ...state.settings, fullscreen });
-              void window.hostsEditor.setFullscreen(fullscreen);
+
+              void window.hostsEditor.setFullscreen(fullscreen).then(() => {
+                void saveSettings({
+                  ...state.settings,
+                  fullscreen,
+                });
+              });
             }}
           />
         </label>

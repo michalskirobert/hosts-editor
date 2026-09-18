@@ -19,6 +19,7 @@ export const createWindow = async (settings: AppSettings): Promise<BrowserWindow
     minHeight: 650,
     show: false,
     fullscreen: settings.fullscreen,
+    fullscreenable: true,
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#090d14" : "#f5f7fb",
     webPreferences: {
       preload: path.join(currentDirectory, "../preload/index.mjs"),

@@ -32,9 +32,6 @@ export const Header = () => {
       </div>
       {state.page === "editor" && (
         <div className="flex items-center gap-2">
-          {state.message && (
-            <span className="max-w-72 truncate text-xs text-slate-500">{state.message}</span>
-          )}
           <button
             onClick={() => {
               void importIntoCurrent();

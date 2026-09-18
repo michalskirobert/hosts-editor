@@ -1,4 +1,4 @@
-import { ArchiveRestore, CircleAlert, FileCode2, Settings } from "lucide-react";
+import { ArchiveRestore, CircleAlert, CircleCheck, FileCode2, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { TabList } from "../../features/tabs/TabList";
@@ -84,7 +84,15 @@ export const Sidebar = () => {
       />
       <TabList />
       <div className="absolute bottom-4 left-3 right-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs dark:border-white/8 dark:bg-white/4">
-        <div className="mb-1 font-medium text-emerald-600">● Safe write · manual backups</div>
+        {state.settings.autoBackupOnSave ? (
+          <div className="flex items-center gap-2 mb-2 font-medium text-emerald-600">
+            <CircleCheck className="h-4 w-4" /> Safe write · auto-backup on save
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 mb-2 font-medium text-yellow-600">
+            <CircleAlert className="h-4 w-4" /> Safe write · manual backups
+          </div>
+        )}
         <div className="truncate text-slate-400">{state.hostsPath}</div>
       </div>
     </aside>

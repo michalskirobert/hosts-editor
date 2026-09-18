@@ -1,4 +1,4 @@
-import { Pencil, Plus, Save, Trash2 } from "lucide-react";
+import { CircleAlert, Pencil, Plus, Save, Trash2 } from "lucide-react";
 
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
 
@@ -73,7 +73,13 @@ export const TabList = () => {
                       startRename(tab);
                     }}
                   >
-                    {dirtyIds.has(tab.id) && <span className="mr-1 text-amber-400">●</span>}
+                    {dirtyIds.has(tab.id) && (
+                      <CircleAlert
+                        size={14}
+                        strokeWidth={2}
+                        className="mr-1 inline-block align-[-1px] text-amber-400"
+                      />
+                    )}
                     {tab.name}
                   </span>
                 )}
