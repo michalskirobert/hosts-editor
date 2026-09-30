@@ -66,22 +66,25 @@ export const TabList = () => {
                     className="min-w-0 flex-1 rounded bg-white/15 px-1 outline-none"
                   />
                 ) : (
-                  <span
-                    className="min-w-0 flex-1 truncate"
-                    onDoubleClick={(event) => {
-                      event.stopPropagation();
-                      startRename(tab);
-                    }}
-                  >
+                  <>
                     {dirtyIds.has(tab.id) && (
-                      <CircleAlert
-                        size={14}
-                        strokeWidth={2}
-                        className="mr-1 inline-block align-[-1px] text-amber-400"
-                      />
+                      <span className="group/warning relative inline-flex shrink-0 cursor-help">
+                        <CircleAlert size={14} strokeWidth={2} className="text-amber-400" />
+                        <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-[11px] font-medium normal-case tracking-normal text-white opacity-0 shadow-lg transition-opacity group-hover/warning:opacity-100 dark:bg-white dark:text-slate-900">
+                          Unsaved changes
+                        </span>
+                      </span>
                     )}
-                    {tab.name}
-                  </span>
+                    <span
+                      className="min-w-0 flex-1 truncate"
+                      onDoubleClick={(event) => {
+                        event.stopPropagation();
+                        startRename(tab);
+                      }}
+                    >
+                      {tab.name}
+                    </span>
+                  </>
                 )}
               </button>
               {isRenaming ? (

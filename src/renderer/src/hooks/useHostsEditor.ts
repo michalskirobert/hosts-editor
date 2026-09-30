@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 
-import { parseHostsText, serializeLines } from "../../../shared/domain/hosts";
+import { getHostLineError, parseHostsText, serializeLines } from "../../../shared/domain/hosts";
 import type { AppSettings, BackupInfo, EditorMode, HostLine, HostTab } from "../../../shared/types";
 import { applyTheme } from "../lib/theme";
 import { tabFingerprint } from "../lib/tabFingerprint";
@@ -89,6 +89,13 @@ export const useHostsEditor = () => {
   const saveCurrent = async (): Promise<void> => {
     const current = materializeCurrentTab();
     if (!current) return;
+
+    const invalid = current.lines.find((line) => getHostLineError(line));
+    if (invalid) {
+      patchState({ message: getHostLineError(invalid) ?? "Invalid hosts entry" });
+      return;
+    }
+
     patchState({ busy: true, message: "" });
     try {
       await Promise.all(
@@ -108,6 +115,63 @@ export const useHostsEditor = () => {
       patchState({
         message: `Save failed: ${error instanceof Error ? error.message : String(error)}`,
       });
+    } finally {
+      patchState({ busy: false });
+    }
+  };
+
+  const addHosts = async (lines: readonly HostLine[], saveNow: boolean): Promise<void> => {
+    const current = materializeCurrentTab();
+    if (!current || lines.length === 0) return;
+
+    const updated: HostTab = { ...current, lines: [...current.lines, ...lines] };
+    const normalizedQuery = state.query.trim().toLowerCase();
+    const hiddenBySearch =
+      normalizedQuery.length > 0 &&
+      lines.some(
+        (line) =>
+          !`${line.address} ${line.hostname} ${line.comment}`
+            .toLowerCase()
+            .includes(normalizedQuery),
+      );
+
+    if (!saveNow) {
+      patchTab(updated);
+      patchState({
+        raw: serializeLines(updated.lines),
+        mode: "structured",
+        dialog: { kind: "none" },
+        message: hiddenBySearch
+          ? `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added. Some new entries are hidden by the current search filter.`
+          : `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added. Save when ready.`,
+      });
+      return;
+    }
+
+    patchState({ busy: true, message: "" });
+    try {
+      await Promise.all(
+        state.tabs
+          .filter((item) => item.id !== updated.id)
+          .map((item) => window.hostsEditor.saveTab(item)),
+      );
+      const result = await window.hostsEditor.saveTabAndApply(updated);
+      patchTab(result);
+      const appliedTabs = state.tabs.map((item) => (item.id === result.id ? result : item));
+      patchState({
+        raw: serializeLines(result.lines),
+        mode: "structured",
+        dialog: { kind: "none" },
+        saved: Object.fromEntries(appliedTabs.map((item) => [item.id, tabFingerprint(item)])),
+        message: hiddenBySearch
+          ? `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added and saved. Some new entries are hidden by the current search filter.`
+          : `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added and system hosts updated.`,
+      });
+    } catch (error: unknown) {
+      patchState({
+        message: `Save failed: ${error instanceof Error ? error.message : String(error)}`,
+      });
+      throw error;
     } finally {
       patchState({ busy: false });
     }
@@ -225,6 +289,7 @@ export const useHostsEditor = () => {
     setLines,
     switchMode,
     saveCurrent,
+    addHosts,
     createTab,
     startRename,
     cancelRename,

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { serializeLines } from "../../../shared/domain/hosts";
+import { getHostLineError, serializeLines } from "../../../shared/domain/hosts";
 import type { HostTab } from "../../../shared/types";
 
 const exec = promisify(execFile);
@@ -20,8 +20,14 @@ export class HostsService {
   }
 
   render(tabs: readonly HostTab[]): string {
-    return `${tabs
-      .filter((tab) => tab.enabled)
+    const enabledTabs = tabs.filter((tab) => tab.enabled);
+    const invalidLine = enabledTabs.flatMap((tab) => tab.lines).find((line) => getHostLineError(line));
+
+    if (invalidLine) {
+      throw new Error(getHostLineError(invalidLine) ?? "Invalid hosts entry.");
+    }
+
+    return `${enabledTabs
       .map((tab) => serializeLines(tab.lines))
       .filter(Boolean)
       .join("\n")}\n`;

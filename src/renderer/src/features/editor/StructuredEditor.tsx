@@ -1,5 +1,6 @@
 import { Trash2 } from "lucide-react";
 
+import { areValidHostnames, isValidIpAddress } from "../../../../shared/domain/hosts";
 import type { HostLine } from "../../../../shared/types";
 
 interface StructuredEditorProps {
@@ -42,7 +43,8 @@ export const StructuredEditor = ({ lines, query, onChange }: StructuredEditorPro
               />
             </button>
             <input
-              className="mono rounded-lg bg-transparent px-2 py-2 text-sm hover:bg-slate-50 dark:hover:bg-white/5"
+              className={`mono rounded-lg border px-2 py-2 text-sm outline-none ${isValidIpAddress(line.address) ? "border-transparent bg-transparent hover:bg-slate-50 dark:hover:bg-white/5" : "border-red-400 bg-red-50/50 dark:bg-red-500/5"}`}
+              title={isValidIpAddress(line.address) ? undefined : "Invalid IP address"}
               value={line.address}
               onChange={(event) => {
                 patch(line.id, { address: event.target.value });
@@ -50,7 +52,8 @@ export const StructuredEditor = ({ lines, query, onChange }: StructuredEditorPro
             />
             <input
               data-hostname-input
-              className="mono rounded-lg bg-transparent px-2 py-2 text-sm hover:bg-slate-50 dark:hover:bg-white/5"
+              className={`mono rounded-lg border px-2 py-2 text-sm outline-none ${areValidHostnames(line.hostname) ? "border-transparent bg-transparent hover:bg-slate-50 dark:hover:bg-white/5" : "border-red-400 bg-red-50/50 dark:bg-red-500/5"}`}
+              title={areValidHostnames(line.hostname) ? undefined : "Invalid hostname"}
               value={line.hostname}
               onChange={(event) => {
                 patch(line.id, { hostname: event.target.value });

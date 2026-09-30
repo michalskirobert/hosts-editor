@@ -46,39 +46,8 @@ export const EditorPage = () => {
     );
   }
 
-  const addHost = (): void => {
-    const id = crypto.randomUUID();
-
-    patchState({
-      query: "",
-      mode: "structured",
-    });
-
-    setLines([
-      ...tab.lines,
-      {
-        id,
-        kind: "host",
-        enabled: true,
-        address: "127.0.0.1",
-        hostname: "",
-        comment: "",
-        raw: "",
-      },
-    ]);
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const row = document.querySelector<HTMLElement>(`[data-host-id="${id}"]`);
-
-        row?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-
-        row?.querySelector<HTMLInputElement>("[data-hostname-input]")?.focus();
-      });
-    });
+  const openAddHosts = (): void => {
+    patchState({ dialog: { kind: "add-hosts" } });
   };
 
   return (
@@ -110,9 +79,9 @@ export const EditorPage = () => {
           )}
         </div>
 
-        <button type="button" className="action" onClick={addHost}>
+        <button type="button" className="action" onClick={openAddHosts}>
           <Plus size={15} />
-          Add host
+          Add hosts
         </button>
 
         <div className="flex rounded-xl border border-slate-200 bg-white p-1 dark:border-white/10 dark:bg-white/5">

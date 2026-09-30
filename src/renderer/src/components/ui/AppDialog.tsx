@@ -1,11 +1,20 @@
 import { serializeLines } from "../../../../shared/domain/hosts";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
+import { AddHostsDialog } from "../../features/editor/AddHostsDialog";
 import { Modal } from "./Modal";
 import { ModalActions } from "./ModalActions";
 
 export const AppDialog = () => {
-  const { state, patchState, confirmImport, confirmDeleteTab, deleteBackup, restoreBackup } =
-    useHostsEditorContext();
+  const {
+    state,
+    tab,
+    patchState,
+    addHosts,
+    confirmImport,
+    confirmDeleteTab,
+    deleteBackup,
+    restoreBackup,
+  } = useHostsEditorContext();
   const dialog = state.dialog;
 
   if (dialog.kind === "none") return null;
@@ -13,6 +22,18 @@ export const AppDialog = () => {
   const close = (): void => {
     patchState({ dialog: { kind: "none" } });
   };
+
+  if (dialog.kind === "add-hosts") {
+    if (!tab) return null;
+    return (
+      <AddHostsDialog
+        tabName={tab.name}
+        existingLines={tab.lines}
+        onClose={close}
+        onAdd={addHosts}
+      />
+    );
+  }
 
   if (dialog.kind === "preview") {
     return (
