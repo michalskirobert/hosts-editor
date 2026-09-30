@@ -28,12 +28,7 @@ const createDraft = (): HostDraft => ({
   comment: "",
 });
 
-export const AddHostsDialog = ({
-  tabName,
-  existingLines,
-  onClose,
-  onAdd,
-}: AddHostsDialogProps) => {
+export const AddHostsDialog = ({ tabName, existingLines, onClose, onAdd }: AddHostsDialogProps) => {
   const [drafts, setDrafts] = useState<readonly HostDraft[]>([createDraft()]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -55,7 +50,9 @@ export const AddHostsDialog = ({
     const existing = new Set(
       existingLines
         .filter((line) => line.kind === "host")
-        .map((line) => `${line.address.trim().toLowerCase()}|${line.hostname.trim().toLowerCase()}`),
+        .map(
+          (line) => `${line.address.trim().toLowerCase()}|${line.hostname.trim().toLowerCase()}`,
+        ),
     );
     const seen = new Set<string>();
     return new Set(
@@ -95,8 +92,8 @@ export const AddHostsDialog = ({
   return (
     <Modal title="Add hosts" onClose={onClose} wide>
       <p className="mb-5 text-sm text-slate-500">
-        Add one or multiple entries to <strong>“{tabName}”</strong>. Add hosts keeps them as
-        unsaved changes; Add & Save also updates the system hosts file.
+        Add one or multiple entries to <strong>“{tabName}”</strong>. Add hosts keeps them as unsaved
+        changes; Add & Save also updates the system hosts file.
       </p>
 
       <div className="scroll max-h-[52vh] space-y-2 overflow-y-auto pr-1">

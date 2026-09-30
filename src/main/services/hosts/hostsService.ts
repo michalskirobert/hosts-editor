@@ -21,7 +21,9 @@ export class HostsService {
 
   render(tabs: readonly HostTab[]): string {
     const enabledTabs = tabs.filter((tab) => tab.enabled);
-    const invalidLine = enabledTabs.flatMap((tab) => tab.lines).find((line) => getHostLineError(line));
+    const invalidLine = enabledTabs
+      .flatMap((tab) => tab.lines)
+      .find((line) => getHostLineError(line));
 
     if (invalidLine) {
       throw new Error(getHostLineError(invalidLine) ?? "Invalid hosts entry.");
