@@ -11,4 +11,5 @@ export type {
   FeedbackKind,
   FeedbackResult,
   FeedbackSubmission,
+  FeedbackSubmitResult,
 } from "./feedback";
