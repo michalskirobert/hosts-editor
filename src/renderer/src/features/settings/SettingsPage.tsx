@@ -153,10 +153,20 @@ export const SettingsPage = () => {
             </div>
           </div>
           <div className="flex shrink-0 gap-2">
-            <Button icon={<Bug size={15} />} onClick={() => setFeedbackKind("bug")}>
+            <Button
+              icon={<Bug size={15} />}
+              onClick={() => {
+                setFeedbackKind("bug");
+              }}
+            >
               Report a bug
             </Button>
-            <Button icon={<Lightbulb size={15} />} onClick={() => setFeedbackKind("feature")}>
+            <Button
+              icon={<Lightbulb size={15} />}
+              onClick={() => {
+                setFeedbackKind("feature");
+              }}
+            >
               Suggest a feature
             </Button>
           </div>
@@ -167,7 +177,9 @@ export const SettingsPage = () => {
         <FeedbackDialog
           version={state.version}
           initialKind={feedbackKind}
-          onClose={() => setFeedbackKind(null)}
+          onClose={() => {
+            setFeedbackKind(null);
+          }}
         />
       )}
     </div>
