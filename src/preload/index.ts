@@ -10,7 +10,7 @@ import type {
   HostTab,
   UpdateState,
   FeedbackCaptchaResult,
-  FeedbackResult,
+  FeedbackSubmitResult,
   FeedbackSubmission,
 } from "../shared/types";
 
@@ -34,7 +34,7 @@ export interface HostsEditorApi {
   setFullscreen(value: boolean): Promise<void>;
   openExternal(url: string): Promise<void>;
   getFeedbackCaptcha(): Promise<FeedbackCaptchaResult>;
-  submitFeedback(payload: FeedbackSubmission): Promise<FeedbackResult>;
+  submitFeedback(payload: FeedbackSubmission): Promise<FeedbackSubmitResult>;
 }
 
 const api: HostsEditorApi = {
@@ -62,7 +62,7 @@ const api: HostsEditorApi = {
   getFeedbackCaptcha: () =>
     ipcRenderer.invoke(IPC.feedbackCaptcha) as Promise<FeedbackCaptchaResult>,
   submitFeedback: (payload) =>
-    ipcRenderer.invoke(IPC.feedbackSubmit, payload) as Promise<FeedbackResult>,
+    ipcRenderer.invoke(IPC.feedbackSubmit, payload) as Promise<FeedbackSubmitResult>,
 };
 
 contextBridge.exposeInMainWorld("hostsEditor", api);

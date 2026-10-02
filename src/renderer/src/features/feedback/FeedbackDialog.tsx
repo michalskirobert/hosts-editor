@@ -122,7 +122,16 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
         captchaToken: captcha.token,
         captchaAnswer: values.captchaAnswer.trim(),
       });
-      setReportId(result.reportId);
+      if (!result.ok) {
+        if (/captcha/i.test(result.message)) {
+          setError("captchaAnswer", { type: "server", message: result.message });
+          await loadCaptcha();
+          return;
+        }
+        setRequestError(result.message);
+        return;
+      }
+      setReportId(result.result.reportId);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "The report could not be sent.";
       if (/captcha/i.test(message)) setError("captchaAnswer", { type: "server", message });
@@ -275,7 +284,7 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
               invalid={Boolean(errors.summary)}
               {...register("summary", {
                 required: "Add a short description",
-                maxLength: { value: 160, message: "Keep the summary under 160 characters" },
+                maxLength: { value: 140, message: "Keep the summary under 140 characters" },
               })}
             />
           </Field>
@@ -293,6 +302,8 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
             invalid={Boolean(errors.description)}
             {...register("description", {
               required: kind === "bug" ? "Describe what happened" : "Describe your suggestion",
+              minLength: { value: 10, message: "Use at least 10 characters" },
+              maxLength: { value: 5000, message: "Keep the description under 5000 characters" },
             })}
           />
         </Field>

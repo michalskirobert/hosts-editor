@@ -69,9 +69,16 @@ export const registerIpc = (
       } as const;
     }
   });
-  ipcMain.handle(IPC.feedbackSubmit, (_event, payload: FeedbackSubmission) =>
-    feedback.submit(payload),
-  );
+  ipcMain.handle(IPC.feedbackSubmit, async (_event, payload: FeedbackSubmission) => {
+    try {
+      return { ok: true, result: await feedback.submit(payload) } as const;
+    } catch (cause) {
+      return {
+        ok: false,
+        message: cause instanceof Error ? cause.message : "The report could not be sent.",
+      } as const;
+    }
+  });
   ipcMain.handle(IPC.externalOpen, async (_event, url: string) => {
     const allowed = new URL(url);
     const isNurByte = allowed.protocol === "https:" && allowed.hostname === "nurbyte.dev";

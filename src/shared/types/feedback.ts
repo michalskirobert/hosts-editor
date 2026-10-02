@@ -31,3 +31,7 @@ export interface FeedbackSubmission {
 export interface FeedbackResult {
   readonly reportId: string;
 }
+
+export type FeedbackSubmitResult =
+  | { readonly ok: true; readonly result: FeedbackResult }
+  | { readonly ok: false; readonly message: string };

@@ -40,10 +40,17 @@ export class FeedbackService {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        ...payload,
         product: "hosts-editor",
         productVersion: app.getVersion(),
+        kind: payload.kind,
+        email: payload.email,
+        summary: payload.summary,
+        description: payload.description,
+        expected: payload.expected || undefined,
+        reproductionSteps: payload.reproductionSteps || undefined,
         diagnostics,
+        captchaToken: payload.captchaToken,
+        captchaAnswer: payload.captchaAnswer,
       }),
     });
     return readJson<FeedbackResult>(response);
