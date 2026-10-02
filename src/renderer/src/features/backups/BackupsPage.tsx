@@ -1,35 +1,41 @@
-import { ArchiveRestore, Download, FolderOpen, Plus, Trash2 } from "lucide-react";
+import { ArchiveRestore, Download, FolderOpen, Plus, RefreshCw, Trash2 } from "lucide-react";
 
+import { Button } from "@renderer/components/ui/Button";
+import { IconButton } from "@renderer/components/ui/IconButton";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
+
 export const BackupsPage = () => {
   const { state, patchState, createManualBackup } = useHostsEditorContext();
 
   return (
     <div className="mx-auto max-w-5xl py-5">
       <div className="mb-4 flex justify-end gap-2">
-        <button
+        <Button
           onClick={() => {
             void window.hostsEditor.openBackups();
           }}
-          className="action"
+          icon={<FolderOpen size={16} />}
         >
-          <FolderOpen size={16} /> Open folder
-        </button>
-        <button
+          Open folder
+        </Button>
+        <Button
           onClick={() => {
             void createManualBackup();
           }}
-          className="primary"
+          disabled={state.busy}
+          disabledReason={state.busy ? "Wait for the current operation to finish" : undefined}
+          variant="primary"
+          icon={state.busy ? <RefreshCw size={16} className="animate-spin" /> : <Plus size={16} />}
         >
-          <Plus size={16} /> Backup current tab
-        </button>
+          {state.busy ? "Creating backup..." : "Backup current tab"}
+        </Button>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-[#0f1622]">
+      <div className="overflow-hidden rounded-3xl border border-slate-300/55 bg-white/55 shadow-[0_18px_60px_-34px_rgba(15,23,42,0.32)] backdrop-blur-3xl dark:border-white/[0.065] dark:bg-white/[0.03]">
         {state.backups.length ? (
           state.backups.map((backup) => (
             <div
               key={backup.path}
-              className="flex items-center gap-4 border-b border-slate-100 px-5 py-4 dark:border-white/6"
+              className="group flex items-center gap-4 border-b border-slate-200/45 px-5 py-4 transition-colors duration-300 hover:bg-amber-50/55 dark:border-white/[0.045] dark:hover:bg-amber-300/[0.035]"
             >
               <ArchiveRestore size={18} />
               <div className="min-w-0 flex-1">
@@ -43,42 +49,39 @@ export const BackupsPage = () => {
               <span className="text-xs text-slate-400">
                 {new Date(backup.createdAt).toLocaleString()}
               </span>
-              <button
+              <Button
                 onClick={() => {
                   void window.hostsEditor.readBackup(backup).then((snapshot) => {
                     patchState({ dialog: { kind: "preview", snapshot } });
                   });
                 }}
-                className="action"
               >
                 Preview
-              </button>
-              <button
+              </Button>
+              <IconButton
+                label="Export"
                 onClick={() => {
                   void window.hostsEditor.exportBackup(backup);
                 }}
-                title="Export"
-                className="icon"
               >
                 <Download size={15} />
-              </button>
-              <button
+              </IconButton>
+              <Button
                 onClick={() => {
                   patchState({ dialog: { kind: "restore", backup } });
                 }}
-                className="action"
               >
                 Restore
-              </button>
-              <button
+              </Button>
+              <IconButton
+                label="Delete"
+                danger
                 onClick={() => {
                   patchState({ dialog: { kind: "delete-backup", backup } });
                 }}
-                title="Delete"
-                className="icon text-red-500"
               >
                 <Trash2 size={15} />
-              </button>
+              </IconButton>
             </div>
           ))
         ) : (

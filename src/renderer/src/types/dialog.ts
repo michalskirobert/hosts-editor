@@ -3,6 +3,7 @@ import type { BackupInfo, BackupSnapshot, HostTab } from "../../../shared/types"
 export type DialogState =
   | { readonly kind: "none" }
   | { readonly kind: "add-hosts" }
+  | { readonly kind: "discard-changes"; readonly tab: HostTab }
   | { readonly kind: "import"; readonly tab: HostTab }
   | { readonly kind: "delete-tab"; readonly tab: HostTab; readonly deleteBackups: boolean }
   | { readonly kind: "delete-backup"; readonly backup: BackupInfo }

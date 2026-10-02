@@ -27,6 +27,7 @@ export const useHostsEditor = () => {
       patchState({
         tabs: payload.tabs,
         saved: Object.fromEntries(payload.tabs.map((item) => [item.id, tabFingerprint(item)])),
+        savedTabs: Object.fromEntries(payload.tabs.map((item) => [item.id, item])),
         selected: payload.tabs[0]?.id ?? "",
         settings: payload.settings,
         hostsPath: payload.hostsPath,
@@ -109,6 +110,7 @@ export const useHostsEditor = () => {
       patchState({
         raw: serializeLines(result.lines),
         saved: Object.fromEntries(appliedTabs.map((item) => [item.id, tabFingerprint(item)])),
+        savedTabs: Object.fromEntries(appliedTabs.map((item) => [item.id, item])),
         message: `Saved “${result.name}” and updated system hosts`,
       });
     } catch (error: unknown) {
@@ -163,6 +165,7 @@ export const useHostsEditor = () => {
         mode: "structured",
         dialog: { kind: "none" },
         saved: Object.fromEntries(appliedTabs.map((item) => [item.id, tabFingerprint(item)])),
+        savedTabs: Object.fromEntries(appliedTabs.map((item) => [item.id, item])),
         message: hiddenBySearch
           ? `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added and saved. Some new entries are hidden by the current search filter.`
           : `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added and system hosts updated.`,
@@ -182,6 +185,7 @@ export const useHostsEditor = () => {
     appendTab(created);
     patchState({
       saved: { ...state.saved, [created.id]: tabFingerprint(created) },
+      savedTabs: { ...state.savedTabs, [created.id]: created },
       selected: created.id,
       page: "editor",
       renamingId: created.id,
@@ -214,6 +218,7 @@ export const useHostsEditor = () => {
     appendTab(created);
     patchState({
       saved: { ...state.saved, [created.id]: tabFingerprint(created) },
+      savedTabs: { ...state.savedTabs, [created.id]: created },
       selected: created.id,
       page: "editor",
     });
@@ -246,7 +251,35 @@ export const useHostsEditor = () => {
       },
       {},
     );
-    patchState({ saved, selected: remaining[0]?.id ?? "", dialog: { kind: "none" } });
+    const savedTabs = Object.entries(state.savedTabs).reduce<Record<string, HostTab>>(
+      (result, [id, savedTab]) => {
+        if (id !== target.id) result[id] = savedTab;
+        return result;
+      },
+      {},
+    );
+    patchState({ saved, savedTabs, selected: remaining[0]?.id ?? "", dialog: { kind: "none" } });
+  };
+
+  const requestDiscardChanges = (): void => {
+    if (!tab || !dirtyIds.has(tab.id)) return;
+    patchState({ dialog: { kind: "discard-changes", tab } });
+  };
+
+  const confirmDiscardChanges = (target: HostTab): void => {
+    const savedTab = state.savedTabs[target.id];
+    if (!savedTab) {
+      patchState({ dialog: { kind: "none" }, message: "The last saved state is not available." });
+      return;
+    }
+
+    const restoredTab = { ...savedTab, name: target.name };
+    patchTab(restoredTab);
+    patchState({
+      raw: serializeLines(restoredTab.lines),
+      dialog: { kind: "none" },
+      message: `Discarded unsaved changes in “${savedTab.name}”`,
+    });
   };
 
   const loadBackups = async (): Promise<void> => {
@@ -254,9 +287,20 @@ export const useHostsEditor = () => {
   };
   const createManualBackup = async (): Promise<void> => {
     const current = materializeCurrentTab();
-    if (!current) return;
-    await window.hostsEditor.createBackup(current, "manual");
-    patchState({ message: "Manual backup created" });
+    if (!current || state.busy) return;
+
+    patchState({ busy: true, message: "" });
+    try {
+      await window.hostsEditor.createBackup(current, "manual");
+      const backups = await window.hostsEditor.listBackups();
+      patchState({ backups, message: "Manual backup created" });
+    } catch (error: unknown) {
+      patchState({
+        message: `Backup failed: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    } finally {
+      patchState({ busy: false });
+    }
   };
   const saveSettings = async (settings: AppSettings): Promise<void> => {
     patchState({ settings });
@@ -300,6 +344,8 @@ export const useHostsEditor = () => {
     confirmDeleteTab,
     loadBackups,
     createManualBackup,
+    requestDiscardChanges,
+    confirmDiscardChanges,
     saveSettings,
     deleteBackup,
     restoreBackup,

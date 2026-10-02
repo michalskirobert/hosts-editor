@@ -29,6 +29,7 @@ export interface HostsEditorApi {
   checkUpdate(): Promise<UpdateState>;
   openUpdate(): Promise<void>;
   setFullscreen(value: boolean): Promise<void>;
+  openExternal(url: string): Promise<void>;
 }
 
 const api: HostsEditorApi = {
@@ -52,6 +53,7 @@ const api: HostsEditorApi = {
   checkUpdate: () => ipcRenderer.invoke(IPC.updateCheck) as Promise<UpdateState>,
   openUpdate: () => ipcRenderer.invoke(IPC.updateOpen) as Promise<void>,
   setFullscreen: (value) => ipcRenderer.invoke(IPC.fullscreen, value) as Promise<void>,
+  openExternal: (url) => ipcRenderer.invoke(IPC.externalOpen, url) as Promise<void>,
 };
 
 contextBridge.exposeInMainWorld("hostsEditor", api);

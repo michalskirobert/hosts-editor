@@ -3,7 +3,10 @@ import { useMemo, useState } from "react";
 
 import { isValidHostname, isValidIpAddress } from "../../../../shared/domain/hosts";
 import type { HostLine } from "../../../../shared/types";
+import { Button } from "../../components/ui/Button";
+import { IconButton } from "../../components/ui/IconButton";
 import { Modal } from "../../components/ui/Modal";
+import { Input, Toggle } from "../../components/shared/form";
 
 interface AddHostsDialogProps {
   readonly tabName: string;
@@ -68,7 +71,8 @@ export const AddHostsDialog = ({ tabName, existingLines, onClose, onAdd }: AddHo
     );
   }, [drafts, existingLines]);
 
-  const hasErrors = errors.some((error) => error.address || error.hostname);
+  const hasErrors =
+    errors.some((error) => error.address || error.hostname) || duplicateIds.size > 0;
 
   const submit = async (saveNow: boolean): Promise<void> => {
     if (hasErrors || submitting) return;
@@ -96,34 +100,31 @@ export const AddHostsDialog = ({ tabName, existingLines, onClose, onAdd }: AddHo
         changes; Add & Save also updates the system hosts file.
       </p>
 
-      <div className="scroll max-h-[52vh] space-y-2 overflow-y-auto pr-1">
+      <div className="max-h-[52vh] space-y-2 overflow-y-auto pr-1">
         {drafts.map((draft, index) => (
           <div
             key={draft.id}
             className="grid grid-cols-[44px_150px_minmax(180px,1fr)_minmax(140px,1fr)_36px] items-start gap-2 rounded-xl border border-slate-200 p-3 dark:border-white/10"
           >
-            <button
-              type="button"
-              title={draft.enabled ? "Enabled" : "Disabled"}
-              onClick={() => {
-                patchDraft(draft.id, { enabled: !draft.enabled });
+            <Toggle
+              checked={draft.enabled}
+              label={draft.enabled ? "Disable host" : "Enable host"}
+              className="mt-1"
+              onChange={(enabled) => {
+                patchDraft(draft.id, { enabled });
               }}
-              className={`mt-1 h-6 w-11 rounded-full p-1 ${draft.enabled ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}
-            >
-              <span
-                className={`block h-4 w-4 rounded-full bg-white transition ${draft.enabled ? "translate-x-5" : ""}`}
-              />
-            </button>
+            />
 
             <div>
-              <input
+              <Input
                 autoFocus={index === 0}
                 value={draft.address}
                 onChange={(event) => {
                   patchDraft(draft.id, { address: event.target.value });
                 }}
                 placeholder="127.0.0.1"
-                className={`mono w-full rounded-lg border bg-transparent px-2 py-2 text-sm outline-none ${errors[index]?.address ? "border-red-400" : "border-slate-200 dark:border-white/10"}`}
+                invalid={Boolean(errors[index]?.address)}
+                monospace
               />
               {errors[index]?.address && (
                 <div className="mt-1 text-[11px] text-red-500">Invalid IP address</div>
@@ -131,85 +132,103 @@ export const AddHostsDialog = ({ tabName, existingLines, onClose, onAdd }: AddHo
             </div>
 
             <div>
-              <input
+              <Input
                 value={draft.hostname}
                 onChange={(event) => {
                   patchDraft(draft.id, { hostname: event.target.value });
                 }}
                 placeholder="dev.example.com"
-                className={`mono w-full rounded-lg border bg-transparent px-2 py-2 text-sm outline-none ${errors[index]?.hostname ? "border-red-400" : "border-slate-200 dark:border-white/10"}`}
+                invalid={Boolean(errors[index]?.hostname) || duplicateIds.has(draft.id)}
+                monospace
               />
               {errors[index]?.hostname && (
                 <div className="mt-1 text-[11px] text-red-500">Invalid hostname</div>
               )}
               {!errors[index]?.hostname && duplicateIds.has(draft.id) && (
-                <div className="mt-1 text-[11px] text-amber-500">Duplicate host entry</div>
+                <div className="mt-1 text-[11px] text-red-500">
+                  This IP and hostname combination already exists
+                </div>
               )}
             </div>
 
-            <input
+            <Input
               value={draft.comment}
               onChange={(event) => {
                 patchDraft(draft.id, { comment: event.target.value });
               }}
               placeholder="Comment"
-              className="w-full rounded-lg border border-slate-200 bg-transparent px-2 py-2 text-sm outline-none dark:border-white/10"
             />
 
-            <button
-              type="button"
-              title="Remove row"
+            <IconButton
+              label="Remove row"
+              danger
               disabled={drafts.length === 1}
+              disabledReason={drafts.length === 1 ? "At least one host row is required" : undefined}
+              className="mt-1"
               onClick={() => {
                 setDrafts((current) => current.filter((item) => item.id !== draft.id));
               }}
-              className="mt-1 rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-red-500/10"
             >
               <Trash2 size={16} />
-            </button>
+            </IconButton>
           </div>
         ))}
       </div>
 
-      <button
-        type="button"
-        className="action mt-3"
+      <Button
+        className="mt-3"
+        icon={<Plus size={15} />}
         onClick={() => {
           setDrafts((current) => [...current, createDraft()]);
         }}
       >
-        <Plus size={15} />
         Add another host
-      </button>
+      </Button>
 
       <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-4 dark:border-white/10">
         <span className="text-xs text-slate-400">
           {drafts.length} {drafts.length === 1 ? "host" : "hosts"} will be added
         </span>
         <div className="flex gap-2">
-          <button type="button" className="action" onClick={onClose} disabled={submitting}>
+          <Button
+            onClick={onClose}
+            disabled={submitting}
+            disabledReason={submitting ? "Wait until hosts are added" : undefined}
+          >
             Cancel
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-400 dark:hover:bg-amber-300"
+          </Button>
+          <Button
+            variant="warning"
             disabled={hasErrors || submitting}
+            disabledReason={
+              submitting
+                ? "Adding hosts…"
+                : hasErrors
+                  ? "Fix validation errors before adding hosts"
+                  : undefined
+            }
             onClick={() => {
               void submit(false);
             }}
           >
             Add hosts
-          </button>
-          <button
-            type="button"
-            className="primary"
+          </Button>
+          <Button
+            variant="primary"
             disabled={hasErrors || submitting}
+            disabledReason={
+              submitting
+                ? "Adding and saving hosts…"
+                : hasErrors
+                  ? "Fix validation errors before saving"
+                  : undefined
+            }
             onClick={() => {
               void submit(true);
             }}
           >
             Add & Save
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

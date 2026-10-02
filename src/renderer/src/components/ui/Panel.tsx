@@ -1,14 +1,29 @@
 import type { ReactNode } from "react";
 
-export const Panel = ({
-  title,
-  children,
-}: {
-  readonly title: string;
+import { cn } from "@renderer/lib/cn";
+
+interface PanelProps {
+  readonly title?: string;
   readonly children: ReactNode;
-}) => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#0f1622]">
-    <h2 className="mb-5 font-semibold">{title}</h2>
-    {children}
+  readonly className?: string;
+}
+
+export const Panel = ({ title, children, className }: PanelProps) => (
+  <section
+    className={cn(
+      "group/panel relative overflow-hidden rounded-3xl border border-slate-300/55 bg-white/58 p-5 shadow-[0_20px_55px_-34px_rgba(15,23,42,0.28)] backdrop-blur-3xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-amber-300/35 hover:bg-white/68 hover:shadow-[0_24px_64px_-34px_rgba(15,23,42,0.38)] motion-reduce:transition-none dark:border-white/[0.065] dark:bg-white/[0.035] dark:shadow-[0_22px_70px_-42px_rgba(0,0,0,0.92)] dark:hover:border-amber-300/[0.13] dark:hover:bg-white/[0.052] dark:hover:shadow-[0_28px_78px_-42px_rgba(0,0,0,0.95)]",
+      className,
+    )}
+  >
+    <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-75 dark:via-white/20" />
+    <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-amber-300/0 blur-3xl transition-colors duration-500 group-hover/panel:bg-amber-300/[0.08] motion-reduce:transition-none dark:group-hover/panel:bg-amber-300/[0.035]" />
+    <div className="relative">
+      {title && (
+        <h2 className="mb-5 text-sm font-semibold tracking-[-0.01em] text-slate-800 dark:text-slate-100">
+          {title}
+        </h2>
+      )}
+      {children}
+    </div>
   </section>
 );

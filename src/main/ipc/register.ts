@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
 
 import { IPC } from "../../shared/contracts/ipc";
 import type { AppSettings, BackupInfo, BackupReason, HostTab } from "../../shared/types";
@@ -50,4 +50,14 @@ export const registerIpc = (
   ipcMain.handle(IPC.fullscreen, (_event, value: boolean) =>
     BrowserWindow.getFocusedWindow()?.setFullScreen(value),
   );
+  ipcMain.handle(IPC.externalOpen, async (_event, url: string) => {
+    const allowed = new URL(url);
+    const isNurByte = allowed.protocol === "https:" && allowed.hostname === "nurbyte.dev";
+    const isFeedbackEmail =
+      allowed.protocol === "mailto:" && allowed.pathname === "rm.software.lab@gmail.com";
+    if (!isNurByte && !isFeedbackEmail) {
+      throw new Error("External URL is not allowed");
+    }
+    await shell.openExternal(allowed.toString());
+  });
 };

@@ -1,9 +1,18 @@
-import { ArchiveRestore, Import, RefreshCw, Save } from "lucide-react";
+import { ArchiveRestore, Import, RefreshCw, Save, Undo2 } from "lucide-react";
 
+import { Button } from "@renderer/components/ui/Button";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
+
 export const Header = () => {
-  const { state, tab, dirtyIds, importIntoCurrent, createManualBackup, saveCurrent } =
-    useHostsEditorContext();
+  const {
+    state,
+    tab,
+    dirtyIds,
+    importIntoCurrent,
+    createManualBackup,
+    requestDiscardChanges,
+    saveCurrent,
+  } = useHostsEditorContext();
   const dirty = tab ? dirtyIds.has(tab.id) : false;
 
   const title =
@@ -12,12 +21,11 @@ export const Header = () => {
       : state.page === "backups"
         ? "Backups"
         : "Settings";
-
   const subtitle =
     state.page === "editor"
       ? tab
         ? dirty
-          ? "System hosts out of date"
+          ? "Unsaved changes"
           : "System hosts up to date"
         : "Create a tab or import your system hosts to begin"
       : state.page === "backups"
@@ -25,41 +33,75 @@ export const Header = () => {
         : "Appearance, backups, updates and support";
 
   return (
-    <header className="flex h-19 items-center justify-between border-b border-slate-200 bg-white/70 px-7 dark:border-white/8 dark:bg-[#090d14]/80">
+    <header className="relative flex h-19 items-center justify-between border-b border-slate-300/60 bg-white/52 px-7 shadow-[0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/[0.07] dark:bg-slate-950/24 dark:shadow-none">
       <div>
-        <div className="text-lg font-semibold">{title}</div>
-        <div className="text-xs text-slate-400">{subtitle}</div>
+        <div className="text-lg font-semibold tracking-[-0.02em]">{title}</div>
+        <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          {state.page === "editor" && tab && (
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${dirty ? "bg-amber-400" : "bg-emerald-400"}`}
+            />
+          )}
+          {subtitle}
+        </div>
       </div>
       {state.page === "editor" && (
         <div className="flex items-center gap-2">
-          <button
+          <Button
             onClick={() => {
               void importIntoCurrent();
             }}
-            className="action"
+            icon={<Import size={16} />}
           >
-            <Import size={15} /> Import system hosts
-          </button>
+            Import system hosts
+          </Button>
           {tab && (
-            <button
+            <Button
               onClick={() => {
                 void createManualBackup();
               }}
-              className="action"
+              icon={<ArchiveRestore size={16} />}
             >
-              <ArchiveRestore size={15} /> Backup
-            </button>
+              Backup
+            </Button>
           )}
-          <button
+          <Button
+            onClick={requestDiscardChanges}
+            disabled={!tab || state.busy || !dirty}
+            disabledReason={
+              !tab
+                ? "Select or create a tab first"
+                : state.busy
+                  ? "Another operation is currently running"
+                  : !dirty
+                    ? "No unsaved changes to discard"
+                    : undefined
+            }
+            icon={<Undo2 size={16} />}
+          >
+            Discard changes
+          </Button>
+          <Button
             onClick={() => {
               void saveCurrent();
             }}
-            disabled={!tab || state.busy}
-            className="primary"
+            disabled={!tab || state.busy || !dirty}
+            disabledReason={
+              !tab
+                ? "Select or create a tab first"
+                : state.busy
+                  ? "Another operation is currently running"
+                  : !dirty
+                    ? "No unsaved changes"
+                    : undefined
+            }
+            variant="primary"
+            icon={
+              state.busy ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />
+            }
           >
-            {state.busy ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-            Save
-          </button>
+            {state.busy ? "Saving…" : "Save changes"}
+          </Button>
         </div>
       )}
     </header>

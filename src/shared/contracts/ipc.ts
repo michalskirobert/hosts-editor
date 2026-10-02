@@ -16,4 +16,5 @@ export const IPC = {
   updateCheck: "update:check",
   updateOpen: "update:open",
   fullscreen: "window:fullscreen",
+  externalOpen: "external:open",
 } as const;

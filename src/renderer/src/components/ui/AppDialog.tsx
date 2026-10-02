@@ -1,4 +1,5 @@
 import { serializeLines } from "../../../../shared/domain/hosts";
+import { Checkbox } from "@renderer/components/shared/form";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
 import { AddHostsDialog } from "../../features/editor/AddHostsDialog";
 import { Modal } from "./Modal";
@@ -12,6 +13,7 @@ export const AppDialog = () => {
     addHosts,
     confirmImport,
     confirmDeleteTab,
+    confirmDiscardChanges,
     deleteBackup,
     restoreBackup,
   } = useHostsEditorContext();
@@ -35,10 +37,29 @@ export const AppDialog = () => {
     );
   }
 
+  if (dialog.kind === "discard-changes") {
+    return (
+      <Modal title="Discard unsaved changes?" onClose={close}>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Changes made in <strong>“{dialog.tab.name}”</strong> since the last system-hosts save will
+          be lost.
+        </p>
+        <ModalActions
+          cancel={close}
+          confirm={() => {
+            confirmDiscardChanges(dialog.tab);
+          }}
+          confirmLabel="Discard changes"
+          danger
+        />
+      </Modal>
+    );
+  }
+
   if (dialog.kind === "preview") {
     return (
       <Modal title={`Backup · ${dialog.snapshot.tab.name}`} onClose={close}>
-        <pre className="mono scroll max-h-[55vh] overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 text-xs text-slate-200">
+        <pre className="max-h-[55vh] overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 font-mono text-xs text-slate-200">
           {serializeLines(dialog.snapshot.tab.lines)}
         </pre>
       </Modal>
@@ -102,16 +123,14 @@ export const AppDialog = () => {
       <p className="text-sm text-slate-500">
         The tab will be removed. Its backup history is kept by default.
       </p>
-      <label className="mt-4 flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={dialog.deleteBackups}
-          onChange={(event) => {
-            patchState({ dialog: { ...dialog, deleteBackups: event.target.checked } });
-          }}
-        />
-        Also permanently delete this tab’s backups
-      </label>
+      <Checkbox
+        className="mt-4"
+        checked={dialog.deleteBackups}
+        label="Also permanently delete this tab’s backups"
+        onChange={(deleteBackups) => {
+          patchState({ dialog: { ...dialog, deleteBackups } });
+        }}
+      />
       <ModalActions
         cancel={close}
         confirm={() => {

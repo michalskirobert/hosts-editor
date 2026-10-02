@@ -1,5 +1,8 @@
-import { CircleAlert, Pencil, Plus, Save, Trash2 } from "lucide-react";
+import { CircleCheck, CircleDot, Pencil, Plus, Save, Trash2 } from "lucide-react";
 
+import { Input } from "@renderer/components/shared/form";
+import { IconButton } from "@renderer/components/ui/IconButton";
+import { Tooltip } from "@renderer/components/ui/Tooltip";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
 
 export const TabList = () => {
@@ -16,40 +19,56 @@ export const TabList = () => {
 
   return (
     <>
-      <div className="mb-2 mt-7 flex items-center justify-between px-3 text-[11px] font-bold uppercase tracking-[.14em] text-slate-400">
+      <div className="mb-2 mt-6 flex items-center justify-between px-3 text-[10px] font-bold uppercase tracking-[.16em] text-slate-500 dark:text-slate-500">
         <span>Tabs</span>
-        <button
-          title="Create tab"
+        <IconButton
+          label="Create tab"
+          className="p-1.5"
           onClick={() => {
             void createTab();
           }}
         >
-          <Plus size={15} />
-        </button>
+          <Plus size={16} />
+        </IconButton>
       </div>
-      <div className="scroll max-h-[calc(100vh-330px)] space-y-1 overflow-auto">
+      <div className="space-y-1">
         {state.tabs.map((tab) => {
           const isRenaming = state.renamingId === tab.id;
           const active = state.selected === tab.id;
+          const dirty = dirtyIds.has(tab.id);
 
           return (
             <div
               key={tab.id}
-              className={`group flex items-center rounded-xl pr-1 ${
+              className={`group flex items-center rounded-2xl border pr-1 transition-[transform,background-color,border-color,color,box-shadow] duration-300 ease-out motion-reduce:transition-none ${
                 active
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                  : "hover:bg-slate-100 dark:hover:bg-white/5"
+                  ? "translate-x-0.5 border-amber-300/55 bg-amber-50/80 text-slate-950 shadow-[0_10px_28px_-22px_rgba(245,158,11,0.62)] ring-1 ring-amber-200/35 dark:border-amber-300/15 dark:bg-amber-300/[0.07] dark:text-white dark:ring-amber-300/[0.06]"
+                  : "border-transparent text-slate-600 motion-safe:hover:translate-x-0.5 hover:border-amber-300/55 hover:bg-amber-50/80 hover:text-slate-950 hover:shadow-[0_10px_28px_-22px_rgba(245,158,11,0.62)] hover:ring-1 hover:ring-amber-200/35 dark:text-slate-400 dark:hover:border-amber-300/15 dark:hover:bg-amber-300/[0.07] dark:hover:text-white dark:hover:ring-amber-300/[0.06]"
               }`}
             >
               <button
-                className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left text-sm"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm focus-visible:rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/35"
                 onClick={() => {
                   selectTab(tab.id);
                 }}
               >
-                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+                <Tooltip label={dirty ? "Unsaved changes" : "Saved"}>
+                  {dirty ? (
+                    <CircleDot
+                      size={15}
+                      strokeWidth={2.5}
+                      className="shrink-0 text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.28)] dark:text-amber-300"
+                    />
+                  ) : (
+                    <CircleCheck
+                      size={15}
+                      strokeWidth={2.25}
+                      className="shrink-0 text-emerald-600 dark:text-emerald-400"
+                    />
+                  )}
+                </Tooltip>
                 {isRenaming ? (
-                  <input
+                  <Input
                     autoFocus
                     value={state.renameValue}
                     onChange={(event) => {
@@ -63,63 +82,54 @@ export const TabList = () => {
                       if (event.key === "Enter") commitRename();
                       if (event.key === "Escape") cancelRename();
                     }}
-                    className="min-w-0 flex-1 rounded bg-white/15 px-1 outline-none"
+                    className="min-w-0 flex-1 rounded-lg px-1.5 py-0.5"
                   />
                 ) : (
-                  <>
-                    {dirtyIds.has(tab.id) && (
-                      <span className="group/warning relative inline-flex shrink-0 cursor-help">
-                        <CircleAlert size={14} strokeWidth={2} className="text-amber-400" />
-                        <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-[11px] font-medium normal-case tracking-normal text-white opacity-0 shadow-lg transition-opacity group-hover/warning:opacity-100 dark:bg-white dark:text-slate-900">
-                          Unsaved changes
-                        </span>
-                      </span>
-                    )}
-                    <span
-                      className="min-w-0 flex-1 truncate"
-                      onDoubleClick={(event) => {
-                        event.stopPropagation();
-                        startRename(tab);
-                      }}
-                    >
-                      {tab.name}
-                    </span>
-                  </>
+                  <span
+                    className="min-w-0 flex-1 truncate"
+                    onDoubleClick={(event) => {
+                      event.stopPropagation();
+                      startRename(tab);
+                    }}
+                  >
+                    {tab.name}
+                  </span>
                 )}
               </button>
               {isRenaming ? (
-                <button
-                  title="Save tab name"
+                <IconButton
+                  label="Save tab name"
+                  className="p-1.5 opacity-70 hover:opacity-100"
                   onMouseDown={(event) => {
                     event.preventDefault();
                   }}
                   onClick={commitRename}
-                  className="rounded p-1.5 opacity-70 hover:opacity-100"
                 >
                   <Save size={13} />
-                </button>
+                </IconButton>
               ) : (
-                <button
-                  title="Rename tab"
+                <IconButton
+                  label="Rename tab"
                   onClick={() => {
                     startRename(tab);
                   }}
-                  className="rounded p-1.5 opacity-0 group-hover:opacity-60"
+                  className="p-1.5 opacity-0 group-hover:opacity-65 focus-visible:opacity-100"
                 >
                   <Pencil size={13} />
-                </button>
+                </IconButton>
               )}
-              <button
-                title="Delete tab"
+              <IconButton
+                label="Delete tab"
+                danger
                 onClick={() => {
                   patchState({
                     dialog: { kind: "delete-tab", tab, deleteBackups: false },
                   });
                 }}
-                className="rounded p-1.5 opacity-0 hover:text-red-400 group-hover:opacity-60"
+                className="p-1.5 opacity-0 group-hover:opacity-65 focus-visible:opacity-100"
               >
                 <Trash2 size={13} />
-              </button>
+              </IconButton>
             </div>
           );
         })}

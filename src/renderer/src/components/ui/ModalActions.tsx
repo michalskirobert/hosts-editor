@@ -1,3 +1,5 @@
+import { Button } from "./Button";
+
 interface ModalActionsProps {
   readonly cancel: () => void;
   readonly confirm: () => void;
@@ -12,11 +14,9 @@ export const ModalActions = ({
   danger = false,
 }: ModalActionsProps) => (
   <div className="mt-6 flex justify-end gap-2">
-    <button onClick={cancel} className="action">
-      Cancel
-    </button>
-    <button onClick={confirm} className={danger ? "danger" : "primary"}>
+    <Button onClick={cancel}>Cancel</Button>
+    <Button onClick={confirm} variant={danger ? "danger" : "primary"}>
       {confirmLabel}
-    </button>
+    </Button>
   </div>
 );

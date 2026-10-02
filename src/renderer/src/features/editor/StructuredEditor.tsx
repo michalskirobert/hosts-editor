@@ -2,6 +2,8 @@ import { Trash2 } from "lucide-react";
 
 import { areValidHostnames, isValidIpAddress } from "../../../../shared/domain/hosts";
 import type { HostLine } from "../../../../shared/types";
+import { IconButton } from "@renderer/components/ui/IconButton";
+import { Input, Toggle } from "@renderer/components/shared/form";
 
 interface StructuredEditorProps {
   readonly lines: readonly HostLine[];
@@ -23,64 +25,64 @@ export const StructuredEditor = ({ lines, query, onChange }: StructuredEditorPro
   );
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-[#0f1622]">
+    <div className="overflow-hidden rounded-3xl border border-slate-300/65 bg-white/62 shadow-[0_18px_60px_-34px_rgba(15,23,42,0.38)] backdrop-blur-2xl dark:border-white/[0.09] dark:bg-slate-950/34">
       {visible.map((line) =>
         line.kind === "host" ? (
           <div
             key={line.id}
             data-host-id={line.id}
-            className="grid grid-cols-[54px_160px_1fr_1fr_44px] items-center gap-3 border-b border-slate-100 px-4 py-2 dark:border-white/6"
+            className="grid grid-cols-[54px_160px_1fr_1fr_44px] items-center gap-3 border-b border-slate-200/45 px-4 py-2 transition-all duration-200 hover:bg-white/72 hover:shadow-[inset_3px_0_0_rgba(245,158,11,0.28)] dark:border-white/[0.045] dark:hover:bg-white/[0.025]"
           >
-            <button
-              type="button"
-              onClick={() => {
-                patch(line.id, { enabled: !line.enabled });
+            <Toggle
+              checked={line.enabled}
+              label={line.enabled ? "Disable host" : "Enable host"}
+              onChange={(enabled) => {
+                patch(line.id, { enabled });
               }}
-              className={`h-6 w-11 rounded-full p-1 ${line.enabled ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}
-            >
-              <span
-                className={`block h-4 w-4 rounded-full bg-white transition ${line.enabled ? "translate-x-5" : ""}`}
-              />
-            </button>
-            <input
-              className={`mono rounded-lg border px-2 py-2 text-sm outline-none ${isValidIpAddress(line.address) ? "border-transparent bg-transparent hover:bg-slate-50 dark:hover:bg-white/5" : "border-red-400 bg-red-50/50 dark:bg-red-500/5"}`}
+            />
+            <Input
+              monospace
+              invalid={!isValidIpAddress(line.address)}
               title={isValidIpAddress(line.address) ? undefined : "Invalid IP address"}
               value={line.address}
               onChange={(event) => {
                 patch(line.id, { address: event.target.value });
               }}
+              className="border-transparent bg-transparent shadow-none hover:bg-white/85 dark:hover:bg-white/[0.055]"
             />
-            <input
+            <Input
+              monospace
+              invalid={!areValidHostnames(line.hostname)}
               data-hostname-input
-              className={`mono rounded-lg border px-2 py-2 text-sm outline-none ${areValidHostnames(line.hostname) ? "border-transparent bg-transparent hover:bg-slate-50 dark:hover:bg-white/5" : "border-red-400 bg-red-50/50 dark:bg-red-500/5"}`}
               title={areValidHostnames(line.hostname) ? undefined : "Invalid hostname"}
               value={line.hostname}
               onChange={(event) => {
                 patch(line.id, { hostname: event.target.value });
               }}
+              className="border-transparent bg-transparent shadow-none hover:bg-white/85 dark:hover:bg-white/[0.055]"
             />
-            <input
-              className="rounded-lg bg-transparent px-2 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5"
+            <Input
               value={line.comment}
               onChange={(event) => {
                 patch(line.id, { comment: event.target.value });
               }}
               placeholder="Comment"
+              className="border-transparent bg-transparent text-slate-500 shadow-none hover:bg-white/85 dark:hover:bg-white/[0.055]"
             />
-            <button
-              type="button"
+            <IconButton
+              label="Delete host"
+              danger
               onClick={() => {
                 onChange(lines.filter((item) => item.id !== line.id));
               }}
-              className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-500"
             >
               <Trash2 size={16} />
-            </button>
+            </IconButton>
           </div>
         ) : (
           <div
             key={line.id}
-            className="border-b border-slate-100 px-5 py-2 text-xs italic text-slate-400 dark:border-white/6"
+            className="border-b border-slate-200/45 px-5 py-2 text-xs italic text-slate-400 dark:border-white/[0.045]"
           >
             {line.raw || " "}
           </div>

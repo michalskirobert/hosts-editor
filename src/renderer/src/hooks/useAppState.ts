@@ -13,6 +13,7 @@ import type { Page } from "../types/navigation";
 export interface AppState {
   readonly tabs: readonly HostTab[];
   readonly saved: Readonly<Record<string, string>>;
+  readonly savedTabs: Readonly<Record<string, HostTab>>;
   readonly selected: string;
   readonly mode: EditorMode;
   readonly raw: string;
@@ -39,6 +40,7 @@ type Action =
 const initialState: AppState = {
   tabs: [],
   saved: {},
+  savedTabs: {},
   selected: "",
   mode: "structured",
   raw: "",
@@ -48,7 +50,7 @@ const initialState: AppState = {
     theme: "system",
     fullscreen: false,
     checkForUpdates: true,
-    autoBackupOnSave: false,
+    autoBackupOnSave: true,
   },
   backups: [],
   hostsPath: "",

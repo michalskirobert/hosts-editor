@@ -1,6 +1,10 @@
 import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
+import { Input, Textarea } from "@renderer/components/shared/form";
+import { IconButton } from "@renderer/components/ui/IconButton";
+import { ScrollArea } from "@renderer/components/ui/ScrollArea";
+
 interface RawEditorProps {
   readonly value: string;
   readonly onChange: (value: string) => void;
@@ -35,10 +39,10 @@ export const RawEditor = ({ value, onChange }: RawEditorProps) => {
   };
 
   return (
-    <div className="relative h-full min-h-[560px] overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-[#0f1622]">
-      <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#151e2c]">
-        <Search size={15} className="ml-2 text-slate-400" />
-        <input
+    <div className="relative h-full min-h-[560px] overflow-hidden rounded-3xl border border-white/70 bg-white/55 shadow-[0_18px_60px_-34px_rgba(15,23,42,0.4)] backdrop-blur-2xl dark:border-white/[0.09] dark:bg-slate-950/42">
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-2xl border border-white/75 bg-white/72 p-1 shadow-lg backdrop-blur-2xl dark:border-white/10 dark:bg-[#0b111b]/75">
+        <Search size={16} className="ml-2 text-slate-400" />
+        <Input
           value={find}
           onChange={(event) => {
             setFind(event.target.value);
@@ -51,48 +55,51 @@ export const RawEditor = ({ value, onChange }: RawEditorProps) => {
             }
           }}
           placeholder="Find in hosts…"
-          className="w-48 bg-transparent px-2 py-1.5 text-sm outline-none"
+          className="w-48 border-transparent bg-transparent px-2 py-1.5 shadow-none hover:bg-white/40 focus:bg-white/50 dark:bg-transparent dark:hover:bg-white/[0.035] dark:focus:bg-white/[0.05]"
         />
         <span className="min-w-12 text-center text-xs text-slate-400">
           {matches.length ? `${String(cursor + 1)}/${String(matches.length)}` : "0/0"}
         </span>
-        <button
-          type="button"
+        <IconButton
+          label="Previous match"
+          className="p-1.5"
           onClick={() => {
             jump(-1);
           }}
-          className="p-1"
         >
           <ChevronUp size={15} />
-        </button>
-        <button
-          type="button"
+        </IconButton>
+        <IconButton
+          label="Next match"
+          className="p-1.5"
           onClick={() => {
             jump(1);
           }}
-          className="p-1"
         >
           <ChevronDown size={15} />
-        </button>
-        <button
-          type="button"
+        </IconButton>
+        <IconButton
+          label="Clear search"
+          className="p-1.5"
           onClick={() => {
             setFind("");
           }}
-          className="p-1"
         >
           <X size={15} />
-        </button>
+        </IconButton>
       </div>
-      <textarea
-        ref={ref}
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value);
-        }}
-        spellCheck={false}
-        className="mono scroll h-full min-h-[560px] w-full resize-none bg-transparent p-5 pt-16 text-[13px] leading-6 outline-none"
-      />
+      <ScrollArea className="absolute inset-0">
+        <Textarea
+          ref={ref}
+          value={value}
+          onChange={(event) => {
+            onChange(event.target.value);
+          }}
+          spellCheck={false}
+          monospace
+          className="h-full min-h-[560px] w-full resize-none rounded-none border-0 bg-transparent p-5 pt-16 text-[13px] leading-6 shadow-none hover:bg-transparent focus:bg-transparent focus:ring-0 dark:bg-transparent dark:hover:bg-transparent dark:focus:bg-transparent"
+        />
+      </ScrollArea>
     </div>
   );
 };

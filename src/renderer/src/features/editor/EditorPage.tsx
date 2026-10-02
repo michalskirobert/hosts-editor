@@ -1,6 +1,9 @@
 import { FileCode2, Import, Plus, Search, Table2, X } from "lucide-react";
 
 import { parseHostsText } from "../../../../shared/domain/hosts";
+import { Input } from "../../components/shared/form";
+import { Button } from "../../components/ui/Button";
+import { IconButton } from "../../components/ui/IconButton";
 import { ModeButton } from "../../components/ui/ModeButton";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
 import { RawEditor } from "./RawEditor";
@@ -12,79 +15,73 @@ export const EditorPage = () => {
 
   if (!tab) {
     return (
-      <div className="mx-auto mt-24 max-w-lg rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-white/15 dark:bg-[#0f1622]">
+      <div className="mx-auto mt-24 max-w-lg rounded-[30px] border border-white/70 bg-white/58 p-10 text-center shadow-[0_24px_70px_-38px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/42">
         <FileCode2 size={38} className="mx-auto mb-5 text-slate-400" />
-
         <h2 className="text-xl font-semibold">No host tabs yet</h2>
-
         <p className="mt-2 text-sm text-slate-400">
           Keep projects isolated in tabs, then save them to your system hosts file.
         </p>
-
         <div className="mt-6 flex justify-center gap-2">
-          <button
-            className="action"
+          <Button
             onClick={() => {
               void importIntoCurrent();
             }}
+            icon={<Import size={15} />}
           >
-            <Import size={15} />
             Import system hosts
-          </button>
-
-          <button
-            className="primary"
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => {
               void createTab();
             }}
+            icon={<Plus size={15} />}
           >
-            <Plus size={15} />
             Create empty tab
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
-  const openAddHosts = (): void => {
-    patchState({ dialog: { kind: "add-hosts" } });
-  };
-
   return (
-    <div className="mx-auto max-w-6xl mt-5 pb-5">
-      <div className="sticky top-0 mb-4 flex gap-3 border-slate-200 bg-white/70 dark:border-white/8 dark:bg-[#090d14]/80">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-
-          <input
+    <div className="mx-auto max-w-6xl pb-6 pt-6">
+      <div className="mb-5 flex h-11 items-center gap-3">
+        <div className="relative h-11 min-w-0 flex-1">
+          <Search
+            size={17}
+            className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-slate-400"
+          />
+          <Input
             value={state.query}
             onChange={(event) => {
               patchState({ query: event.target.value });
             }}
             placeholder="Search hosts…"
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm outline-none dark:border-white/10 dark:bg-white/5"
+            className="h-11 rounded-2xl border-slate-300/55 bg-white/48 py-0 pl-11 pr-11 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.35)] hover:bg-white/62 dark:border-white/[0.075] dark:bg-white/[0.035] dark:hover:bg-white/[0.055]"
           />
-
           {state.query && (
-            <button
-              type="button"
-              aria-label="Clear search"
+            <IconButton
+              label="Clear search"
               onClick={() => {
                 patchState({ query: "" });
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-slate-200"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400"
             >
               <X size={15} />
-            </button>
+            </IconButton>
           )}
         </div>
-
-        <button type="button" className="action" onClick={openAddHosts}>
-          <Plus size={15} />
+        <Button
+          className="h-11"
+          onClick={() => {
+            patchState({ dialog: { kind: "add-hosts" } });
+          }}
+          icon={<Plus size={15} />}
+        >
           Add hosts
-        </button>
-
-        <div className="flex rounded-xl border border-slate-200 bg-white p-1 dark:border-white/10 dark:bg-white/5">
+        </Button>
+        <div className="flex h-11 items-center rounded-2xl border border-white/75 bg-white/48 p-1 shadow-sm backdrop-blur-xl dark:border-white/[0.075] dark:bg-white/[0.035]">
           <ModeButton
             active={state.mode === "structured"}
             icon={<Table2 size={15} />}
@@ -93,7 +90,6 @@ export const EditorPage = () => {
               switchMode("structured");
             }}
           />
-
           <ModeButton
             active={state.mode === "raw"}
             icon={<FileCode2 size={15} />}
@@ -105,17 +101,19 @@ export const EditorPage = () => {
         </div>
       </div>
 
-      {state.mode === "structured" ? (
-        <StructuredEditor lines={tab.lines} query={state.query} onChange={setLines} />
-      ) : (
-        <RawEditor
-          value={state.raw}
-          onChange={(raw) => {
-            patchState({ raw });
-            setLines(parseHostsText(raw));
-          }}
-        />
-      )}
+      <div className="pt-1">
+        {state.mode === "structured" ? (
+          <StructuredEditor lines={tab.lines} query={state.query} onChange={setLines} />
+        ) : (
+          <RawEditor
+            value={state.raw}
+            onChange={(raw) => {
+              patchState({ raw });
+              setLines(parseHostsText(raw));
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };

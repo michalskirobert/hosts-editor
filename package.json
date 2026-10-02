@@ -1,11 +1,12 @@
 {
   "name": "hosts-editor",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "private": true,
   "description": "Cross-platform hosts editor by NurByte",
   "author": {
     "name": "Robert Michalski",
-    "email": "rm.software.lab@gmail.com"
+    "email": "robertmichalski@nurbyte.dev",
+    "url": "https://nurbyte.dev"
   },
   "license": "MIT",
   "type": "module",

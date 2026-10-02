@@ -16,7 +16,7 @@ const defaults: AppSettings = {
   theme: "system",
   fullscreen: false,
   checkForUpdates: true,
-  autoBackupOnSave: false,
+  autoBackupOnSave: true,
 };
 
 interface StoredBackup {
@@ -79,7 +79,10 @@ export class StorageService {
 
   async saveTab(tab: HostTab, createAutoBackup = false): Promise<HostTab> {
     const existing = await this.tryReadTab(tab.id);
-    if (existing && createAutoBackup) await this.createBackup(existing, "auto-save");
+    if (existing && createAutoBackup && !(await this.hasAutoBackupToday(tab.id))) {
+      await this.createBackup(existing, "auto-save");
+      await this.pruneAutoBackups(7);
+    }
     const next: HostTab = {
       ...tab,
       name: this.normalizeName(tab.name),
@@ -109,6 +112,28 @@ export class StorageService {
     const stored: StoredBackup = { reason, createdAt, tab };
     await this.atomicJson(backupPath, stored);
     return { tabId: tab.id, fileName, createdAt, path: backupPath, reason };
+  }
+
+  private async hasAutoBackupToday(tabId: string): Promise<boolean> {
+    const directory = path.join(this.backupsDirectory, this.safeId(tabId));
+    const files = await fs.readdir(directory).catch((): string[] => []);
+    const today = new Date().toISOString().slice(0, 10);
+
+    for (const fileName of files) {
+      if (!fileName.endsWith(".json")) continue;
+      try {
+        const stored = await this.read<StoredBackup>(path.join(directory, fileName));
+        if (stored.reason === "auto-save" && stored.createdAt.slice(0, 10) === today) return true;
+      } catch {
+        // Ignore malformed legacy backup files here. listBackups handles them separately.
+      }
+    }
+    return false;
+  }
+
+  private async pruneAutoBackups(limit: number): Promise<void> {
+    const backups = (await this.listBackups()).filter((backup) => backup.reason === "auto-save");
+    await Promise.all(backups.slice(limit).map((backup) => fs.rm(backup.path, { force: true })));
   }
 
   async listBackups(): Promise<readonly BackupInfo[]> {
