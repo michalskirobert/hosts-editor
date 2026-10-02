@@ -25,6 +25,7 @@ interface SideButtonProps {
 const SideButton = ({ active, label, icon, onClick }: SideButtonProps) => (
   <button
     onClick={onClick}
+    aria-current={active ? "page" : undefined}
     className={`group mb-1 flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-[background-color,border-color,color,box-shadow,transform] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/35 ${active ? "translate-x-1 border-amber-300/45 bg-amber-50/75 font-medium text-slate-950 shadow-[0_12px_32px_-24px_rgba(245,158,11,0.58)] dark:border-amber-300/[0.14] dark:bg-amber-300/[0.07] dark:text-white" : "border-transparent text-slate-600 motion-safe:hover:translate-x-1 hover:border-amber-300/25 hover:bg-amber-50/60 hover:text-slate-950 hover:shadow-[0_12px_28px_-24px_rgba(245,158,11,0.42)] dark:text-slate-400 dark:hover:border-amber-300/[0.10] dark:hover:bg-amber-300/[0.045] dark:hover:text-slate-100"}`}
   >
     <span

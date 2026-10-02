@@ -1,16 +1,24 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
 
 import { IPC } from "../../shared/contracts/ipc";
-import type { AppSettings, BackupInfo, BackupReason, HostTab } from "../../shared/types";
+import type {
+  AppSettings,
+  BackupInfo,
+  BackupReason,
+  FeedbackSubmission,
+  HostTab,
+} from "../../shared/types";
 import type { HostsService } from "../services/hosts/hostsService";
 import type { StorageService } from "../services/storage/storageService";
 import type { UpdateService } from "../services/update/updateService";
+import { FeedbackService } from "../services/feedbackService";
 
 export const registerIpc = (
   storage: StorageService,
   hosts: HostsService,
   updates: UpdateService,
 ): void => {
+  const feedback = new FeedbackService();
   ipcMain.handle(IPC.bootstrap, async () => ({
     tabs: await storage.listTabs(),
     settings: await storage.getSettings(),
@@ -49,6 +57,20 @@ export const registerIpc = (
   ipcMain.handle(IPC.updateOpen, () => updates.open());
   ipcMain.handle(IPC.fullscreen, (_event, value: boolean) =>
     BrowserWindow.getFocusedWindow()?.setFullScreen(value),
+  );
+
+  ipcMain.handle(IPC.feedbackCaptcha, async () => {
+    try {
+      return { ok: true, captcha: await feedback.captcha() } as const;
+    } catch (cause) {
+      return {
+        ok: false,
+        message: cause instanceof Error ? cause.message : "CAPTCHA service is unavailable.",
+      } as const;
+    }
+  });
+  ipcMain.handle(IPC.feedbackSubmit, (_event, payload: FeedbackSubmission) =>
+    feedback.submit(payload),
   );
   ipcMain.handle(IPC.externalOpen, async (_event, url: string) => {
     const allowed = new URL(url);

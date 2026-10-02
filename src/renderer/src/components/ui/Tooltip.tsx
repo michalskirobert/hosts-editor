@@ -61,18 +61,22 @@ export const Tooltip = ({ label, children }: TooltipProps) => {
     };
   }, [updatePosition, visible]);
 
-  const show = () => setVisible(true);
+  const show = () => {
+    setVisible(true);
+  };
   const hide = () => {
     setVisible(false);
     setPosition(null);
   };
 
   const handleBlur = (event: FocusEvent<HTMLSpanElement>) => {
-    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) hide();
+    if (!event.currentTarget.contains(event.relatedTarget)) hide();
   };
 
   const handleMouseLeave = (event: MouseEvent<HTMLSpanElement>) => {
-    if (!event.currentTarget.contains(document.activeElement)) hide();
+    if (!event.currentTarget.contains(document.activeElement)) {
+      hide();
+    }
   };
 
   const style: CSSProperties | undefined = position

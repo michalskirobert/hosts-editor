@@ -1,12 +1,12 @@
-import { Bug, Lightbulb, Mail, ShieldCheck } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Bug, CheckCircle2, Lightbulb, RefreshCw, Send, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 
 import { Checkbox, Input, Textarea } from "@renderer/components/shared/form";
 import { Button } from "@renderer/components/ui/Button";
 import { Modal } from "@renderer/components/ui/Modal";
 import { cn } from "@renderer/lib/cn";
-
-type FeedbackKind = "bug" | "feature";
+import type { FeedbackCaptcha, FeedbackKind } from "@shared/types";
 
 interface FeedbackDialogProps {
   readonly version: string;
@@ -14,169 +14,405 @@ interface FeedbackDialogProps {
   readonly onClose: () => void;
 }
 
-const recipient = "rm.software.lab@gmail.com";
+interface FeedbackFormValues {
+  kind: FeedbackKind;
+  email: string;
+  summary: string;
+  description: string;
+  expected: string;
+  steps: string;
+  includeDiagnostics: boolean;
+  captchaAnswer: string;
+}
+
+interface FieldProps {
+  readonly label: string;
+  readonly hint?: string;
+  readonly error?: string;
+  readonly children: React.ReactNode;
+}
+
+const Field = ({ label, hint, error, children }: FieldProps) => (
+  <label className="block space-y-1.5">
+    <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{label}</span>
+    {children}
+    {error ? (
+      <span className="block text-xs text-red-600 dark:text-red-300">{error}</span>
+    ) : hint ? (
+      <span className="block text-xs text-slate-500 dark:text-slate-400">{hint}</span>
+    ) : null}
+  </label>
+);
 
 export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialogProps) => {
-  const [kind, setKind] = useState<FeedbackKind>(initialKind);
-  const [summary, setSummary] = useState("");
-  const [happened, setHappened] = useState("");
-  const [expected, setExpected] = useState("");
-  const [steps, setSteps] = useState("");
-  const [includeDiagnostics, setIncludeDiagnostics] = useState(true);
+  const [captcha, setCaptcha] = useState<FeedbackCaptcha | null>(null);
+  const [loadingCaptcha, setLoadingCaptcha] = useState(false);
+  const [requestError, setRequestError] = useState("");
+  const [reportId, setReportId] = useState("");
+  const initialCaptchaRequested = useRef(false);
 
-  const diagnostics = useMemo(
-    () =>
-      `Hosts Editor ${version}\nPlatform: ${navigator.platform}\nUser agent: ${navigator.userAgent}`,
-    [version],
-  );
-  const missingRequired = !summary.trim() || (kind === "bug" && !happened.trim());
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    resetField,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<FeedbackFormValues>({
+    mode: "onTouched",
+    defaultValues: {
+      kind: initialKind,
+      email: "",
+      summary: "",
+      description: "",
+      expected: "",
+      steps: "",
+      includeDiagnostics: true,
+      captchaAnswer: "",
+    },
+  });
 
-  const openEmail = async (): Promise<void> => {
-    if (missingRequired) return;
-    const subject = `${kind === "bug" ? "#BUG" : "#FEATURE"} ${summary.trim()}`;
-    const sections =
-      kind === "bug"
-        ? [
-            `What happened?\n${happened.trim()}`,
-            `What did you expect?\n${expected.trim() || "—"}`,
-            `Steps to reproduce\n${steps.trim() || "—"}`,
-          ]
-        : [
-            `Suggestion\n${happened.trim() || "—"}`,
-            `Why would it help?\n${expected.trim() || "—"}`,
-          ];
-    if (includeDiagnostics) sections.push(`Diagnostics\n${diagnostics}`);
-    sections.push(
-      "\nPrivacy note: Hosts Editor did not attach hosts, hostnames, IP addresses, backups or personal files.",
+  const kind = watch("kind");
+  const email = watch("email");
+
+  const loadCaptcha = useCallback(async (): Promise<void> => {
+    setLoadingCaptcha(true);
+    setRequestError("");
+    try {
+      const result = await window.hostsEditor.getFeedbackCaptcha();
+      if (!result.ok) {
+        setCaptcha(null);
+        setRequestError(result.message);
+        return;
+      }
+      setCaptcha(result.captcha);
+      resetField("captchaAnswer", { defaultValue: "" });
+    } catch (cause) {
+      setRequestError(
+        cause instanceof Error ? cause.message : "Could not load CAPTCHA. Try again.",
+      );
+    } finally {
+      setLoadingCaptcha(false);
+    }
+  }, [resetField]);
+
+  useEffect(() => {
+    if (initialCaptchaRequested.current) return;
+    initialCaptchaRequested.current = true;
+    void loadCaptcha();
+  }, [loadCaptcha]);
+
+  const submit = handleSubmit(async (values): Promise<void> => {
+    if (!captcha) {
+      setRequestError("CAPTCHA is unavailable. Refresh it and try again.");
+      return;
+    }
+
+    setRequestError("");
+    try {
+      const result = await window.hostsEditor.submitFeedback({
+        kind: values.kind,
+        email: values.email.trim(),
+        summary: values.summary.trim(),
+        description: values.description.trim(),
+        expected: values.expected.trim(),
+        reproductionSteps: values.kind === "bug" ? values.steps.trim() : "",
+        includeDiagnostics: values.includeDiagnostics,
+        captchaToken: captcha.token,
+        captchaAnswer: values.captchaAnswer.trim(),
+      });
+      setReportId(result.reportId);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "The report could not be sent.";
+      if (/captcha/i.test(message)) setError("captchaAnswer", { type: "server", message });
+      else setRequestError(message);
+      await loadCaptcha();
+    }
+  });
+
+  if (reportId) {
+    return (
+      <Modal title="Feedback sent" onClose={onClose}>
+        <div className="flex flex-col items-center px-2 py-8 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-500/10">
+            <CheckCircle2 size={30} className="text-emerald-500" />
+          </div>
+          <h3 className="mt-4 text-lg font-semibold">Thanks for helping improve Hosts Editor.</h3>
+          <p className="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
+            We sent a confirmation to {email}. Report ID:{" "}
+            <span className="font-mono text-slate-700 dark:text-slate-200">{reportId}</span>.
+          </p>
+          <Button className="mt-6" variant="primary" onClick={onClose}>
+            Done
+          </Button>
+        </div>
+      </Modal>
     );
+  }
 
-    const url = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(sections.join("\n\n"))}`;
-    await window.hostsEditor.openExternal(url);
-    onClose();
-  };
+  const footer = (
+    <div className="flex w-full items-center justify-between gap-4">
+      <p className="hidden text-xs text-slate-500 sm:block dark:text-slate-400">
+        Required fields are marked automatically when validation fails.
+      </p>
+      <div className="ml-auto flex gap-2">
+        <Button onClick={onClose}>Cancel</Button>
+        <Button
+          variant="primary"
+          icon={<Send size={16} />}
+          disabled={isSubmitting || loadingCaptcha || !captcha}
+          disabledReason={
+            isSubmitting
+              ? "Your report is being sent"
+              : loadingCaptcha
+                ? "Security check is loading"
+                : !captcha
+                  ? "Security check is unavailable"
+                  : undefined
+          }
+          onClick={() => {
+            void submit();
+          }}
+        >
+          {isSubmitting ? "Sending…" : "Send feedback"}
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
-    <Modal title={kind === "bug" ? "Report a bug" : "Suggest a feature"} onClose={onClose} wide>
-      <div className="space-y-5">
-        <div className="grid grid-cols-2 gap-3">
-          {(
-            [
-              { id: "bug", label: "Bug report", icon: Bug },
-              { id: "feature", label: "Feature request", icon: Lightbulb },
-            ] as const
-          ).map(({ id, label, icon: Icon }) => {
-            const active = kind === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setKind(id)}
-                className={cn(
-                  "group rounded-2xl border p-4 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40",
-                  active
-                    ? "-translate-y-0.5 border-amber-400/45 bg-amber-50/75 shadow-[0_14px_34px_-24px_rgba(245,158,11,0.58)] dark:border-amber-300/[0.18] dark:bg-amber-300/[0.075]"
-                    : "border-slate-300/55 bg-white/35 hover:-translate-y-0.5 hover:border-amber-400/45 hover:bg-amber-50/75 dark:border-white/[0.065] dark:bg-white/[0.025] dark:hover:border-amber-300/[0.18] dark:hover:bg-amber-300/[0.075]",
-                )}
-              >
-                <Icon
-                  size={18}
-                  className={active ? "text-amber-600 dark:text-amber-300" : "text-slate-500"}
-                />
-                <div className="mt-2 font-medium">{label}</div>
-              </button>
-            );
-          })}
+    <Modal
+      title={kind === "bug" ? "Report a bug" : "Suggest a feature"}
+      onClose={onClose}
+      wide
+      footer={footer}
+    >
+      <form
+        className="space-y-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submit();
+        }}
+        noValidate
+      >
+        <Controller
+          control={control}
+          name="kind"
+          render={({ field }) => (
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Feedback type">
+              {(
+                [
+                  {
+                    id: "bug",
+                    label: "Bug report",
+                    caption: "Something is not working",
+                    icon: Bug,
+                  },
+                  {
+                    id: "feature",
+                    label: "Feature request",
+                    caption: "Suggest an improvement",
+                    icon: Lightbulb,
+                  },
+                ] as const
+              ).map(({ id, label, caption, icon: Icon }) => {
+                const active = field.value === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => {
+                      field.onChange(id);
+                    }}
+                    className={cn(
+                      "rounded-xl border px-4 py-3 text-left transition-[background-color,border-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40",
+                      active
+                        ? "border-amber-400/45 bg-amber-400/[0.09] shadow-[0_12px_30px_-24px_rgba(245,158,11,0.75)] dark:border-amber-300/20"
+                        : "border-slate-300/55 bg-white/35 hover:border-amber-400/30 hover:bg-amber-400/[0.045] dark:border-white/[0.065] dark:bg-white/[0.025]",
+                    )}
+                  >
+                    <Icon size={18} className={active ? "text-amber-500" : "text-slate-500"} />
+                    <div className="mt-1 font-semibold">{label}</div>
+                    <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                      {caption}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Field
+            label="Your email"
+            hint="Used only for confirmation and replies."
+            {...(errors.email?.message ? { error: errors.email.message } : {})}
+          >
+            <Input
+              type="email"
+              placeholder="you@example.com"
+              autoFocus
+              invalid={Boolean(errors.email)}
+              {...register("email", {
+                required: "Enter your email address",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Enter a valid email address",
+                },
+              })}
+            />
+          </Field>
+          <Field
+            label="Short description"
+            {...(errors.summary?.message ? { error: errors.summary.message } : {})}
+          >
+            <Input
+              placeholder="A short summary"
+              invalid={Boolean(errors.summary)}
+              {...register("summary", {
+                required: "Add a short description",
+                maxLength: { value: 160, message: "Keep the summary under 160 characters" },
+              })}
+            />
+          </Field>
         </div>
 
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium">Short description</span>
-          <Input
-            value={summary}
-            onChange={(event) => setSummary(event.target.value)}
-            placeholder="A short summary"
-            autoFocus
-          />
-        </label>
-
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium">
-            {kind === "bug" ? "What happened?" : "Your suggestion"}
-          </span>
+        <Field
+          label={kind === "bug" ? "What happened?" : "Your suggestion"}
+          {...(errors.description?.message ? { error: errors.description.message } : {})}
+        >
           <Textarea
-            rows={4}
-            value={happened}
-            onChange={(event) => setHappened(event.target.value)}
+            rows={3}
             placeholder={
               kind === "bug" ? "Describe the problem" : "Describe the feature or improvement"
             }
+            invalid={Boolean(errors.description)}
+            {...register("description", {
+              required: kind === "bug" ? "Describe what happened" : "Describe your suggestion",
+            })}
           />
-        </label>
+        </Field>
 
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium">
-            {kind === "bug" ? "What did you expect?" : "Why would it help?"}
-          </span>
-          <Textarea
-            rows={3}
-            value={expected}
-            onChange={(event) => setExpected(event.target.value)}
-          />
-        </label>
-
-        {kind === "bug" && (
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">Steps to reproduce</span>
-            <Textarea
-              rows={3}
-              value={steps}
-              onChange={(event) => setSteps(event.target.value)}
-              placeholder="1. …\n2. …\n3. …"
-            />
-          </label>
-        )}
-
-        <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.045] p-4 dark:bg-emerald-400/[0.035]">
-          <div className="flex gap-3">
-            <ShieldCheck
-              size={19}
-              className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="font-medium">Privacy-first diagnostics</div>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Hosts contents, hostnames, IP addresses, backups and personal files are never
-                included automatically.
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Field label={kind === "bug" ? "What did you expect?" : "Why would it help?"}>
+            <Textarea rows={2} {...register("expected")} />
+          </Field>
+          {kind === "bug" ? (
+            <Field label="Steps to reproduce">
+              <Textarea rows={2} placeholder={"1. …\n2. …\n3. …"} {...register("steps")} />
+            </Field>
+          ) : (
+            <div className="rounded-2xl border border-amber-400/15 bg-amber-400/[0.04] p-4 text-sm text-slate-500 dark:text-slate-400">
+              <div className="font-medium text-slate-800 dark:text-slate-200">Feature request</div>
+              <p className="mt-1">
+                Tell us what problem the feature would solve. That context helps us evaluate the
+                idea.
               </p>
-              <Checkbox
-                className="mt-3"
-                checked={includeDiagnostics}
-                label="Include app version and system information"
-                onChange={setIncludeDiagnostics}
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-3 lg:grid-cols-2">
+          <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.045] p-4 dark:bg-emerald-400/[0.035]">
+            <div className="flex gap-3">
+              <ShieldCheck
+                size={19}
+                className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400"
               />
-              {includeDiagnostics && (
-                <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-400">{diagnostics}</pre>
-              )}
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Privacy-first diagnostics
+                </div>
+                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                  Hosts contents, hostnames, IP addresses, backups and personal files are never
+                  included automatically.
+                </p>
+                <Controller
+                  control={control}
+                  name="includeDiagnostics"
+                  render={({ field }) => (
+                    <Checkbox
+                      className="mt-2"
+                      checked={field.value}
+                      label={`Include Hosts Editor ${version} and system information`}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-300/55 bg-white/35 p-4 dark:border-white/[0.065] dark:bg-white/[0.025]">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  Security check
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  Enter the characters shown below.
+                </div>
+              </div>
+              <Button
+                size="sm"
+                icon={
+                  <RefreshCw size={14} className={loadingCaptcha ? "animate-spin" : undefined} />
+                }
+                disabled={loadingCaptcha}
+                disabledReason="CAPTCHA is already refreshing"
+                onClick={() => {
+                  void loadCaptcha();
+                }}
+              >
+                Refresh
+              </Button>
+            </div>
+            <div className="grid grid-cols-[160px_1fr] items-center gap-3">
+              <div className="flex h-14 items-center justify-center overflow-hidden rounded-xl border border-slate-300/60 bg-slate-950/95 dark:border-white/10">
+                {captcha ? (
+                  <img
+                    src={captcha.imageDataUrl}
+                    alt="CAPTCHA challenge"
+                    className="h-full w-full object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <span className="text-xs text-slate-400">
+                    {loadingCaptcha ? "Loading…" : "Unavailable"}
+                  </span>
+                )}
+              </div>
+              <div>
+                <Input
+                  placeholder="CAPTCHA"
+                  autoComplete="off"
+                  spellCheck={false}
+                  invalid={Boolean(errors.captchaAnswer)}
+                  {...register("captchaAnswer", { required: "Complete the security check" })}
+                />
+                {errors.captchaAnswer?.message && (
+                  <div className="mt-1 text-xs text-red-600 dark:text-red-300">
+                    {errors.captchaAnswer.message}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-slate-200/60 pt-4 dark:border-white/[0.06]">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button
-            variant="primary"
-            icon={<Mail size={16} />}
-            disabled={missingRequired}
-            disabledReason={
-              !summary.trim() ? "Add a short description first" : "Describe what happened first"
-            }
-            onClick={() => {
-              void openEmail();
-            }}
+        {requestError && (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-400/20 bg-red-500/[0.06] px-4 py-3 text-sm text-red-600 dark:text-red-300"
           >
-            Open email
-          </Button>
-        </div>
-      </div>
+            {requestError}
+          </div>
+        )}
+      </form>
     </Modal>
   );
 };

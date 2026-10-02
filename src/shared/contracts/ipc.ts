@@ -17,4 +17,6 @@ export const IPC = {
   updateOpen: "update:open",
   fullscreen: "window:fullscreen",
   externalOpen: "external:open",
+  feedbackCaptcha: "feedback:captcha",
+  feedbackSubmit: "feedback:submit",
 } as const;

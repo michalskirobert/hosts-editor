@@ -144,8 +144,8 @@ export const useHostsEditor = () => {
         mode: "structured",
         dialog: { kind: "none" },
         message: hiddenBySearch
-          ? `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added. Some new entries are hidden by the current search filter.`
-          : `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added. Save when ready.`,
+          ? `${String(lines.length)} ${lines.length === 1 ? "host" : "hosts"} added. Some new entries are hidden by the current search filter.`
+          : `${String(lines.length)} ${lines.length === 1 ? "host" : "hosts"} added. Save when ready.`,
       });
       return;
     }
@@ -167,8 +167,8 @@ export const useHostsEditor = () => {
         saved: Object.fromEntries(appliedTabs.map((item) => [item.id, tabFingerprint(item)])),
         savedTabs: Object.fromEntries(appliedTabs.map((item) => [item.id, item])),
         message: hiddenBySearch
-          ? `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added and saved. Some new entries are hidden by the current search filter.`
-          : `${lines.length} ${lines.length === 1 ? "host" : "hosts"} added and system hosts updated.`,
+          ? `${String(lines.length)} ${lines.length === 1 ? "host" : "hosts"} added and saved. Some new entries are hidden by the current search filter.`
+          : `${String(lines.length)} ${lines.length === 1 ? "host" : "hosts"} added and system hosts updated.`,
       });
     } catch (error: unknown) {
       patchState({

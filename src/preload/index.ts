@@ -9,6 +9,9 @@ import type {
   BootstrapPayload,
   HostTab,
   UpdateState,
+  FeedbackCaptchaResult,
+  FeedbackResult,
+  FeedbackSubmission,
 } from "../shared/types";
 
 export interface HostsEditorApi {
@@ -30,6 +33,8 @@ export interface HostsEditorApi {
   openUpdate(): Promise<void>;
   setFullscreen(value: boolean): Promise<void>;
   openExternal(url: string): Promise<void>;
+  getFeedbackCaptcha(): Promise<FeedbackCaptchaResult>;
+  submitFeedback(payload: FeedbackSubmission): Promise<FeedbackResult>;
 }
 
 const api: HostsEditorApi = {
@@ -54,6 +59,10 @@ const api: HostsEditorApi = {
   openUpdate: () => ipcRenderer.invoke(IPC.updateOpen) as Promise<void>,
   setFullscreen: (value) => ipcRenderer.invoke(IPC.fullscreen, value) as Promise<void>,
   openExternal: (url) => ipcRenderer.invoke(IPC.externalOpen, url) as Promise<void>,
+  getFeedbackCaptcha: () =>
+    ipcRenderer.invoke(IPC.feedbackCaptcha) as Promise<FeedbackCaptchaResult>,
+  submitFeedback: (payload) =>
+    ipcRenderer.invoke(IPC.feedbackSubmit, payload) as Promise<FeedbackResult>,
 };
 
 contextBridge.exposeInMainWorld("hostsEditor", api);

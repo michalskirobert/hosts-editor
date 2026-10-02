@@ -147,8 +147,9 @@ export const SettingsPage = () => {
           <div>
             <div className="font-medium">Help improve Hosts Editor</div>
             <div className="mt-1 max-w-xl text-sm text-slate-500 dark:text-slate-400">
-              Report a problem or suggest an improvement. Hosts Editor prepares an email and never
-              includes your hosts, IP addresses, backups or personal files automatically.
+              Report a problem or suggest an improvement. Your report is sent securely to NurByte
+              and you receive an email confirmation. Hosts Editor never includes your hosts, IP
+              addresses, backups or personal files automatically.
             </div>
           </div>
           <div className="flex shrink-0 gap-2">
