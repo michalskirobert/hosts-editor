@@ -47,6 +47,8 @@ export const registerIpc = (
   ipcMain.handle(IPC.backupsRestore, (_event, backup: BackupInfo) => storage.restoreBackup(backup));
   ipcMain.handle(IPC.backupsDelete, (_event, backup: BackupInfo) => storage.deleteBackup(backup));
   ipcMain.handle(IPC.backupsExport, (_event, backup: BackupInfo) => storage.exportBackup(backup));
+  ipcMain.handle(IPC.backupsExportAll, () => storage.exportAllBackups());
+  ipcMain.handle(IPC.backupsImport, () => storage.importBackups());
   ipcMain.handle(IPC.backupsOpen, () => storage.openBackups());
   ipcMain.handle(IPC.settingsSave, async (_event, settings: AppSettings) => {
     await storage.saveSettings(settings);

@@ -1,5 +1,6 @@
 import type {
   AppSettings,
+  BackupImportResult,
   BackupInfo,
   BackupReason,
   BackupSnapshot,
@@ -24,6 +25,8 @@ export interface HostsEditorApi {
   restoreBackup(backup: BackupInfo): Promise<HostTab>;
   deleteBackup(backup: BackupInfo): Promise<void>;
   exportBackup(backup: BackupInfo): Promise<boolean>;
+  exportAllBackups(): Promise<boolean>;
+  importBackups(): Promise<BackupImportResult | null>;
   openBackups(): Promise<void>;
   saveSettings(settings: AppSettings): Promise<AppSettings>;
   checkUpdate(): Promise<UpdateState>;

@@ -46,7 +46,7 @@ export const EditorPage = () => {
 
   return (
     <div className="mx-auto max-w-6xl pb-6 pt-6">
-      <div className="mb-5 flex h-11 items-center gap-3">
+      <div className="sticky top-0 z-30 -mx-2 mb-5 flex h-[67px] items-center gap-3 border-b border-slate-300/70 bg-slate-100/92 px-2 backdrop-blur-2xl dark:border-white/[0.06] dark:bg-[#080d15]/92">
         <div className="relative h-11 min-w-0 flex-1">
           <Search
             size={17}
@@ -58,7 +58,7 @@ export const EditorPage = () => {
               patchState({ query: event.target.value });
             }}
             placeholder="Search hosts…"
-            className="h-11 rounded-2xl border-slate-300/55 bg-white/48 py-0 pl-11 pr-11 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.35)] hover:bg-white/62 dark:border-white/[0.075] dark:bg-white/[0.035] dark:hover:bg-white/[0.055]"
+            className="h-11 rounded-2xl border-slate-300/85 bg-white/88 py-0 pl-11 pr-11 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.35)] hover:bg-white/62 dark:border-white/[0.075] dark:bg-white/[0.035] dark:hover:bg-white/[0.055]"
           />
           {state.query && (
             <IconButton
@@ -81,7 +81,7 @@ export const EditorPage = () => {
         >
           Add hosts
         </Button>
-        <div className="flex h-11 items-center rounded-2xl border border-white/75 bg-white/48 p-1 shadow-sm backdrop-blur-xl dark:border-white/[0.075] dark:bg-white/[0.035]">
+        <div className="flex h-11 items-center rounded-2xl border border-slate-300/80 bg-white/88 p-1 shadow-sm backdrop-blur-xl dark:border-white/[0.075] dark:bg-white/[0.035]">
           <ModeButton
             active={state.mode === "structured"}
             icon={<Table2 size={15} />}

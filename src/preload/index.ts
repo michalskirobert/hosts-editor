@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from "electron";
 import { IPC } from "../shared/contracts/ipc";
 import type {
   AppSettings,
+  BackupImportResult,
   BackupInfo,
   BackupSnapshot,
   BootstrapPayload,
@@ -28,6 +29,8 @@ const api: HostsEditorApi = {
   restoreBackup: (backup) => ipcRenderer.invoke(IPC.backupsRestore, backup) as Promise<HostTab>,
   deleteBackup: (backup) => ipcRenderer.invoke(IPC.backupsDelete, backup) as Promise<void>,
   exportBackup: (backup) => ipcRenderer.invoke(IPC.backupsExport, backup) as Promise<boolean>,
+  exportAllBackups: () => ipcRenderer.invoke(IPC.backupsExportAll) as Promise<boolean>,
+  importBackups: () => ipcRenderer.invoke(IPC.backupsImport) as Promise<BackupImportResult | null>,
   openBackups: () => ipcRenderer.invoke(IPC.backupsOpen) as Promise<void>,
   saveSettings: (settings) =>
     ipcRenderer.invoke(IPC.settingsSave, settings) as Promise<AppSettings>,

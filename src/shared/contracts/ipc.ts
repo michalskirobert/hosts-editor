@@ -11,6 +11,8 @@ export const IPC = {
   backupsRestore: "backups:restore",
   backupsDelete: "backups:delete",
   backupsExport: "backups:export",
+  backupsExportAll: "backups:export-all",
+  backupsImport: "backups:import",
   backupsOpen: "backups:open",
   settingsSave: "settings:save",
   updateCheck: "update:check",

@@ -2,10 +2,13 @@ import { app, dialog, shell } from "electron";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import AdmZip from "adm-zip";
+import { z } from "zod";
 
 import { parseHostsText } from "../../../shared/domain/hosts";
 import type {
   AppSettings,
+  BackupImportResult,
   BackupInfo,
   BackupReason,
   BackupSnapshot,
@@ -24,6 +27,42 @@ interface StoredBackup {
   readonly createdAt: string;
   readonly tab: HostTab;
 }
+
+const hostLineSchema = z.object({
+  id: z.string().min(1),
+  kind: z.enum(["host", "comment", "blank", "raw"]),
+  enabled: z.boolean(),
+  address: z.string(),
+  hostname: z.string(),
+  comment: z.string(),
+  raw: z.string(),
+});
+
+const hostTabSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  enabled: z.boolean(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+  lines: z.array(hostLineSchema),
+});
+
+const storedBackupSchema = z.object({
+  reason: z.enum(["auto-save", "manual", "pre-restore", "pre-import", "pre-delete"]),
+  createdAt: z.iso.datetime(),
+  tab: hostTabSchema,
+});
+
+const backupArchiveManifestSchema = z.object({
+  format: z.literal("hosts-editor-backup-archive"),
+  formatVersion: z.literal(1),
+  createdAt: z.iso.datetime(),
+  backupCount: z.number().int().nonnegative(),
+});
+
+const MAX_ARCHIVE_BYTES = 20 * 1024 * 1024;
+const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
+const MAX_ARCHIVE_BACKUPS = 200;
 
 export class StorageService {
   private readonly root = path.join(app.getPath("userData"), "v2");
@@ -200,8 +239,150 @@ export class StorageService {
     return true;
   }
 
+  async exportAllBackups(): Promise<boolean> {
+    const backups = await this.listBackups();
+    if (!backups.length) return false;
+
+    const result = await dialog.showSaveDialog({
+      title: "Export all backups",
+      defaultPath: `hosts-editor-backups-${new Date().toISOString().slice(0, 10)}.zip`,
+      filters: [{ name: "Hosts Editor backup archive", extensions: ["zip"] }],
+    });
+    if (result.canceled || !result.filePath) return false;
+
+    const archive = new AdmZip();
+    archive.addFile(
+      "manifest.json",
+      Buffer.from(
+        `${JSON.stringify(
+          {
+            format: "hosts-editor-backup-archive",
+            formatVersion: 1,
+            createdAt: new Date().toISOString(),
+            backupCount: backups.length,
+          },
+          null,
+          2,
+        )}\n`,
+        "utf8",
+      ),
+    );
+
+    for (const [index, backup] of backups.entries()) {
+      const stored = await this.readBackupFile(backup.path);
+      const safeName = `${String(index + 1).padStart(3, "0")}-${this.safeId(stored.tab.name)}-${backup.fileName}`;
+      archive.addFile(
+        `backups/${safeName}`,
+        Buffer.from(`${JSON.stringify(stored, null, 2)}\n`, "utf8"),
+      );
+    }
+
+    await fs.writeFile(result.filePath, archive.toBuffer());
+    return true;
+  }
+
+  async importBackups(): Promise<BackupImportResult | null> {
+    const result = await dialog.showOpenDialog({
+      title: "Import backups",
+      properties: ["openFile"],
+      filters: [{ name: "Hosts Editor backups", extensions: ["json", "zip"] }],
+    });
+    const filePath = result.filePaths[0];
+    if (result.canceled || !filePath) return null;
+
+    const stat = await fs.stat(filePath);
+    if (stat.size > MAX_ARCHIVE_BYTES) throw new Error("Backup file is too large.");
+
+    const sourceName = path.basename(filePath);
+    const extension = path.extname(filePath).toLowerCase();
+    const candidates: StoredBackup[] = [];
+
+    if (extension === ".json") {
+      candidates.push(this.parseImportedBackup(await fs.readFile(filePath, "utf8")));
+    } else if (extension === ".zip") {
+      const archive = new AdmZip(filePath);
+      const manifestEntry = archive.getEntry("manifest.json");
+      if (!manifestEntry) throw new Error("This is not a Hosts Editor backup archive.");
+
+      const manifestValue: unknown = JSON.parse(manifestEntry.getData().toString("utf8"));
+      backupArchiveManifestSchema.parse(manifestValue);
+
+      const entries = archive
+        .getEntries()
+        .filter(
+          (entry) =>
+            !entry.isDirectory &&
+            entry.entryName.startsWith("backups/") &&
+            entry.entryName.endsWith(".json"),
+        );
+
+      if (entries.length > MAX_ARCHIVE_BACKUPS) {
+        throw new Error("Backup archive contains too many files.");
+      }
+
+      for (const entry of entries) {
+        const bytes = entry.getData();
+        if (bytes.byteLength > MAX_BACKUP_BYTES) {
+          throw new Error("A backup inside the archive is too large.");
+        }
+        candidates.push(this.parseImportedBackup(bytes.toString("utf8")));
+      }
+    } else {
+      throw new Error("Choose a JSON backup or Hosts Editor ZIP archive.");
+    }
+
+    let imported = 0;
+    let skipped = 0;
+    const existing = await this.listBackups();
+    const fingerprints = new Set(
+      await Promise.all(
+        existing.map(async (backup) =>
+          this.backupFingerprint(await this.readBackupFile(backup.path)),
+        ),
+      ),
+    );
+
+    for (const stored of candidates) {
+      const fingerprint = this.backupFingerprint(stored);
+      if (fingerprints.has(fingerprint)) {
+        skipped += 1;
+        continue;
+      }
+      await this.importStoredBackup(stored);
+      fingerprints.add(fingerprint);
+      imported += 1;
+    }
+
+    return { imported, skipped, sourceName };
+  }
+
   async openBackups(): Promise<void> {
     await shell.openPath(this.backupsDirectory);
+  }
+
+  private parseImportedBackup(raw: string): StoredBackup {
+    const value: unknown = JSON.parse(raw);
+    const current = storedBackupSchema.safeParse(value);
+    if (current.success) return current.data;
+    const legacy = hostTabSchema.safeParse(value);
+    if (legacy.success)
+      return { reason: "manual", createdAt: legacy.data.updatedAt, tab: legacy.data };
+    throw new Error("Invalid Hosts Editor backup file.");
+  }
+
+  private async importStoredBackup(stored: StoredBackup): Promise<void> {
+    const directory = path.join(this.backupsDirectory, this.safeId(stored.tab.id));
+    await fs.mkdir(directory, { recursive: true });
+    const fileName = `${stored.createdAt.replace(/[:.]/g, "-")}-imported.json`;
+    await this.atomicJson(path.join(directory, fileName), { ...stored, reason: "manual" });
+  }
+
+  private backupFingerprint(stored: StoredBackup): string {
+    return JSON.stringify({
+      tabId: stored.tab.id,
+      createdAt: stored.createdAt,
+      lines: stored.tab.lines,
+    });
   }
 
   private async readBackupFile(backupPath: string): Promise<StoredBackup> {

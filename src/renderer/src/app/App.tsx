@@ -14,7 +14,7 @@ const AppContent = () => {
   const { state } = useHostsEditorContext();
 
   return (
-    <div className="relative flex h-screen min-w-[1000px] overflow-hidden bg-slate-200/85 font-sans text-slate-900 dark:bg-[#05080e] dark:text-slate-100">
+    <div className="relative flex h-screen min-w-[1000px] overflow-hidden bg-slate-100 font-sans text-slate-900 dark:bg-[#05080e] dark:text-slate-100">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-32 -top-44 h-[560px] w-[560px] rounded-full bg-amber-300/26 blur-[120px] dark:bg-amber-400/14" />
         <div className="absolute -right-36 top-[3%] h-[620px] w-[620px] rounded-full bg-indigo-300/24 blur-[145px] dark:bg-indigo-500/[0.08]" />

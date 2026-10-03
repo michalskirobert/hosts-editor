@@ -1,4 +1,4 @@
-import { Bug, Check, Download, Lightbulb, Moon, RefreshCw, Settings, Sun } from "lucide-react";
+import { Check, Download, MessageSquareText, Moon, RefreshCw, Settings, Sun } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "../../components/ui/Button";
@@ -16,7 +16,7 @@ const themes = [
 
 export const SettingsPage = () => {
   const { state, patchState, saveSettings } = useHostsEditorContext();
-  const [feedbackKind, setFeedbackKind] = useState<"bug" | "feature" | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const checkForUpdate = async (): Promise<void> => {
     patchState({ update: { status: "checking" } });
@@ -152,33 +152,24 @@ export const SettingsPage = () => {
               addresses, backups or personal files automatically.
             </div>
           </div>
-          <div className="flex shrink-0 gap-2">
-            <Button
-              icon={<Bug size={15} />}
-              onClick={() => {
-                setFeedbackKind("bug");
-              }}
-            >
-              Report a bug
-            </Button>
-            <Button
-              icon={<Lightbulb size={15} />}
-              onClick={() => {
-                setFeedbackKind("feature");
-              }}
-            >
-              Suggest a feature
-            </Button>
-          </div>
+          <Button
+            className="shrink-0"
+            icon={<MessageSquareText size={15} />}
+            onClick={() => {
+              setFeedbackOpen(true);
+            }}
+          >
+            Send feedback
+          </Button>
         </div>
       </Panel>
 
-      {feedbackKind && (
+      {feedbackOpen && (
         <FeedbackDialog
           version={state.version}
-          initialKind={feedbackKind}
+          initialKind="bug"
           onClose={() => {
-            setFeedbackKind(null);
+            setFeedbackOpen(false);
           }}
         />
       )}

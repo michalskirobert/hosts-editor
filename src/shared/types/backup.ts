@@ -14,3 +14,9 @@ export interface BackupSnapshot {
   readonly info: BackupInfo;
   readonly tab: HostTab;
 }
+
+export interface BackupImportResult {
+  readonly imported: number;
+  readonly skipped: number;
+  readonly sourceName: string;
+}

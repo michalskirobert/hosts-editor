@@ -1,6 +1,6 @@
 {
   "name": "hosts-editor",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "private": true,
   "description": "Cross-platform hosts editor by NurByte",
   "author": {
@@ -23,14 +23,13 @@
     "dist:win": "yarn build && electron-builder --win --publish never",
     "dist:linux": "yarn build && electron-builder --linux --publish never",
     "release": "yarn build && dotenv -e .env -- electron-builder --publish always",
-    "release:linux": "yarn release --linux --x64 --arm64",
-    "release:mac": "yarn release --mac --x64 --arm64",
-    "release:win": "yarn release --win --x64 --ia32",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "release:linux": "yarn release --linux --x64 --arm64"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
+    "adm-zip": "^0.5.16",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.6.2",
     "lucide-react": "^0.544.0",
@@ -42,6 +41,7 @@
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@tailwindcss/vite": "^4.1.13",
+    "@types/adm-zip": "^0.5.7",
     "@types/node": "^24.3.1",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
