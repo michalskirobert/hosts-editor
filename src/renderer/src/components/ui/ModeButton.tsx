@@ -17,8 +17,8 @@ export const ModeButton = ({ active, icon, label, onClick }: ModeButtonProps) =>
     className={cn(
       "flex h-9 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm transition-[background-color,border-color,color,box-shadow] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/35",
       active
-        ? "bg-amber-100/90 text-amber-950 shadow-sm ring-1 ring-amber-300/50 dark:bg-amber-300/[0.10] dark:text-amber-100 dark:ring-amber-300/15"
-        : "text-slate-600 hover:bg-amber-100/90 hover:text-amber-950 hover:shadow-sm hover:ring-1 hover:ring-amber-300/50 dark:text-slate-400 dark:hover:bg-amber-300/[0.10] dark:hover:text-amber-100 dark:hover:ring-amber-300/15",
+        ? "bg-amber-100/80 text-amber-950 shadow-[0_4px_12px_-8px_rgba(245,158,11,0.65)] dark:bg-amber-300/[0.10] dark:text-amber-100"
+        : "text-slate-600 hover:bg-amber-100/80 hover:text-amber-950 hover:shadow-[0_4px_12px_-8px_rgba(245,158,11,0.65)] dark:text-slate-400 dark:hover:bg-amber-300/[0.10] dark:hover:text-amber-100",
     )}
   >
     {icon}

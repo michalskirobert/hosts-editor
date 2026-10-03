@@ -25,13 +25,13 @@ export const StructuredEditor = ({ lines, query, onChange }: StructuredEditorPro
   );
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-300/65 bg-white/62 shadow-[0_18px_60px_-34px_rgba(15,23,42,0.38)] backdrop-blur-2xl dark:border-white/[0.09] dark:bg-slate-950/34">
+    <div className="overflow-hidden rounded-3xl border border-slate-300/65 bg-white/54 shadow-[0_18px_60px_-34px_rgba(15,23,42,0.38)] backdrop-blur-2xl dark:border-white/[0.09] dark:bg-slate-950/34">
       {visible.map((line) =>
         line.kind === "host" ? (
           <div
             key={line.id}
             data-host-id={line.id}
-            className="grid grid-cols-[54px_160px_1fr_1fr_44px] items-center gap-3 border-b border-slate-200/45 px-4 py-2 transition-all duration-200 hover:bg-white/72 hover:shadow-[inset_3px_0_0_rgba(245,158,11,0.28)] dark:border-white/[0.045] dark:hover:bg-white/[0.025]"
+            className="grid grid-cols-[54px_160px_1fr_1fr_44px] items-center gap-3 border-b border-slate-300/45 px-4 py-2 transition-all duration-200 hover:bg-white/72 hover:shadow-[inset_3px_0_0_rgba(245,158,11,0.28)] dark:border-white/[0.045] dark:hover:bg-white/[0.025]"
           >
             <Toggle
               checked={line.enabled}
@@ -82,7 +82,7 @@ export const StructuredEditor = ({ lines, query, onChange }: StructuredEditorPro
         ) : (
           <div
             key={line.id}
-            className="border-b border-slate-200/45 px-5 py-2 text-xs italic text-slate-400 dark:border-white/[0.045]"
+            className="border-b border-slate-300/45 px-5 py-2 text-xs italic text-slate-600 dark:border-white/[0.045]"
           >
             {line.raw || " "}
           </div>

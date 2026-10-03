@@ -11,7 +11,7 @@ interface PanelProps {
 export const Panel = ({ title, children, className }: PanelProps) => (
   <section
     className={cn(
-      "group/panel relative overflow-hidden rounded-3xl border border-slate-300/85 bg-white/82 p-5 shadow-[0_20px_55px_-34px_rgba(15,23,42,0.28)] backdrop-blur-3xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-amber-300/35 hover:bg-white/94 hover:shadow-[0_24px_64px_-34px_rgba(15,23,42,0.38)] motion-reduce:transition-none dark:border-white/[0.065] dark:bg-white/[0.035] dark:shadow-[0_22px_70px_-42px_rgba(0,0,0,0.92)] dark:hover:border-amber-300/[0.13] dark:hover:bg-white/[0.052] dark:hover:shadow-[0_28px_78px_-42px_rgba(0,0,0,0.95)]",
+      "group/panel relative overflow-hidden rounded-3xl border border-slate-300/70 bg-white/66 p-5 shadow-[0_18px_48px_-30px_rgba(15,23,42,0.30)] backdrop-blur-2xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-amber-300/55 hover:bg-white/76 hover:shadow-[0_22px_52px_-30px_rgba(15,23,42,0.36)] motion-reduce:transition-none dark:border-white/[0.065] dark:bg-white/[0.035] dark:backdrop-blur-3xl dark:backdrop-saturate-150 dark:shadow-[0_22px_70px_-42px_rgba(0,0,0,0.92)] dark:hover:border-amber-300/[0.13] dark:hover:bg-white/[0.052] dark:hover:shadow-[0_28px_78px_-42px_rgba(0,0,0,0.95)]",
       className,
     )}
   >

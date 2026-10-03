@@ -1,4 +1,13 @@
-import { Bug, CheckCircle2, Lightbulb, RefreshCw, Send, ShieldCheck } from "lucide-react";
+import {
+  AlertCircle,
+  Bug,
+  CheckCircle2,
+  Lightbulb,
+  LoaderCircle,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -47,6 +56,7 @@ const Field = ({ label, hint, error, children }: FieldProps) => (
 export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialogProps) => {
   const [captcha, setCaptcha] = useState<FeedbackCaptcha | null>(null);
   const [loadingCaptcha, setLoadingCaptcha] = useState(false);
+  const [captchaError, setCaptchaError] = useState("");
   const [requestError, setRequestError] = useState("");
   const [reportId, setReportId] = useState("");
   const initialCaptchaRequested = useRef(false);
@@ -78,18 +88,19 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
 
   const loadCaptcha = useCallback(async (): Promise<void> => {
     setLoadingCaptcha(true);
-    setRequestError("");
+    setCaptchaError("");
     try {
       const result = await window.hostsEditor.getFeedbackCaptcha();
       if (!result.ok) {
         setCaptcha(null);
-        setRequestError(result.message);
+        setCaptchaError(result.message);
         return;
       }
       setCaptcha(result.captcha);
       resetField("captchaAnswer", { defaultValue: "" });
     } catch (cause) {
-      setRequestError(
+      setCaptcha(null);
+      setCaptchaError(
         cause instanceof Error ? cause.message : "Could not load CAPTCHA. Try again.",
       );
     } finally {
@@ -374,17 +385,26 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
                   <RefreshCw size={14} className={loadingCaptcha ? "animate-spin" : undefined} />
                 }
                 disabled={loadingCaptcha}
-                disabledReason="CAPTCHA is already refreshing"
+                disabledReason={loadingCaptcha ? "CAPTCHA is already refreshing" : undefined}
                 onClick={() => {
                   void loadCaptcha();
                 }}
               >
-                Refresh
+                {captchaError ? "Retry" : "Refresh"}
               </Button>
             </div>
-            <div className="grid grid-cols-[160px_1fr] items-center gap-3">
-              <div className="flex h-14 items-center justify-center overflow-hidden rounded-xl border border-slate-300/60 bg-slate-950/95 dark:border-white/10">
-                {captcha ? (
+            <div className="grid min-h-14 grid-cols-[160px_1fr] items-center gap-3">
+              <div className="flex h-14 items-center justify-center overflow-hidden rounded-xl border border-slate-300 bg-slate-950/95 dark:border-white/10">
+                {loadingCaptcha ? (
+                  <div
+                    className="flex items-center gap-2 text-xs text-slate-300"
+                    role="status"
+                    aria-label="Loading CAPTCHA"
+                  >
+                    <LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" />
+                    <span>Loading…</span>
+                  </div>
+                ) : captcha ? (
                   <img
                     src={captcha.imageDataUrl}
                     alt="CAPTCHA challenge"
@@ -392,24 +412,28 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
                     draggable={false}
                   />
                 ) : (
-                  <span className="text-xs text-slate-400">
-                    {loadingCaptcha ? "Loading…" : "Unavailable"}
-                  </span>
+                  <div className="flex items-center gap-1.5 px-2 text-center text-xs text-red-300">
+                    <AlertCircle size={14} className="shrink-0" />
+                    <span>Unavailable</span>
+                  </div>
                 )}
               </div>
               <div>
                 <Input
-                  placeholder="CAPTCHA"
+                  disabled={loadingCaptcha || !captcha}
+                  placeholder={loadingCaptcha ? "Loading security check…" : "CAPTCHA"}
                   autoComplete="off"
                   spellCheck={false}
                   invalid={Boolean(errors.captchaAnswer)}
                   {...register("captchaAnswer", { required: "Complete the security check" })}
                 />
-                {errors.captchaAnswer?.message && (
+                {errors.captchaAnswer?.message ? (
                   <div className="mt-1 text-xs text-red-600 dark:text-red-300">
                     {errors.captchaAnswer.message}
                   </div>
-                )}
+                ) : captchaError ? (
+                  <div className="mt-1 text-xs text-red-600 dark:text-red-300">{captchaError}</div>
+                ) : null}
               </div>
             </div>
           </div>

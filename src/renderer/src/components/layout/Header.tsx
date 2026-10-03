@@ -33,7 +33,7 @@ export const Header = () => {
         : "Appearance, backups, updates and support";
 
   return (
-    <header className="relative flex h-19 items-center justify-between border-b border-slate-300/60 bg-white/52 px-7 shadow-[0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/[0.07] dark:bg-slate-950/24 dark:shadow-none">
+    <header className="relative flex h-19 items-center justify-between border-b border-slate-300/55 bg-[#faf8f2]/58 px-7 shadow-[0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/[0.07] dark:bg-slate-950/24 dark:shadow-none">
       <div>
         <div className="text-lg font-semibold tracking-[-0.02em]">{title}</div>
         <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">

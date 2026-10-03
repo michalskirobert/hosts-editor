@@ -17,7 +17,7 @@ const variants: Record<ButtonVariant, string> = {
   primary:
     "border-amber-300/55 bg-gradient-to-b from-amber-300 to-amber-500 font-semibold text-slate-950 shadow-[0_12px_28px_-14px_rgba(245,158,11,0.72)] hover:border-amber-200/85 hover:from-amber-200 hover:to-amber-400 hover:shadow-[0_18px_38px_-14px_rgba(245,158,11,0.82)] dark:border-amber-200/25 dark:from-amber-300 dark:to-amber-400",
   secondary:
-    "border-slate-300/90 bg-white/88 text-slate-800 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.48)] backdrop-blur-xl hover:border-amber-300/35 hover:bg-amber-50/75 hover:text-slate-950 hover:shadow-[0_14px_32px_-20px_rgba(245,158,11,0.34)] dark:border-white/[0.075] dark:bg-white/[0.045] dark:text-slate-200 dark:hover:border-amber-300/[0.16] dark:hover:bg-amber-300/[0.075] dark:hover:text-amber-50 dark:hover:shadow-[0_14px_34px_-20px_rgba(245,158,11,0.22)]",
+    "border-slate-300/70 bg-white/58 text-slate-800 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.48)] backdrop-blur-xl hover:border-amber-300/35 hover:bg-amber-50/70 hover:text-slate-950 hover:shadow-[0_14px_32px_-20px_rgba(245,158,11,0.34)] dark:border-white/[0.075] dark:bg-white/[0.045] dark:text-slate-200 dark:hover:border-amber-300/[0.16] dark:hover:bg-amber-300/[0.075] dark:hover:text-amber-50 dark:hover:shadow-[0_14px_34px_-20px_rgba(245,158,11,0.22)]",
   warning:
     "border-orange-300/40 bg-gradient-to-b from-orange-300 to-orange-500 font-semibold text-slate-950 shadow-[0_10px_24px_-14px_rgba(249,115,22,0.65)] hover:from-orange-200 hover:to-orange-400 hover:shadow-[0_16px_30px_-14px_rgba(249,115,22,0.68)]",
   danger:
