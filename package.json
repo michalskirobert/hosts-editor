@@ -25,7 +25,9 @@
     "release": "yarn build && dotenv -e .env -- electron-builder --publish always",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "release:linux": "yarn release --linux --x64 --arm64"
+    "release:linux": "yarn release --linux --x64 --arm64",
+    "release:mac": "yarn release --mac --x64 --arm64",
+    "release:win": "yarn release --win --x64 --arm64"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
