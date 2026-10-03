@@ -23,6 +23,9 @@
     "dist:win": "yarn build && electron-builder --win --publish never",
     "dist:linux": "yarn build && electron-builder --linux --publish never",
     "release": "yarn build && dotenv -e .env -- electron-builder --publish always",
+    "release:linux": "yarn release --linux --x64 --arm64",
+    "release:mac": "yarn release --mac --x64 --arm64",
+    "release:win": "yarn release --win --x64 --ia32",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
