@@ -35,6 +35,8 @@ export interface HostsEditorApi {
   downloadUpdate(): Promise<UpdateState>;
   installUpdate(): Promise<UpdateState>;
   setUpdateSafety(dirty: boolean, busy: boolean): Promise<void>;
+  cancelUpdate(): Promise<UpdateState>;
+  showUpdateInFolder(): Promise<void>;
   openUpdate(): Promise<void>;
   setFullscreen(value: boolean): Promise<void>;
   openExternal(url: string): Promise<void>;

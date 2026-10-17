@@ -88,6 +88,8 @@ export const registerIpc = (
     updates.setSafety(dirty, busy);
   });
   handle(IPC.updateCheck, empty, () => updates.check());
+  handle(IPC.updateCancel, empty, () => updates.cancel());
+  handle(IPC.updateShowInFolder, empty, () => updates.showInFolder());
   handle(IPC.updateOpen, empty, () => updates.open());
   handle(IPC.fullscreen, z.tuple([z.boolean()]), (_event, value) =>
     BrowserWindow.getFocusedWindow()?.setFullScreen(value),

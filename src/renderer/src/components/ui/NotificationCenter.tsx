@@ -32,13 +32,22 @@ type Action =
 
 const reducer = (state: Notification[], action: Action): Notification[] => {
   switch (action.type) {
-    case "add":
-      if (
-        action.notification.eventKey &&
-        state.some((item) => item.eventKey === action.notification.eventKey)
-      )
-        return state;
+    case "add": {
+      const existing = state.find(
+        (item) => action.notification.eventKey && item.eventKey === action.notification.eventKey,
+      );
+      if (existing) {
+        if (
+          existing.message === action.notification.message &&
+          existing.level === action.notification.level
+        )
+          return state;
+        return state.map((item) =>
+          item.id === existing.id ? { ...action.notification, id: existing.id, read: false } : item,
+        );
+      }
       return [action.notification, ...state].slice(0, notificationLimit);
+    }
     case "read":
       return state.map((item) => (item.id === action.id ? { ...item, read: true } : item));
     case "read-all":
@@ -107,7 +116,7 @@ export const NotificationCenter = () => {
       status === "available"
         ? `Hosts Editor ${version ?? "update"} is available. Open Settings to update.`
         : status === "downloaded"
-          ? `Hosts Editor ${version ?? "update"} is ready to install. Restart when ready.`
+          ? `Hosts Editor ${version ?? "update"} is ready. Open Settings to ${state.update.installSupported ? "restart and install" : "open the downloaded installer"}.`
           : (message ?? "Update failed. Open Settings to try again.");
 
     dispatch({
@@ -119,7 +128,8 @@ export const NotificationCenter = () => {
         createdAt: new Date().toISOString(),
         read: false,
         source: "update",
-        eventKey: `update:${key}`,
+        eventKey:
+          status === "error" ? `update:error:${key}` : `update:release:${version ?? "unknown"}`,
       },
     });
   }, [state.update]);
@@ -225,6 +235,11 @@ export const NotificationCenter = () => {
                               dispatch({ type: "read", id: item.id });
                               patchState({ page: "settings" });
                               setOpen(false);
+                              requestAnimationFrame(() => {
+                                document
+                                  .getElementById("updates")
+                                  ?.scrollIntoView({ block: "start" });
+                              });
                             }}
                           >
                             Open updates

@@ -49,6 +49,8 @@ const api: HostsEditorApi = {
   installUpdate: () => ipcRenderer.invoke(IPC.updateInstall) as Promise<UpdateState>,
   setUpdateSafety: (dirty, busy) =>
     ipcRenderer.invoke(IPC.updateSafety, dirty, busy) as Promise<void>,
+  cancelUpdate: () => ipcRenderer.invoke(IPC.updateCancel) as Promise<UpdateState>,
+  showUpdateInFolder: () => ipcRenderer.invoke(IPC.updateShowInFolder) as Promise<void>,
   openUpdate: () => ipcRenderer.invoke(IPC.updateOpen) as Promise<void>,
   setFullscreen: (value) => ipcRenderer.invoke(IPC.fullscreen, value) as Promise<void>,
   openExternal: (url) => ipcRenderer.invoke(IPC.externalOpen, url) as Promise<void>,

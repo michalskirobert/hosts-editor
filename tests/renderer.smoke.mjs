@@ -95,7 +95,7 @@ const checks = [];
             autoBackupOnSave: true,
           },
           hostsPath: "/isolated/hosts",
-          version: "2.3.0",
+          version: "2.3.1",
         }),
         saveTab: async (tab) => {
           qa.saves++;
@@ -126,7 +126,13 @@ const checks = [];
           return () => listeners.delete(listener);
         },
         checkUpdate: async () => {
-          qa.emit({ status: "available", version: "2.4.0", installSupported: true });
+          qa.emit({
+            status: "available",
+            version: "2.4.0",
+            packageType: "dmg",
+            installSupported: true,
+            message: "Hosts Editor 2.4.0 is available.",
+          });
           return qa.updates;
         },
         downloadUpdate: async () => {
@@ -143,7 +149,17 @@ const checks = [];
         setUpdateSafety: async (dirty, busy) => {
           qa.safety = { dirty, busy };
         },
-        openUpdate: async () => undefined,
+        cancelUpdate: async () => {
+          qa.emit({ status: "cancelled", message: "Download cancelled." });
+          return qa.updates;
+        },
+        openUpdate: async () => {
+          qa.opened = (qa.opened ?? 0) + 1;
+          if (qa.openError) throw new Error(qa.openError);
+        },
+        showUpdateInFolder: async () => {
+          qa.shown = (qa.shown ?? 0) + 1;
+        },
         setFullscreen: async () => undefined,
         openExternal: async () => undefined,
         getFeedbackCaptcha: async () => {
@@ -264,7 +280,7 @@ const checks = [];
     await page.screenshot({ path: path.join(artifacts, "dark-settings.png") });
     checks.push("Light and Dark appearance switching");
     await page.getByRole("button", { name: "Check for updates", exact: true }).click();
-    await page.getByRole("button", { name: "Download update", exact: true }).click();
+    await page.getByRole("button", { name: "Download Update", exact: true }).click();
     assert.equal(await page.getByRole("progressbar").getAttribute("value"), "37");
     await page.evaluate(() => window.qa.emit({ status: "downloaded" }));
     await page.getByRole("button", { name: "Restart & Install", exact: true }).waitFor();
@@ -301,10 +317,84 @@ const checks = [];
       .getByRole("button", { name: "Cancel", exact: true })
       .click();
     checks.push("Explicit Discard & Install restores snapshots without writing system hosts");
+    await page.evaluate(() =>
+      window.qa.emit({
+        status: "available",
+        version: "2.4.0",
+        packageType: "dmg",
+        installSupported: false,
+        message: "Hosts Editor 2.4.0 is available.",
+      }),
+    );
+    await page.getByRole("button", { name: "Download Update", exact: true }).click();
+    await page.getByRole("button", { name: "Cancel download", exact: true }).click();
+    await page.getByRole("button", { name: "Download Update", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Download Update", exact: true }).click();
+    await page.evaluate(() =>
+      window.qa.emit({
+        status: "downloaded",
+        message: "Hosts Editor 2.4.0 is ready. Open the downloaded installer to continue.",
+      }),
+    );
+    assert.equal(
+      await page.getByRole("button", { name: "Restart & Install", exact: true }).count(),
+      0,
+    );
+    await page.getByRole("button", { name: "Open Installer", exact: true }).click();
+    await page.getByRole("button", { name: "Show in Folder", exact: true }).click();
+    assert.equal(await page.evaluate(() => window.qa.opened), 1);
+    assert.equal(await page.evaluate(() => window.qa.shown), 1);
+    checks.push(
+      "Direct installer progress, cancellation, retry, Open Installer and Show in Folder",
+    );
+    await page.evaluate(() => {
+      window.qa.openError = "The system could not open the installer.";
+    });
+    await page.getByRole("button", { name: "Open Installer", exact: true }).click();
+    await page
+      .getByRole("alert")
+      .filter({ hasText: "The system could not open the installer." })
+      .first()
+      .waitFor();
+    checks.push("Installer opening failure is shown inline");
+    await page.getByRole("button", { name: /^Notifications/ }).click();
+    const notificationDialog = page.getByRole("dialog", { name: "Notifications", exact: true });
+    assert.equal(
+      await notificationDialog
+        .getByRole("listitem")
+        .filter({ hasText: "Hosts Editor 2.4.0" })
+        .count(),
+      1,
+    );
+    await page.screenshot({ path: path.join(artifacts, "notification-center.png") });
+    await notificationDialog
+      .getByRole("button", { name: "Open updates", exact: true })
+      .first()
+      .click();
+    await notificationDialog.waitFor({ state: "hidden" });
+    checks.push("One update notification advances from available to downloaded and opens Updates");
     await page.evaluate(() => window.qa.emit({ status: "current" }));
     await page.getByRole("button", { name: "Send feedback", exact: true }).click();
     let feedback = page.getByRole("dialog", { name: "Report a bug", exact: true });
     await feedback.waitFor();
+    assert.equal(
+      await feedback
+        .locator("textarea")
+        .first()
+        .evaluate((el) => getComputedStyle(el).resize),
+      "none",
+    );
+    const modalGeometry = await feedback.evaluate((el) => ({
+      top: el.getBoundingClientRect().top,
+      bottom: el.getBoundingClientRect().bottom,
+      viewport: innerHeight,
+      scroll: el.querySelector("div.overflow-y-auto").scrollTop,
+    }));
+    assert.ok(modalGeometry.top >= 15 && modalGeometry.bottom <= modalGeometry.viewport - 15);
+    assert.equal(modalGeometry.scroll, 0);
+    checks.push("Feedback dialog opens at the top and textareas have no resize handle");
+    await page.screenshot({ path: path.join(artifacts, "report-bug.png") });
+
     assert.equal(await feedback.getByPlaceholder("Loading security check…").isDisabled(), true);
     await feedback.getByRole("button", { name: "Retry", exact: true }).waitFor();
     await feedback.getByRole("button", { name: "Retry", exact: true }).click();

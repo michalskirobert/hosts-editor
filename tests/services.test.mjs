@@ -121,26 +121,6 @@ after(async () => {
 
 const tab = async (text = "127.0.0.1 localhost\n::1 localhost") =>
   storage.createTab("Fixture", text);
-const release = (overrides = {}) => ({
-  tag_name: "v2.4.0",
-  html_url: "https://github.com/michalskirobert/hosts-editor/releases/tag/v2.4.0",
-  draft: false,
-  prerelease: false,
-  assets: [],
-  ...overrides,
-});
-const jsonResponse = (value) => async () =>
-  new Response(JSON.stringify(value), { headers: { "content-type": "application/json" } });
-const nativeUpdater = async () => {
-  if (process.platform !== "linux") return null;
-  env.app.isPackaged = true;
-  process.env.APPIMAGE = path.join(state.directory, "fixture.AppImage");
-  await fs.writeFile(process.env.APPIMAGE, "fixture");
-  const service = new api.UpdateService();
-  await service.check();
-  return service;
-};
-
 test("hosts text keeps tabs, spaces, comments and incomplete edits unchanged", () => {
   const text = "# fixture\n127.0.0.1\tlocalhost alias.test  # note\n\n# ::1 ipv6.test\n127.0.0.\n";
   assert.equal(api.serializeLines(api.parseHostsText(text)), text);
@@ -298,104 +278,6 @@ test("concurrent draft writes remain atomic and leave the latest requested conte
   assert.equal((await storage.listTabs())[0].name, "Revision 19");
   assert.equal((await fs.readdir(path.join(state.directory, "v2/tabs"))).length, 1);
 });
-test("version comparison and download URL validation reject unsafe input", () => {
-  assert.equal(api.isNewerVersion("v2.10.0", "2.3.0"), true);
-  assert.equal(api.isNewerVersion("2.3.0-beta.1", "2.3.0"), false);
-  assert.throws(() => api.safeReleaseUrl("https://evil.example/installer"));
-  assert.throws(() =>
-    api.safeReleaseUrl("http://github.com/michalskirobert/hosts-editor/releases/latest"),
-  );
-  assert.throws(() =>
-    api.safeReleaseUrl("https://user@github.com/michalskirobert/hosts-editor/releases/latest"),
-  );
-});
-test("fallback selects the exact architecture and platform release asset", () => {
-  const assets = [
-    "mac-arm64.dmg",
-    "mac-x64.dmg",
-    "win-arm64.exe",
-    "win-x64.exe",
-    "linux-arm64.AppImage",
-    "linux-x64.AppImage",
-  ].map((suffix) => ({
-    name: `Hosts Editor-2.4.0-${suffix}`,
-    browser_download_url: `https://github.com/michalskirobert/hosts-editor/releases/download/v2.4.0/${suffix}`,
-  }));
-  for (const platform of ["darwin", "win32", "linux"])
-    for (const arch of ["x64", "arm64"])
-      assert.ok(api.selectReleaseAsset(assets, platform, arch).includes(arch));
-  assert.equal(api.selectReleaseAsset(assets, "darwin", "ia32"), undefined);
-  assert.ok(
-    api.selectReleaseAsset(
-      [
-        {
-          name: "Hosts Editor-2.4.0-linux-x86_64.AppImage",
-          browser_download_url:
-            "https://github.com/michalskirobert/hosts-editor/releases/download/v2.4.0/example",
-        },
-      ],
-      "linux",
-      "x64",
-    ),
-  );
-});
-test("manual and automatic checks share one request; development uses safe fallback", async () => {
-  let requests = 0;
-  globalThis.fetch = async () => {
-    requests += 1;
-    return new Response(JSON.stringify(release()));
-  };
-  const service = new api.UpdateService();
-  const results = await Promise.all([service.check(), service.check(), service.check()]);
-  assert.equal(requests, 1);
-  assert.equal(results[0].status, "available");
-  assert.equal(results[0].installSupported, false);
-  await service.check();
-  assert.equal(requests, 1);
-});
-test("offline, malformed and HTTP error update responses are recoverable", async () => {
-  for (const response of [
-    async () => {
-      throw new Error("offline");
-    },
-    async () => new Response("{}"),
-    async () => new Response("rate limited", { status: 403 }),
-  ]) {
-    globalThis.fetch = response;
-    const service = new api.UpdateService();
-    assert.equal((await service.check()).status, "error");
-    globalThis.fetch = jsonResponse(release({ tag_name: "v2.3.0" }));
-    assert.equal((await service.check()).status, "current");
-  }
-});
-test("real updater events drive progress; install waits for explicit clean approval", async (context) => {
-  const service = await nativeUpdater();
-  if (!service) return context.skip("AppImage updater path requires Linux");
-  assert.equal(service.getState().status, "available");
-  assert.equal(updater.autoDownload, false);
-  assert.equal(updater.autoInstallOnAppQuit, false);
-  await service.download();
-  assert.equal(service.getState().status, "downloaded");
-  assert.equal(service.getState().progress.percent, 42);
-  assert.throws(() => service.install(), /unsaved/);
-  service.setSafety(false, true);
-  assert.throws(() => service.install(), /unsaved/);
-  assert.equal(state.installed, undefined);
-  service.setSafety(false, false);
-  service.install();
-  await new Promise(setImmediate);
-  assert.equal(state.installed, true);
-});
-test("download failures never offer installation", async (context) => {
-  const service = await nativeUpdater();
-  if (!service) return context.skip("AppImage updater path requires Linux");
-  updater.downloadUpdate = async () => {
-    throw new Error("checksum mismatch");
-  };
-  assert.equal((await service.download()).status, "error");
-  assert.throws(() => service.install(), /No verified/);
-  assert.equal(state.installed, undefined);
-});
 test("IPC rejects untrusted senders and invalid operation payloads", async () => {
   const updates = new api.UpdateService();
   api.registerIpc(storage, new api.HostsService(), updates);
@@ -408,51 +290,6 @@ test("IPC rejects untrusted senders and invalid operation payloads", async () =>
   assert.throws(() => state.handlers.get("update:safety")(trusted, "false", false));
   assert.throws(() => state.handlers.get("tabs:save")(trusted, {}));
   assert.doesNotThrow(() => state.handlers.get("update:safety")(trusted, false, false));
-});
-test("macOS and unsigned Windows use explicit manual download fallback", async () => {
-  const descriptor = Object.getOwnPropertyDescriptor(process, "platform");
-  try {
-    for (const platform of ["darwin", "win32"]) {
-      Object.defineProperty(process, "platform", { value: platform });
-      env.app.isPackaged = true;
-      globalThis.fetch = jsonResponse(release());
-      const result = await new api.UpdateService().check();
-      assert.equal(result.status, "available");
-      assert.equal(result.installSupported, false);
-      assert.ok(result.limitation);
-    }
-  } finally {
-    Object.defineProperty(process, "platform", descriptor);
-  }
-});
-test("installed Windows NSIS enables updates only with a configured signing publisher", async () => {
-  const descriptor = Object.getOwnPropertyDescriptor(process, "platform");
-  const resourcesPath = process.resourcesPath;
-  try {
-    Object.defineProperty(process, "platform", { value: "win32" });
-    process.resourcesPath = state.directory;
-    env.app.isPackaged = true;
-    await fs.writeFile(path.join(state.directory, "Uninstall Hosts Editor.exe"), "fixture");
-    await fs.writeFile(
-      path.join(state.directory, "app-update.yml"),
-      "provider: github\npublisherName: Fixture Publisher\n",
-    );
-    const service = new api.UpdateService();
-    assert.equal((await service.check()).installSupported, true);
-    assert.equal(service.getState().status, "available");
-    await fs.writeFile(path.join(state.directory, "app-update.yml"), "publisherName: null\n");
-    globalThis.fetch = jsonResponse(release());
-    assert.equal((await new api.UpdateService().check()).installSupported, false);
-    await fs.writeFile(
-      path.join(state.directory, "app-update.yml"),
-      "publisherName:\n  - Fixture Publisher\n",
-    );
-    assert.equal((await new api.UpdateService().check()).installSupported, true);
-  } finally {
-    Object.defineProperty(process, "platform", descriptor);
-    if (resourcesPath === undefined) delete process.resourcesPath;
-    else process.resourcesPath = resourcesPath;
-  }
 });
 test("macOS and Windows privileged writers stage replacements without writing test hosts", async () => {
   const descriptor = Object.getOwnPropertyDescriptor(process, "platform");

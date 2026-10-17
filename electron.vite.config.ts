@@ -14,5 +14,13 @@ export default defineConfig({
         "@renderer": path.resolve("src/renderer/src"),
       },
     },
+    build: {
+      rollupOptions: {
+        input: {
+          index: path.resolve("src/renderer/index.html"),
+          splash: path.resolve("src/renderer/splash.html"),
+        },
+      },
+    },
   },
 });

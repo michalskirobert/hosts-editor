@@ -10,14 +10,22 @@ import { HostsEditorProvider } from "../context/HostsEditorContext";
 import { BackupsPage } from "../features/backups/BackupsPage";
 import { EditorPage } from "../features/editor/EditorPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
-
 import { UpdateNotice } from "../features/settings/UpdateNotice";
 
 const AppContent = () => {
   const { state } = useHostsEditorContext();
 
+  const startupState = state.version
+    ? "ready"
+    : !state.busy && state.message.startsWith("Startup failed:")
+      ? "failed"
+      : "loading";
+
   return (
-    <div className="relative flex h-screen min-w-[1000px] overflow-hidden bg-[#f3f1eb] font-sans text-slate-900 dark:bg-[#05080e] dark:text-slate-100">
+    <div
+      data-startup-state={startupState}
+      className="relative flex h-screen min-w-[1000px] overflow-hidden bg-[#f3f1eb] font-sans text-slate-900 dark:bg-[#05080e] dark:text-slate-100"
+    >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-32 -top-44 h-[560px] w-[560px] rounded-full bg-amber-200/24 blur-[120px] dark:bg-amber-400/14" />
         <div className="absolute -right-36 top-[3%] h-[620px] w-[620px] rounded-full bg-sky-200/14 blur-[145px] dark:bg-indigo-500/[0.08]" />
@@ -28,26 +36,37 @@ const AppContent = () => {
       </div>
 
       <Sidebar />
+
       <main className="relative z-10 flex min-w-0 flex-1 flex-col">
         <Header />
+
         <ScrollArea className="min-h-0 flex-1 px-5">
           {!state.version ? (
             <div
               className="mx-auto mt-24 max-w-lg rounded-3xl border border-slate-300/60 bg-white/80 p-8 text-center dark:border-white/10 dark:bg-slate-950/70"
-              role="status"
+              role={startupState === "failed" ? "alert" : "status"}
             >
               <p className="text-lg font-semibold">
-                {state.busy ? "Loading Hosts Editor…" : "Could not load your workspace"}
+                {startupState === "failed"
+                  ? "Could not load your workspace"
+                  : "Loading Hosts Editor…"}
               </p>
-              {!state.busy && (
-                <Button
-                  className="mt-4"
-                  onClick={() => {
-                    window.location.reload();
-                  }}
-                >
-                  Try again
-                </Button>
+
+              {startupState === "failed" && (
+                <>
+                  <p className="mt-3 break-words text-sm text-slate-600 dark:text-slate-400">
+                    {state.message.replace(/^Startup failed:\s*/, "")}
+                  </p>
+
+                  <Button
+                    className="mt-4"
+                    onClick={() => {
+                      window.location.reload();
+                    }}
+                  >
+                    Try again
+                  </Button>
+                </>
               )}
             </div>
           ) : (
@@ -58,8 +77,10 @@ const AppContent = () => {
             </>
           )}
         </ScrollArea>
+
         <StatusBar />
       </main>
+
       <AppDialog />
       <UpdateNotice />
       <Toast />

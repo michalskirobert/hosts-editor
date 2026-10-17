@@ -7,17 +7,20 @@ export interface UpdateState {
     | "downloading"
     | "downloaded"
     | "installing"
-    | "error";
+    | "error"
+    | "cancelled";
   readonly currentVersion?: string;
   readonly version?: string;
   readonly message?: string;
   readonly releaseUrl?: string;
   readonly downloadUrl?: string;
   readonly installSupported?: boolean;
-  readonly limitation?: string;
-  readonly progress?: {
-    readonly percent: number;
-    readonly transferred: number;
-    readonly total: number;
-  };
+  readonly packageType?: string | undefined;
+  readonly progress?:
+    | {
+        readonly percent: number;
+        readonly transferred: number;
+        readonly total: number;
+      }
+    | undefined;
 }

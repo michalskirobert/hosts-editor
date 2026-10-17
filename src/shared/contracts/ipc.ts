@@ -21,6 +21,8 @@ export const IPC = {
   updateDownload: "update:download",
   updateInstall: "update:install",
   updateSafety: "update:safety",
+  updateCancel: "update:cancel",
+  updateShowInFolder: "update:show-in-folder",
   updateOpen: "update:open",
   fullscreen: "window:fullscreen",
   externalOpen: "external:open",

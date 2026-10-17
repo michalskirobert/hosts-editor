@@ -6,7 +6,7 @@ Manage your system `hosts` file through a modern desktop GUI instead of editing 
 
 Built for developers, testers, system administrators, and anyone who regularly works with local domains, development environments, DNS overrides, or custom hostname mappings.
 
-Version **2.3.0** is a release candidate. See [CHANGELOG.md](CHANGELOG.md), [TEST-RESULTS.md](TEST-RESULTS.md) and [RELEASING.md](RELEASING.md) for implemented changes, verification and platform limitations.
+Version **2.3.1** improves installer downloads, update notifications and feedback form layout. See [CHANGELOG.md](CHANGELOG.md), [TEST-RESULTS.md](TEST-RESULTS.md) and [RELEASING.md](RELEASING.md) for implemented changes, verification and platform limitations.
 
 ## Features
 
@@ -251,24 +251,28 @@ Tabs are JSON-backed and act as the source of truth for configurations managed b
 
 ## Updates
 
-Hosts Editor uses `electron-updater` and GitHub Releases. The main process checks once after startup when enabled in Settings. Manual checks share the same request and cannot interrupt a running download.
+Hosts Editor checks the configured public GitHub repository once after startup when enabled in Settings. Manual checks share a single request; another check cannot interrupt a download. Stable SemVer versions are compared correctly; drafts, prereleases and downgrades are excluded.
 
-On supported installations, Settings provides **Check for updates → Download update → download progress → Restart & Install**. Progress comes from updater events. Downloads and installation are explicit actions. Closing the app does not automatically install a downloaded update.
+The main flow is **Check for updates → Download Update → progress → Open Installer**. Downloads run in the Electron main process. The correct installer is selected for the running process platform and architecture. **Cancel download** cleans up the partial file; the next attempt starts again. **Show in Folder** reveals the verified downloaded package.
 
-Before installation, changes in all tabs must be saved or discarded. **Save & Install** uses the existing system-hosts save; failed validation, denied elevation or a failed write prevents restart. **Discard & Install** restores the last saved snapshots. **Cancel** keeps the editor open.
+| Installation                                             | Update behavior in 2.3.1                                                                                                                  |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| macOS Intel / Apple Silicon                              | Direct in-app DMG download, SHA-256 verification, Open Installer and Show in Folder. Installation remains an explicit system/user action. |
+| Windows unsigned NSIS / ZIP / portable                   | Direct matching EXE or ZIP download and verification, then open/reveal.                                                                   |
+| Windows installed NSIS with configured signing publisher | Existing electron-updater download/signature checks and explicit Restart & Install.                                                       |
+| Linux writable AppImage                                  | Existing electron-updater download/checksum checks and explicit Restart & Install.                                                        |
+| Linux DEB / read-only AppImage                           | Direct matching package download and verification, then open/reveal.                                                                      |
+| Development build                                        | Direct matching installer download; no automatic self-replacement.                                                                        |
 
-| Installation                                               | Update behavior in 2.3.0                                                                                                                          |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| macOS Intel / Apple Silicon                                | Manual DMG download for the running architecture. The current configuration disables signing; automatic installation is deliberately unavailable. |
-| Windows x64 / arm64, installed NSIS with signing publisher | In-app download and installation through electron-updater, with its normal signature verification. Native validation is still required.           |
-| Windows unsigned NSIS / ZIP / portable                     | Manual installer or ZIP download.                                                                                                                 |
-| Linux writable AppImage, x64 / arm64                       | In-app update through electron-updater with package checksum validation. End-to-end update from a published release still needs validation.       |
-| Linux DEB / read-only AppImage                             | Manual matching package download; install with the OS package manager or replace the AppImage.                                                    |
-| Development build                                          | Manual release downloads.                                                                                                                         |
+macOS signing and notarization remain disabled. No Apple Developer ID subscription, credentials or signing infrastructure is required or configured. Downloaded DMGs receive the macOS quarantine attribute; the app never removes it or bypasses Gatekeeper. Opening a DMG does not mean replacing the installed app. System security checks still apply. The updater backend and installer actions remain separate so a future signed macOS update backend can be added without changing the editor or notification model.
 
-Fallback chooses an asset for the actual process architecture and platform; when no matching asset exists, it opens the verified GitHub release page. GitHub endpoints use HTTPS. No downloaded scripts are executed.
+Direct downloads require the asset's `sha256:` digest from official GitHub Releases API metadata. Bytes, expected length and package magic are checked before marking a package ready and again before opening or revealing it. This verifies integrity against metadata retrieved over HTTPS; it is **not a publisher signature or independent proof of release authenticity**. A missing digest or matching package blocks download with a clear error instead of guessing a file. Only HTTPS official repository download URLs and explicitly allowed GitHub asset-storage redirects are accepted. No downloaded scripts are run.
 
-A native update requires the package and its generated `latest*.yml` metadata to be published together. Package hashes are validated by electron-updater. This release uses electron-builder 26 / electron-updater 6 and does not claim the signed update-manifest features of newer major versions.
+Completed installers are cached under `userData/updates/installers`; incomplete `.part` files are removed on startup. After restarting, the next successful update check obtains fresh release metadata and revalidates the cached file. Downloads are bounded to 2 GiB with a 30-minute total timeout and a disk-space check. Network failures, invalid data, insufficient space and permission errors support retry. Request cooldown and GitHub rate-limit responses prevent repeated checks.
+
+The header bell opens one persistent notification center. The same release entry changes from available to downloaded; **Open updates** navigates directly to the Updates section. Dismissing a toast does not erase its history.
+
+Native Restart & Install is available only on supported installations and remains explicit. Closing the app never automatically installs an update. Before restarting, changes in all tabs must be saved or discarded. Save & Install uses the existing system-hosts save; validation, denied elevation or a failed write prevents restart. Discard & Install restores saved snapshots. Cancel keeps the editor open. Native packages and their generated `latest*.yml` files must be published together. Native OS and real release end-to-end validation are still required; see TEST-RESULTS.md.
 
 ## 2.3.0 editor and safety details
 

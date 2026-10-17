@@ -1,4 +1,4 @@
-import { Download, RefreshCw, RotateCw } from "lucide-react";
+import { Download, FolderOpen, PackageOpen, RefreshCw, RotateCw, X } from "lucide-react";
 import { useState } from "react";
 
 import { useHostsEditorContext } from "../../context/useHostsEditorContext";
@@ -11,15 +11,21 @@ const bytes = (value: number): string => `${(value / 1024 / 1024).toFixed(1)} MB
 export const UpdateControls = () => {
   const { state, dirtyIds, patchState, installUpdate, saveSettings } = useHostsEditorContext();
   const [confirm, setConfirm] = useState(false);
+  const [actionError, setActionError] = useState("");
   const update = state.update;
   const working = ["checking", "downloading", "installing"].includes(update.status);
+  const canDownload =
+    ["available", "cancelled", "error"].includes(update.status) &&
+    Boolean(update.version && update.packageType);
   const run = (operation: () => Promise<unknown>): void => {
+    setActionError("");
     void operation().catch((error: unknown) => {
-      patchState({
-        message: `Update failed: ${error instanceof Error ? error.message : String(error)}`,
-      });
+      const message = error instanceof Error ? error.message : String(error);
+      setActionError(message);
+      patchState({ message: `Update failed: ${message}` });
     });
   };
+
   return (
     <div className="space-y-4">
       <label className="flex items-center justify-between gap-4 text-sm">
@@ -32,38 +38,35 @@ export const UpdateControls = () => {
           }}
         />
       </label>
-      <div className="text-sm text-slate-700 dark:text-slate-200" role="status">
-        Installed: <strong>{state.version}</strong>
-        {update.version && update.status !== "current" ? (
-          <>
-            {" "}
-            · Available: <strong>{update.version}</strong>
-          </>
-        ) : null}
-        <p className="mt-2">{update.message ?? "Check GitHub Releases for new versions."}</p>
-      </div>
-      {update.limitation && (
-        <p className="rounded-xl border border-orange-400/25 bg-orange-400/10 p-3 text-sm text-orange-900 dark:text-orange-200">
-          {update.limitation}
-        </p>
-      )}
-      {update.status === "downloading" && (
-        <div>
-          <progress
-            aria-label="Update download progress"
-            max={100}
-            value={update.progress?.percent ?? 0}
-            className="h-2 w-full accent-amber-500"
-          />
-          <p className="mt-1 text-xs tabular-nums text-slate-600 dark:text-slate-400">
-            {update.progress
-              ? `${update.progress.percent.toFixed(1)}% · ${bytes(update.progress.transferred)}${update.progress.total ? ` / ${bytes(update.progress.total)}` : ""}`
-              : "Connecting…"}
-          </p>
+      <div className="rounded-2xl border border-slate-200/80 bg-white/55 p-4 dark:border-white/10 dark:bg-white/[0.025]">
+        <div className="text-xs text-slate-600 dark:text-slate-400">
+          Installed: <strong className="text-slate-900 dark:text-slate-100">{state.version}</strong>
         </div>
-      )}
-      <div className="flex flex-wrap gap-2">
+        <p
+          role={update.status === "error" ? "alert" : "status"}
+          className={`mt-2 min-h-5 text-sm ${update.status === "error" ? "text-red-600 dark:text-red-300" : update.status === "current" ? "text-emerald-700 dark:text-emerald-400" : "text-slate-800 dark:text-slate-200"}`}
+        >
+          {update.message ?? "Check for the latest Hosts Editor version."}
+        </p>
+        {update.status === "downloading" && (
+          <div className="mt-4">
+            <progress
+              aria-label="Update download progress"
+              max={100}
+              value={update.progress?.percent ?? 0}
+              className="block h-2 w-full accent-amber-500"
+            />
+            <p className="mt-2 text-xs tabular-nums text-slate-600 dark:text-slate-400">
+              {update.progress
+                ? `${update.progress.percent.toFixed(1)}% · ${bytes(update.progress.transferred)}${update.progress.total > 0 ? ` / ${bytes(update.progress.total)}` : ""}`
+                : "Connecting…"}
+            </p>
+          </div>
+        )}
+      </div>
+      <div className="flex min-h-10 flex-wrap items-center gap-2">
         <Button
+          className="h-10"
           disabled={working || update.status === "downloaded"}
           icon={
             <RefreshCw
@@ -79,44 +82,79 @@ export const UpdateControls = () => {
         >
           {update.status === "checking" ? "Checking…" : "Check for updates"}
         </Button>
-        {update.status === "available" && (
+        {canDownload && (
           <Button
+            className="h-10"
             variant="primary"
             icon={<Download size={15} />}
             onClick={() => {
-              run(() =>
-                update.installSupported
-                  ? window.hostsEditor.downloadUpdate()
-                  : window.hostsEditor.openUpdate(),
-              );
+              run(() => window.hostsEditor.downloadUpdate());
             }}
           >
-            {update.installSupported ? "Download update" : "Download manually"}
+            {update.status === "error" ? "Retry download" : "Download Update"}
           </Button>
         )}
-        {update.status === "error" && (
+        {update.status === "downloading" && (
           <Button
+            className="h-10"
+            icon={<X size={15} />}
             onClick={() => {
-              run(() => window.hostsEditor.openUpdate());
+              run(() => window.hostsEditor.cancelUpdate());
             }}
           >
-            Open release downloads
+            Cancel download
           </Button>
         )}
-        {update.status === "downloaded" && (
-          <Button
-            variant="primary"
-            disabled={state.busy}
-            icon={<RotateCw size={15} />}
-            onClick={() => {
-              if (dirtyIds.size) setConfirm(true);
-              else run(() => installUpdate(false));
-            }}
-          >
-            Restart & Install
-          </Button>
-        )}
+        {update.status === "downloaded" &&
+          (update.installSupported ? (
+            <Button
+              className="h-10"
+              variant="primary"
+              disabled={state.busy}
+              icon={<RotateCw size={15} />}
+              onClick={() => {
+                if (dirtyIds.size) setConfirm(true);
+                else run(() => installUpdate(false));
+              }}
+            >
+              Restart & Install
+            </Button>
+          ) : (
+            <>
+              <Button
+                className="h-10"
+                variant="primary"
+                icon={<PackageOpen size={15} />}
+                onClick={() => {
+                  run(() => window.hostsEditor.openUpdate());
+                }}
+              >
+                {update.packageType === "AppImage"
+                  ? "Open downloaded app"
+                  : update.packageType === "zip"
+                    ? "Open downloaded archive"
+                    : "Open Installer"}
+              </Button>
+              <Button
+                className="h-10"
+                icon={<FolderOpen size={15} />}
+                onClick={() => {
+                  run(() => window.hostsEditor.showUpdateInFolder());
+                }}
+              >
+                Show in Folder
+              </Button>
+            </>
+          ))}
       </div>
+      {actionError && (
+        <p
+          role="alert"
+          className="rounded-xl border border-red-400/25 bg-red-500/5 p-3 text-sm text-red-700 dark:text-red-300"
+        >
+          {actionError}
+        </p>
+      )}
       {confirm && (
         <Modal
           title="Unsaved changes before restart"

@@ -92,9 +92,11 @@ export const SettingsPage = () => {
         </label>
       </Panel>
 
-      <Panel title="Updates">
-        <UpdateControls />
-      </Panel>
+      <div id="updates" className="scroll-mt-5">
+        <Panel title="Updates">
+          <UpdateControls />
+        </Panel>
+      </div>
 
       <Panel title="Help & feedback">
         <div className="flex items-center justify-between gap-5">
