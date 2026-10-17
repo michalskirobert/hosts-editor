@@ -1,159 +1,137 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import type { CSSProperties } from "react";
 
-import { Textarea } from "@renderer/components/shared/form";
+import type { TextMatch } from "../../lib/search";
 
 interface RawEditorProps {
   readonly value: string;
-  readonly query: string;
+  readonly matches: readonly TextMatch[];
   readonly activeMatchIndex: number;
   readonly onChange: (value: string) => void;
 }
 
-interface HighlightPart {
-  readonly text: string;
-  readonly matchIndex?: number;
-}
+const textStyle: CSSProperties = {
+  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+  fontSize: "13px",
+  fontWeight: 400,
+  fontStyle: "normal",
+  fontVariantLigatures: "none",
+  letterSpacing: "normal",
+  lineHeight: "24px",
+  tabSize: 4,
+  padding: "20px",
+  whiteSpace: "pre-wrap",
+  overflowWrap: "anywhere",
+  wordBreak: "normal",
+  textAlign: "left",
+  textIndent: 0,
+  textTransform: "none",
+  boxSizing: "border-box",
+  border: 0,
+};
 
-export const RawEditor = ({ value, query, activeMatchIndex, onChange }: RawEditorProps) => {
+export const RawEditor = ({ value, matches, activeMatchIndex, onChange }: RawEditorProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const highlightRef = useRef<HTMLDivElement>(null);
-  const [editorMetrics, setEditorMetrics] = useState<CSSProperties>({});
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const mirrorRef = useRef<HTMLDivElement>(null);
+  const normalizedIndex = matches.length ? activeMatchIndex % matches.length : -1;
 
-  const matches = useMemo(() => {
-    if (!query) return [];
-
-    const indexes: number[] = [];
-    const haystack = value.toLocaleLowerCase();
-    const needle = query.toLocaleLowerCase();
-    let position = 0;
-
-    while ((position = haystack.indexOf(needle, position)) >= 0) {
-      indexes.push(position);
-      position += Math.max(1, needle.length);
-    }
-
-    return indexes;
-  }, [query, value]);
-
-  const normalizedActiveMatchIndex =
-    matches.length > 0
-      ? ((activeMatchIndex % matches.length) + matches.length) % matches.length
-      : -1;
-
-  const highlightParts = useMemo<HighlightPart[]>(() => {
-    if (!query || !matches.length) return [{ text: value }];
-
-    const parts: HighlightPart[] = [];
+  const parts = useMemo(() => {
     let cursor = 0;
-
-    matches.forEach((start, matchIndex) => {
-      if (start > cursor) parts.push({ text: value.slice(cursor, start) });
-      parts.push({ text: value.slice(start, start + query.length), matchIndex });
-      cursor = start + query.length;
+    const result = matches.flatMap((match, index) => {
+      const before = value.slice(cursor, match.start);
+      cursor = match.end;
+      return [
+        before,
+        <mark
+          key={index}
+          data-match={index}
+          className={
+            index === normalizedIndex
+              ? "bg-amber-400/85 text-transparent outline outline-1 outline-amber-600 dark:bg-amber-300/60"
+              : "bg-amber-300/50 text-transparent dark:bg-amber-300/30"
+          }
+        >
+          {value.slice(match.start, match.end)}
+        </mark>,
+      ];
     });
+    result.push(value.slice(cursor), "\u200b");
+    return result;
+  }, [matches, normalizedIndex, value]);
 
-    if (cursor < value.length) parts.push({ text: value.slice(cursor) });
-    if (value.endsWith("\n")) parts.push({ text: "\n" });
-
-    return parts;
-  }, [matches, query, value]);
-
-  useEffect(() => {
+  const syncScroll = (): void => {
     const textarea = textareaRef.current;
-    if (!textarea) return;
+    const viewport = viewportRef.current;
+    if (!textarea || !viewport) return;
+    viewport.scrollTop = textarea.scrollTop;
+    viewport.scrollLeft = textarea.scrollLeft;
+  };
 
-    const syncMetrics = (): void => {
-      const style = window.getComputedStyle(textarea);
-      setEditorMetrics({
-        boxSizing: style.boxSizing as CSSProperties["boxSizing"],
-        fontFamily: style.fontFamily,
-        fontSize: style.fontSize,
-        fontWeight: style.fontWeight,
-        fontStyle: style.fontStyle,
-        letterSpacing: style.letterSpacing,
-        lineHeight: style.lineHeight,
-        paddingTop: style.paddingTop,
-        paddingRight: style.paddingRight,
-        paddingBottom: style.paddingBottom,
-        paddingLeft: style.paddingLeft,
-        tabSize: style.tabSize,
-        width: `${String(textarea.clientWidth)}px`,
-        height: `${String(textarea.clientHeight)}px`,
-      });
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    const mirror = mirrorRef.current;
+    const viewport = viewportRef.current;
+    if (!textarea || !mirror || !viewport) return;
+    const sync = (): void => {
+      mirror.style.width = `${String(textarea.clientWidth)}px`;
+      viewport.style.width = `${String(textarea.clientWidth)}px`;
+      viewport.style.height = `${String(textarea.clientHeight)}px`;
+      syncScroll();
     };
-
-    syncMetrics();
-    const observer = new ResizeObserver(syncMetrics);
+    sync();
+    const observer = new ResizeObserver(sync);
     observer.observe(textarea);
     return () => {
       observer.disconnect();
     };
   }, []);
 
-  const syncScroll = (): void => {
+  useLayoutEffect(() => {
     const textarea = textareaRef.current;
-    const highlight = highlightRef.current;
-    if (!textarea || !highlight) return;
-
-    highlight.scrollTop = textarea.scrollTop;
-    highlight.scrollLeft = textarea.scrollLeft;
-  };
-
-  useEffect(() => {
-    if (!query || !matches.length) return;
-
-    const start = matches[normalizedActiveMatchIndex];
-    const textarea = textareaRef.current;
-    const highlight = highlightRef.current;
-    if (start === undefined || !textarea) return;
-
-    const valueBeforeMatch = value.slice(0, start);
-    const line = valueBeforeMatch.split("\n").length - 1;
-    const computedLineHeight = Number.parseFloat(window.getComputedStyle(textarea).lineHeight);
-    const lineHeight = Number.isFinite(computedLineHeight) ? computedLineHeight : 24;
-    const targetScrollTop = Math.max(0, line * lineHeight - textarea.clientHeight / 3);
-
-    textarea.scrollTo({ top: targetScrollTop, behavior: "smooth" });
-    if (highlight) highlight.scrollTop = targetScrollTop;
-  }, [matches, normalizedActiveMatchIndex, query, value]);
+    const mirror = mirrorRef.current;
+    const active = mirror?.querySelector<HTMLElement>(`[data-match="${String(normalizedIndex)}"]`);
+    if (!textarea || !mirror || !active) {
+      syncScroll();
+      return;
+    }
+    const rect = active.getBoundingClientRect();
+    const bounds = mirror.getBoundingClientRect();
+    const top = rect.top - bounds.top;
+    if (
+      top < textarea.scrollTop + 20 ||
+      top + rect.height > textarea.scrollTop + textarea.clientHeight - 20
+    ) {
+      textarea.scrollTop = Math.max(0, top - textarea.clientHeight / 3);
+    }
+    syncScroll();
+  }, [normalizedIndex, matches, value]);
 
   return (
-    <div className="relative min-h-[560px] overflow-hidden rounded-3xl border border-white/70 bg-white/55 shadow-[0_18px_60px_-34px_rgba(15,23,42,0.4)] backdrop-blur-2xl dark:border-white/[0.09] dark:bg-slate-950/42">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-300/70 bg-white/75 shadow-[0_18px_60px_-34px_rgba(15,23,42,0.4)] backdrop-blur-2xl focus-within:ring-2 focus-within:ring-amber-500/30 dark:border-white/10 dark:bg-slate-950/55">
       <div
-        ref={highlightRef}
+        ref={viewportRef}
         aria-hidden="true"
-        style={editorMetrics}
-        className="pointer-events-none absolute left-0 top-0 overflow-hidden whitespace-pre-wrap break-words text-transparent"
+        className="pointer-events-none absolute left-0 top-0 overflow-hidden"
       >
-        {highlightParts.map((part, index) =>
-          part.matchIndex === undefined ? (
-            <span key={index}>{part.text}</span>
-          ) : (
-            <mark
-              key={index}
-              className={
-                part.matchIndex === normalizedActiveMatchIndex
-                  ? "rounded-sm bg-amber-400/80 text-transparent ring-1 ring-amber-500/70 dark:bg-amber-300/55 dark:ring-amber-300/80"
-                  : "rounded-sm bg-amber-300/45 text-transparent dark:bg-amber-300/25"
-              }
-            >
-              {part.text}
-            </mark>
-          ),
-        )}
+        <div ref={mirrorRef} style={textStyle} className="min-h-full text-transparent">
+          {parts}
+        </div>
       </div>
-
-      <Textarea
+      <textarea
         ref={textareaRef}
+        aria-label="Hosts file text"
         value={value}
+        wrap="soft"
+        style={textStyle}
         onChange={(event) => {
           onChange(event.target.value);
         }}
         onScroll={syncScroll}
         spellCheck={false}
-        monospace
-        className="relative z-10 h-[560px] min-h-[560px] w-full resize-none rounded-none border-0 bg-transparent p-5 text-[13px] leading-6 shadow-none hover:bg-transparent focus:bg-transparent focus:ring-0 dark:bg-transparent dark:hover:bg-transparent dark:focus:bg-transparent"
+        autoCapitalize="off"
+        autoCorrect="off"
+        className="relative block h-[560px] w-full resize-none overflow-auto bg-transparent text-slate-900 outline-none [scrollbar-gutter:stable] dark:text-slate-100"
       />
     </div>
   );

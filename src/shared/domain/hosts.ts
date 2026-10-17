@@ -45,6 +45,7 @@ export const areValidHostnames = (value: string): boolean => {
 };
 
 export const getHostLineError = (line: HostLine): string | undefined => {
+  if (line.kind === "raw" && line.raw.trim()) return `Unrecognized hosts entry: ${line.raw}`;
   if (line.kind !== "host") return undefined;
   if (!isValidIpAddress(line.address)) return `Invalid IP address: ${line.address || "(empty)"}`;
   if (!areValidHostnames(line.hostname)) return `Invalid hostname: ${line.hostname || "(empty)"}`;
@@ -93,13 +94,24 @@ export const parseHostsText = (text: string): readonly HostLine[] =>
       }
 
       if (commented) return createLine(raw, "comment");
-      return createLine(`# ${raw}`, "comment");
+      return createLine(raw, "raw");
     });
 
 export const serializeLines = (lines: readonly HostLine[]): string =>
   lines
     .map((line) => {
       if (line.kind !== "host") return line.raw;
+      if (line.raw) {
+        const original = parseHostsText(line.raw)[0];
+        if (
+          original?.kind === "host" &&
+          original.address === line.address &&
+          original.hostname === line.hostname &&
+          original.comment === line.comment &&
+          original.enabled === line.enabled
+        )
+          return line.raw;
+      }
       const base = `${line.address} ${line.hostname}`.trim();
       const withComment = line.comment ? `${base} # ${line.comment}` : base;
       return line.enabled ? withComment : `# ${withComment}`;

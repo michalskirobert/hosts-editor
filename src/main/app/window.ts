@@ -29,6 +29,11 @@ export const createWindow = async (settings: AppSettings): Promise<BrowserWindow
     },
   });
 
+  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  window.webContents.on("will-navigate", (event, url) => {
+    if (url !== window.webContents.getURL()) event.preventDefault();
+  });
+
   window.webContents.on("before-input-event", (event, input) => {
     if (input.type === "keyDown" && input.key === "F12") {
       event.preventDefault();

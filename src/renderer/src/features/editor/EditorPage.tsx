@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, FileCode2, Import, Plus, Search, Table2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { parseHostsText } from "../../../../shared/domain/hosts";
 import { Input } from "../../components/shared/form";
@@ -7,6 +7,7 @@ import { Button } from "../../components/ui/Button";
 import { IconButton } from "../../components/ui/IconButton";
 import { ModeButton } from "../../components/ui/ModeButton";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
+import { findTextMatches } from "../../lib/search";
 import { RawEditor } from "./RawEditor";
 import { StructuredEditor } from "./StructuredEditor";
 
@@ -15,25 +16,15 @@ export const EditorPage = () => {
     useHostsEditorContext();
   const [rawMatchIndex, setRawMatchIndex] = useState(0);
 
-  const rawMatches = useMemo(() => {
-    if (state.mode !== "raw" || !state.query) return [];
-
-    const indexes: number[] = [];
-    const haystack = state.raw.toLocaleLowerCase();
-    const needle = state.query.toLocaleLowerCase();
-    let position = 0;
-
-    while ((position = haystack.indexOf(needle, position)) >= 0) {
-      indexes.push(position);
-      position += Math.max(1, needle.length);
-    }
-
-    return indexes;
-  }, [state.mode, state.query, state.raw]);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const rawMatches = useMemo(
+    () => (state.mode === "raw" ? findTextMatches(state.raw, state.query) : []),
+    [state.mode, state.query, state.raw],
+  );
 
   useEffect(() => {
     setRawMatchIndex(0);
-  }, [state.query, state.mode]);
+  }, [state.query, state.mode, state.selected]);
 
   const jumpRawMatch = (delta: number): void => {
     if (!rawMatches.length) return;
@@ -83,6 +74,8 @@ export const EditorPage = () => {
             className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-slate-400"
           />
           <Input
+            ref={searchRef}
+            aria-label={state.mode === "raw" ? "Find in hosts" : "Search hosts"}
             value={state.query}
             onChange={(event) => {
               patchState({ query: event.target.value });
@@ -97,7 +90,12 @@ export const EditorPage = () => {
             className={`h-10 rounded-xl border-slate-300/70 bg-white/58 py-0 pl-11 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.35)] hover:bg-white/62 dark:border-white/[0.075] dark:bg-white/[0.04] dark:hover:bg-white/[0.055] ${rawSearchActive ? "pr-40" : "pr-11"}`}
           />
           {rawSearchActive ? (
-            <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+            <div
+              className="absolute inset-y-0 right-1 flex items-center gap-0.5"
+              onMouseDown={(event) => {
+                event.preventDefault();
+              }}
+            >
               <span className="min-w-12 px-1 text-center text-xs tabular-nums text-slate-500 dark:text-slate-400">
                 {String(displayedMatchIndex)}/{String(rawMatches.length)}
               </span>
@@ -132,15 +130,18 @@ export const EditorPage = () => {
               </IconButton>
             </div>
           ) : state.query ? (
-            <IconButton
-              label="Clear search"
-              onClick={() => {
-                patchState({ query: "" });
-              }}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400"
-            >
-              <X size={15} />
-            </IconButton>
+            <div className="absolute inset-y-0 right-1.5 flex items-center">
+              <IconButton
+                label="Clear search"
+                onClick={() => {
+                  patchState({ query: "" });
+                  searchRef.current?.focus();
+                }}
+                className="text-slate-400"
+              >
+                <X size={15} />
+              </IconButton>
+            </div>
           ) : null}
         </div>
         <Button
@@ -178,7 +179,7 @@ export const EditorPage = () => {
         ) : (
           <RawEditor
             value={state.raw}
-            query={state.query}
+            matches={rawMatches}
             activeMatchIndex={rawMatchIndex}
             onChange={(raw) => {
               patchState({ raw });

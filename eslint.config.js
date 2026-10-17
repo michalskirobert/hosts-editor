@@ -9,12 +9,16 @@ export default tseslint.config(
     ignores: ["dist/**", "out/**", "node_modules/**", "eslint.config.js"],
   },
   js.configs.recommended,
-  {
-    files: ["**/*.js"],
-    ...tseslint.configs.disableTypeChecked,
-  },
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
+  {
+    files: ["**/*.{js,mjs}"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
   {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {

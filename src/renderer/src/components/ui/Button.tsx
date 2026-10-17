@@ -47,9 +47,9 @@ export const Button = ({
       type={type}
       disabled={disabled}
       className={cn(
-        "group relative isolate inline-flex cursor-pointer items-center justify-center gap-2 overflow-hidden border transition-[transform,background-color,border-color,color,box-shadow] duration-300 ease-out motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-safe:active:scale-[0.98] motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100",
+        "group relative isolate inline-flex cursor-pointer items-center justify-center gap-2 overflow-hidden border transition-[background-color,border-color,color,box-shadow,opacity] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:shadow-none",
         "before:pointer-events-none before:absolute before:inset-y-0 before:-left-1/2 before:-z-10 before:w-1/3 before:-skew-x-12 before:bg-gradient-to-r before:from-transparent before:via-white/35 before:to-transparent before:opacity-0 before:transition-[left,opacity] before:duration-500 motion-safe:hover:before:left-[120%] motion-safe:hover:before:opacity-70 motion-reduce:before:hidden",
-        "[&_svg]:transition-[transform,color] [&_svg]:duration-300 motion-safe:hover:[&_svg]:scale-110 motion-reduce:[&_svg]:transition-none",
+        "[&_svg]:transition-colors [&_svg]:duration-200 motion-reduce:[&_svg]:transition-none",
         variants[variant],
         sizes[size],
         className,

@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { useId, useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -13,33 +14,71 @@ interface ModalProps {
   readonly footer?: ReactNode;
 }
 
-export const Modal = ({ title, children, onClose, wide = false, footer }: ModalProps) =>
-  createPortal(
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-md dark:bg-black/65">
+export const Modal = ({ title, children, onClose, wide = false, footer }: ModalProps) => {
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    const previous = document.activeElement;
+    if (!dialog) return;
+
+    dialog.showModal();
+    titleRef.current?.focus({ preventScroll: true });
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+
+    const frame = requestAnimationFrame(() => {
+      if (bodyRef.current) bodyRef.current.scrollTop = 0;
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      dialog.close();
+      if (previous instanceof HTMLElement && previous.isConnected)
+        previous.focus({ preventScroll: true });
+    };
+  }, []);
+
+  return createPortal(
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={titleId}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      className={cn(
+        "fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100vw_-_2rem)] overflow-hidden rounded-[28px] border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/45 backdrop:backdrop-blur-md [&[open]]:flex [&[open]]:flex-col dark:border-white/10 dark:bg-[#0b111b] dark:text-slate-100 dark:backdrop:bg-black/65",
+        wide ? "max-w-4xl" : "max-w-xl",
+      )}
+    >
+      <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200/70 px-6 py-4 dark:border-white/[0.07]">
+        <h2
+          ref={titleRef}
+          id={titleId}
+          tabIndex={-1}
+          className="min-w-0 text-lg font-semibold tracking-tight outline-none"
+        >
+          {title}
+        </h2>
+        <IconButton label="Close" onClick={onClose}>
+          <X size={18} />
+        </IconButton>
+      </header>
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className={cn(
-          "flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden rounded-[28px] border border-white/75 bg-white/90 shadow-[0_32px_100px_-30px_rgba(15,23,42,0.55)] backdrop-blur-3xl backdrop-saturate-150 dark:border-white/12 text-slate-900 dark:bg-[#0b111b]/95 dark:text-slate-100 dark:shadow-[0_36px_110px_-30px_rgba(0,0,0,0.9)]",
-          wide ? "max-w-4xl" : "max-w-xl",
-        )}
+        ref={bodyRef}
+        className="min-h-0 flex-auto overflow-y-auto overscroll-contain px-6 py-5 [scrollbar-color:rgba(100,116,139,0.45)_transparent] [scrollbar-gutter:stable] [scrollbar-width:thin]"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200/60 px-6 py-4 dark:border-white/[0.06]">
-          <h2 className="text-lg font-semibold tracking-[-0.02em]">{title}</h2>
-          <IconButton label="Close" onClick={onClose}>
-            <X size={18} />
-          </IconButton>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5 [scrollbar-color:rgba(100,116,139,0.45)_transparent] [scrollbar-gutter:stable] [scrollbar-width:thin]">
-          {children}
-        </div>
-        {footer && (
-          <div className="shrink-0 border-t border-slate-200/60 bg-white/72 px-6 py-4 backdrop-blur-2xl dark:border-white/[0.06] dark:bg-[#0b111b]/88">
-            {footer}
-          </div>
-        )}
+        {children}
       </div>
-    </div>,
+      {footer && (
+        <footer className="shrink-0 border-t border-slate-200/70 px-6 py-4 dark:border-white/[0.07]">
+          {footer}
+        </footer>
+      )}
+    </dialog>,
     document.body,
   );
+};

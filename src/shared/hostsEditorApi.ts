@@ -30,6 +30,11 @@ export interface HostsEditorApi {
   openBackups(): Promise<void>;
   saveSettings(settings: AppSettings): Promise<AppSettings>;
   checkUpdate(): Promise<UpdateState>;
+  getUpdateState(): Promise<UpdateState>;
+  onUpdateState(listener: (state: UpdateState) => void): () => void;
+  downloadUpdate(): Promise<UpdateState>;
+  installUpdate(): Promise<UpdateState>;
+  setUpdateSafety(dirty: boolean, busy: boolean): Promise<void>;
   openUpdate(): Promise<void>;
   setFullscreen(value: boolean): Promise<void>;
   openExternal(url: string): Promise<void>;

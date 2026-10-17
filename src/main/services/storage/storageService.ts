@@ -1,10 +1,11 @@
 import { app, dialog, shell } from "electron";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import AdmZip from "adm-zip";
 import { z } from "zod";
 
+import { hostTabSchema, settingsSchema } from "../../../shared/contracts/schemas";
 import { parseHostsText } from "../../../shared/domain/hosts";
 import type {
   AppSettings,
@@ -28,25 +29,6 @@ interface StoredBackup {
   readonly tab: HostTab;
 }
 
-const hostLineSchema = z.object({
-  id: z.string().min(1),
-  kind: z.enum(["host", "comment", "blank", "raw"]),
-  enabled: z.boolean(),
-  address: z.string(),
-  hostname: z.string(),
-  comment: z.string(),
-  raw: z.string(),
-});
-
-const hostTabSchema = z.object({
-  id: z.string().min(1),
-  name: z.string(),
-  enabled: z.boolean(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-  lines: z.array(hostLineSchema),
-});
-
 const storedBackupSchema = z.object({
   reason: z.enum(["auto-save", "manual", "pre-restore", "pre-import", "pre-delete"]),
   createdAt: z.iso.datetime(),
@@ -65,6 +47,7 @@ const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
 const MAX_ARCHIVE_BACKUPS = 200;
 
 export class StorageService {
+  private readonly writes = new Map<string, Promise<void>>();
   private readonly root = path.join(app.getPath("userData"), "v2");
   private readonly tabsDirectory = path.join(this.root, "tabs");
   private readonly backupsDirectory = path.join(this.root, "backups");
@@ -84,7 +67,10 @@ export class StorageService {
 
   async getSettings(): Promise<AppSettings> {
     try {
-      return { ...defaults, ...(await this.read<AppSettings>(this.settingsPath)) };
+      return settingsSchema.parse({
+        ...defaults,
+        ...(await this.read<AppSettings>(this.settingsPath)),
+      });
     } catch {
       return defaults;
     }
@@ -97,7 +83,11 @@ export class StorageService {
   async listTabs(): Promise<readonly HostTab[]> {
     const names = (await fs.readdir(this.tabsDirectory)).filter((name) => name.endsWith(".json"));
     const tabs = await Promise.all(
-      names.map((name) => this.read<HostTab>(path.join(this.tabsDirectory, name))),
+      names.map((name) =>
+        this.read<unknown>(path.join(this.tabsDirectory, name)).then((value) =>
+          hostTabSchema.parse(value),
+        ),
+      ),
     );
     return tabs.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }
@@ -117,6 +107,7 @@ export class StorageService {
   }
 
   async saveTab(tab: HostTab, createAutoBackup = false): Promise<HostTab> {
+    hostTabSchema.parse(tab);
     const existing = await this.tryReadTab(tab.id);
     if (existing && createAutoBackup && !(await this.hasAutoBackupToday(tab.id))) {
       await this.createBackup(existing, "auto-save");
@@ -146,7 +137,7 @@ export class StorageService {
     const directory = path.join(this.backupsDirectory, this.safeId(tab.id));
     await fs.mkdir(directory, { recursive: true });
     const createdAt = new Date().toISOString();
-    const fileName = `${createdAt.replace(/[:.]/g, "-")}-${reason}.json`;
+    const fileName = `${createdAt.replace(/[:.]/g, "-")}-${reason}-${randomUUID()}.json`;
     const backupPath = path.join(directory, fileName);
     const stored: StoredBackup = { reason, createdAt, tab };
     await this.atomicJson(backupPath, stored);
@@ -199,7 +190,7 @@ export class StorageService {
             fileName,
             createdAt: stat.mtime.toISOString(),
             path: backupPath,
-            reason: "auto-save",
+            reason: "manual",
           });
         }
       }
@@ -225,6 +216,7 @@ export class StorageService {
   }
 
   async deleteBackup(info: BackupInfo): Promise<void> {
+    await this.assertBackupPath(info.path);
     await fs.rm(info.path, { force: true });
   }
 
@@ -235,6 +227,7 @@ export class StorageService {
       filters: [{ name: "JSON", extensions: ["json"] }],
     });
     if (result.canceled || !result.filePath) return false;
+    await this.assertBackupPath(info.path);
     await fs.copyFile(info.path, result.filePath);
     return true;
   }
@@ -304,8 +297,10 @@ export class StorageService {
       const manifestEntry = archive.getEntry("manifest.json");
       if (!manifestEntry) throw new Error("This is not a Hosts Editor backup archive.");
 
+      if (manifestEntry.header.size > MAX_BACKUP_BYTES)
+        throw new Error("Archive manifest is too large.");
       const manifestValue: unknown = JSON.parse(manifestEntry.getData().toString("utf8"));
-      backupArchiveManifestSchema.parse(manifestValue);
+      const manifest = backupArchiveManifestSchema.parse(manifestValue);
 
       const entries = archive
         .getEntries()
@@ -320,7 +315,13 @@ export class StorageService {
         throw new Error("Backup archive contains too many files.");
       }
 
+      if (manifest.backupCount !== entries.length)
+        throw new Error("Backup archive count does not match its manifest.");
+      let total = 0;
       for (const entry of entries) {
+        total += entry.header.size;
+        if (entry.header.size > MAX_BACKUP_BYTES || total > MAX_ARCHIVE_BYTES)
+          throw new Error("Backup archive expands beyond the allowed size.");
         const bytes = entry.getData();
         if (bytes.byteLength > MAX_BACKUP_BYTES) {
           throw new Error("A backup inside the archive is too large.");
@@ -373,7 +374,11 @@ export class StorageService {
   private async importStoredBackup(stored: StoredBackup): Promise<void> {
     const directory = path.join(this.backupsDirectory, this.safeId(stored.tab.id));
     await fs.mkdir(directory, { recursive: true });
-    const fileName = `${stored.createdAt.replace(/[:.]/g, "-")}-imported.json`;
+    const hash = createHash("sha256")
+      .update(this.backupFingerprint(stored))
+      .digest("hex")
+      .slice(0, 16);
+    const fileName = `${stored.createdAt.replace(/[:.]/g, "-")}-${hash}-imported.json`;
     await this.atomicJson(path.join(directory, fileName), { ...stored, reason: "manual" });
   }
 
@@ -385,15 +390,28 @@ export class StorageService {
     });
   }
 
+  private async assertBackupPath(backupPath: string): Promise<void> {
+    const resolved = await fs.realpath(backupPath);
+    const root = await fs.realpath(this.backupsDirectory);
+    const relative = path.relative(root, resolved);
+    if (
+      !relative ||
+      relative.startsWith("..") ||
+      path.isAbsolute(relative) ||
+      path.extname(resolved) !== ".json"
+    )
+      throw new Error("Invalid backup path.");
+  }
+
   private async readBackupFile(backupPath: string): Promise<StoredBackup> {
-    const value = await this.read<StoredBackup | HostTab>(backupPath);
-    if ("tab" in value) return value;
-    return { reason: "auto-save", createdAt: value.updatedAt, tab: value };
+    await this.assertBackupPath(backupPath);
+    const value: unknown = await this.read<unknown>(backupPath);
+    return this.parseImportedBackup(JSON.stringify(value));
   }
 
   private async tryReadTab(id: string): Promise<HostTab | undefined> {
     try {
-      return await this.read<HostTab>(this.tabPath(id));
+      return hostTabSchema.parse(await this.read<unknown>(this.tabPath(id)));
     } catch {
       return undefined;
     }
@@ -412,9 +430,27 @@ export class StorageService {
     return JSON.parse(await fs.readFile(filePath, "utf8")) as T;
   }
   private async atomicJson(filePath: string, value: unknown): Promise<void> {
-    const tempPath = `${filePath}.${String(process.pid)}.tmp`;
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
-    await fs.writeFile(tempPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-    await fs.rename(tempPath, filePath);
+    const previous = this.writes.get(filePath) ?? Promise.resolve();
+    const write = previous
+      .catch(() => undefined)
+      .then(async () => {
+        const tempPath = `${filePath}.${randomUUID()}.tmp`;
+        try {
+          await fs.mkdir(path.dirname(filePath), { recursive: true });
+          await fs.writeFile(tempPath, `${JSON.stringify(value, null, 2)}\n`, {
+            encoding: "utf8",
+            mode: 0o600,
+          });
+          await fs.rename(tempPath, filePath);
+        } finally {
+          await fs.rm(tempPath, { force: true });
+        }
+      });
+    this.writes.set(filePath, write);
+    try {
+      await write;
+    } finally {
+      if (this.writes.get(filePath) === write) this.writes.delete(filePath);
+    }
   }
 }

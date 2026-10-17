@@ -1,4 +1,5 @@
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
+import { Button } from "../components/ui/Button";
 import { Header } from "../components/layout/Header";
 import { Sidebar } from "../components/layout/Sidebar";
 import { StatusBar } from "../components/layout/StatusBar";
@@ -9,6 +10,8 @@ import { HostsEditorProvider } from "../context/HostsEditorContext";
 import { BackupsPage } from "../features/backups/BackupsPage";
 import { EditorPage } from "../features/editor/EditorPage";
 import { SettingsPage } from "../features/settings/SettingsPage";
+
+import { UpdateNotice } from "../features/settings/UpdateNotice";
 
 const AppContent = () => {
   const { state } = useHostsEditorContext();
@@ -28,13 +31,37 @@ const AppContent = () => {
       <main className="relative z-10 flex min-w-0 flex-1 flex-col">
         <Header />
         <ScrollArea className="min-h-0 flex-1 px-5">
-          {state.page === "editor" && <EditorPage />}
-          {state.page === "backups" && <BackupsPage />}
-          {state.page === "settings" && <SettingsPage />}
+          {!state.version ? (
+            <div
+              className="mx-auto mt-24 max-w-lg rounded-3xl border border-slate-300/60 bg-white/80 p-8 text-center dark:border-white/10 dark:bg-slate-950/70"
+              role="status"
+            >
+              <p className="text-lg font-semibold">
+                {state.busy ? "Loading Hosts Editor…" : "Could not load your workspace"}
+              </p>
+              {!state.busy && (
+                <Button
+                  className="mt-4"
+                  onClick={() => {
+                    window.location.reload();
+                  }}
+                >
+                  Try again
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              {state.page === "editor" && <EditorPage />}
+              {state.page === "backups" && <BackupsPage />}
+              {state.page === "settings" && <SettingsPage />}
+            </>
+          )}
         </ScrollArea>
         <StatusBar />
       </main>
       <AppDialog />
+      <UpdateNotice />
       <Toast />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Check, Download, MessageSquareText, Moon, RefreshCw, Settings, Sun } from "lucide-react";
+import { Check, MessageSquareText, Moon, Settings, Sun } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "../../components/ui/Button";
@@ -8,6 +8,8 @@ import { cn } from "@renderer/lib/cn";
 import { useHostsEditorContext } from "@renderer/context/useHostsEditorContext";
 import { FeedbackDialog } from "@renderer/features/feedback/FeedbackDialog";
 
+import { UpdateControls } from "./UpdateControls";
+
 const themes = [
   { id: "system", label: "System", icon: Settings },
   { id: "light", label: "Light", icon: Sun },
@@ -15,14 +17,8 @@ const themes = [
 ] as const;
 
 export const SettingsPage = () => {
-  const { state, patchState, saveSettings } = useHostsEditorContext();
+  const { state, saveSettings } = useHostsEditorContext();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-
-  const checkForUpdate = async (): Promise<void> => {
-    patchState({ update: { status: "checking" } });
-    const update = await window.hostsEditor.checkUpdate();
-    patchState({ update, message: update.message ?? "" });
-  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 py-5">
@@ -37,9 +33,9 @@ export const SettingsPage = () => {
                   void saveSettings({ ...state.settings, theme: id });
                 }}
                 className={cn(
-                  "group relative overflow-hidden rounded-2xl border p-4 text-left transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out motion-safe:hover:-translate-y-0.5 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40",
+                  "group relative overflow-hidden rounded-2xl border p-4 text-left transition-[background-color,border-color,box-shadow] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40",
                   active
-                    ? "-translate-y-0.5 border-amber-400/45 bg-amber-50/75 shadow-[0_14px_34px_-24px_rgba(245,158,11,0.58)] dark:border-amber-300/[0.18] dark:bg-amber-300/[0.075]"
+                    ? "border-amber-400/45 bg-amber-50/75 shadow-[0_14px_34px_-24px_rgba(245,158,11,0.58)] dark:border-amber-300/[0.18] dark:bg-amber-300/[0.075]"
                     : "border-slate-300/70 bg-white/46 hover:border-amber-400/55 hover:bg-amber-50/70 hover:shadow-[0_14px_34px_-24px_rgba(245,158,11,0.58)] dark:border-white/[0.065] dark:bg-white/[0.025] dark:hover:border-amber-300/[0.18] dark:hover:bg-amber-300/[0.075]",
                 )}
               >
@@ -47,7 +43,7 @@ export const SettingsPage = () => {
                 <div className="relative flex items-start justify-between">
                   <Icon
                     className={cn(
-                      "transition-[color,transform] duration-300 group-hover:scale-110",
+                      "transition-colors duration-200",
                       active
                         ? "text-amber-600 dark:text-amber-300"
                         : "text-slate-600 dark:text-slate-300",
@@ -97,49 +93,7 @@ export const SettingsPage = () => {
       </Panel>
 
       <Panel title="Updates">
-        <div className="flex items-center justify-between gap-5">
-          <div>
-            <div className="font-medium">Version {state.version}</div>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              {state.update.status === "available"
-                ? `Version ${state.update.version ?? "new"} is available. Please update Hosts Editor to get the latest fixes and improvements.`
-                : (state.update.message ?? "Hosts Editor checks GitHub Releases for new versions.")}
-            </div>
-          </div>
-          <div className="flex shrink-0 gap-2">
-            <Button
-              onClick={() => {
-                void checkForUpdate();
-              }}
-              disabled={state.update.status === "checking"}
-              disabledReason={
-                state.update.status === "checking"
-                  ? "Update check is already in progress"
-                  : undefined
-              }
-              className="hover:[&_svg]:rotate-180"
-              icon={
-                <RefreshCw
-                  size={15}
-                  className={state.update.status === "checking" ? "animate-spin" : undefined}
-                />
-              }
-            >
-              {state.update.status === "checking" ? "Checking..." : "Check for updates"}
-            </Button>
-            {state.update.status === "available" && (
-              <Button
-                variant="primary"
-                icon={<Download size={15} />}
-                onClick={() => {
-                  void window.hostsEditor.openUpdate();
-                }}
-              >
-                Download
-              </Button>
-            )}
-          </div>
-        </div>
+        <UpdateControls />
       </Panel>
 
       <Panel title="Help & feedback">

@@ -52,8 +52,11 @@ export const Header = () => {
               void importIntoCurrent();
             }}
             icon={<Import size={16} />}
+            aria-label="Import system hosts"
+            title="Import system hosts"
+            className="h-10"
           >
-            Import system hosts
+            <span className="hidden xl:inline">Import system hosts</span>
           </Button>
           {tab && (
             <Button
@@ -61,8 +64,11 @@ export const Header = () => {
                 void createManualBackup();
               }}
               icon={<ArchiveRestore size={16} />}
+              aria-label="Backup"
+              title="Create backup"
+              className="h-10"
             >
-              Backup
+              <span className="hidden xl:inline">Backup</span>
             </Button>
           )}
           <Button
@@ -78,8 +84,11 @@ export const Header = () => {
                     : undefined
             }
             icon={<Undo2 size={16} />}
+            aria-label="Discard changes"
+            title="Discard changes"
+            className="h-10"
           >
-            Discard changes
+            <span className="hidden xl:inline">Discard changes</span>
           </Button>
           <Button
             onClick={() => {
@@ -96,6 +105,7 @@ export const Header = () => {
                     : undefined
             }
             variant="primary"
+            className="h-10 whitespace-nowrap"
             icon={
               state.busy ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />
             }

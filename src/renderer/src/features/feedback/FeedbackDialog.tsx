@@ -60,6 +60,8 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
   const [requestError, setRequestError] = useState("");
   const [reportId, setReportId] = useState("");
   const initialCaptchaRequested = useRef(false);
+  const sending = useRef(false);
+  const captchaLoading = useRef(false);
 
   const {
     register,
@@ -78,7 +80,7 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
       description: "",
       expected: "",
       steps: "",
-      includeDiagnostics: true,
+      includeDiagnostics: false,
       captchaAnswer: "",
     },
   });
@@ -87,7 +89,10 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
   const email = watch("email");
 
   const loadCaptcha = useCallback(async (): Promise<void> => {
+    if (captchaLoading.current) return;
+    captchaLoading.current = true;
     setLoadingCaptcha(true);
+    setCaptcha(null);
     setCaptchaError("");
     try {
       const result = await window.hostsEditor.getFeedbackCaptcha();
@@ -104,6 +109,7 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
         cause instanceof Error ? cause.message : "Could not load CAPTCHA. Try again.",
       );
     } finally {
+      captchaLoading.current = false;
       setLoadingCaptcha(false);
     }
   }, [resetField]);
@@ -120,6 +126,8 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
       return;
     }
 
+    if (sending.current) return;
+    sending.current = true;
     setRequestError("");
     try {
       const result = await window.hostsEditor.submitFeedback({
@@ -148,6 +156,8 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
       if (/captcha/i.test(message)) setError("captchaAnswer", { type: "server", message });
       else setRequestError(message);
       await loadCaptcha();
+    } finally {
+      sending.current = false;
     }
   });
 
@@ -177,7 +187,9 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
         Required fields are marked automatically when validation fails.
       </p>
       <div className="ml-auto flex gap-2">
-        <Button onClick={onClose}>Cancel</Button>
+        <Button disabled={isSubmitting} onClick={onClose}>
+          Cancel
+        </Button>
         <Button
           variant="primary"
           icon={<Send size={16} />}
@@ -204,7 +216,9 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
   return (
     <Modal
       title={kind === "bug" ? "Report a bug" : "Suggest a feature"}
-      onClose={onClose}
+      onClose={() => {
+        if (!sending.current) onClose();
+      }}
       wide
       footer={footer}
     >
@@ -295,7 +309,8 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
               invalid={Boolean(errors.summary)}
               {...register("summary", {
                 required: "Add a short description",
-                maxLength: { value: 140, message: "Keep the summary under 140 characters" },
+                minLength: { value: 3, message: "Use at least 3 characters" },
+                maxLength: { value: 120, message: "Keep the summary under 120 characters" },
               })}
             />
           </Field>
@@ -393,7 +408,7 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
                 {captchaError ? "Retry" : "Refresh"}
               </Button>
             </div>
-            <div className="grid min-h-14 grid-cols-[160px_1fr] items-center gap-3">
+            <div className="grid min-h-[104px] grid-cols-[160px_1fr] items-start gap-3">
               <div className="flex h-14 items-center justify-center overflow-hidden rounded-xl border border-slate-300 bg-slate-950/95 dark:border-white/10">
                 {loadingCaptcha ? (
                   <div

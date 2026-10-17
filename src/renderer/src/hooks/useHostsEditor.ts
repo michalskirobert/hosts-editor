@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { getHostLineError, parseHostsText, serializeLines } from "../../../shared/domain/hosts";
 import type { AppSettings, BackupInfo, EditorMode, HostLine, HostTab } from "../../../shared/types";
@@ -8,6 +8,9 @@ import { useAppState } from "./useAppState";
 
 export const useHostsEditor = () => {
   const { state, patchState, setTabs, patchTab, appendTab } = useAppState();
+  const bootstrapped = useRef(false);
+  const installing = useRef(false);
+  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
   const tab = useMemo(
     () => state.tabs.find((item) => item.id === state.selected),
     [state.tabs, state.selected],
@@ -23,30 +26,59 @@ export const useHostsEditor = () => {
   );
 
   useEffect(() => {
-    void window.hostsEditor.bootstrap().then((payload) => {
-      patchState({
-        tabs: payload.tabs,
-        saved: Object.fromEntries(payload.tabs.map((item) => [item.id, tabFingerprint(item)])),
-        savedTabs: Object.fromEntries(payload.tabs.map((item) => [item.id, item])),
-        selected: payload.tabs[0]?.id ?? "",
-        settings: payload.settings,
-        hostsPath: payload.hostsPath,
-        version: payload.version,
-      });
-      applyTheme(payload.settings.theme);
-      if (payload.settings.checkForUpdates) {
-        void window.hostsEditor.checkUpdate().then((update) => {
+    const unsubscribe = window.hostsEditor.onUpdateState((update) => {
+      patchState({ update });
+    });
+    void window.hostsEditor
+      .getUpdateState()
+      .then((update) => {
+        patchState({ update });
+      })
+      .catch(() => undefined);
+    if (!bootstrapped.current) {
+      bootstrapped.current = true;
+      patchState({ busy: true });
+      void window.hostsEditor
+        .bootstrap()
+        .then((payload) => {
           patchState({
-            update,
-            message:
-              update.status === "available"
-                ? `Update ${update.version ?? "available"} found. Open Settings to download it.`
-                : "",
+            tabs: payload.tabs,
+            saved: Object.fromEntries(payload.tabs.map((item) => [item.id, tabFingerprint(item)])),
+            savedTabs: Object.fromEntries(payload.tabs.map((item) => [item.id, item])),
+            selected: payload.tabs[0]?.id ?? "",
+            settings: payload.settings,
+            hostsPath: payload.hostsPath,
+            version: payload.version,
+            busy: false,
+          });
+          applyTheme(payload.settings.theme);
+        })
+        .catch((error: unknown) => {
+          patchState({
+            busy: false,
+            message: `Startup failed: ${error instanceof Error ? error.message : String(error)}`,
           });
         });
-      }
-    });
+    }
+    return unsubscribe;
   }, [patchState]);
+
+  useEffect(() => {
+    void window.hostsEditor
+      .setUpdateSafety(dirtyIds.size > 0, state.busy || !state.version)
+      .catch(() => undefined);
+  }, [dirtyIds, state.busy, state.version]);
+
+  useEffect(() => {
+    const media = matchMedia("(prefers-color-scheme: dark)");
+    const refresh = (): void => {
+      if (state.settings.theme === "system") applyTheme("system");
+    };
+    media.addEventListener("change", refresh);
+    return () => {
+      media.removeEventListener("change", refresh);
+    };
+  }, [state.settings.theme]);
 
   useEffect(() => {
     if (tab) {
@@ -55,20 +87,21 @@ export const useHostsEditor = () => {
   }, [patchState, tab]);
 
   useEffect(() => {
-    if (state.tabs.length === 0) return;
+    if (state.tabs.length === 0 || state.busy || installing.current) return;
     const timeout = window.setTimeout(() => {
-      void Promise.all(state.tabs.map((item) => window.hostsEditor.saveTab(item))).catch(
-        (error: unknown) => {
-          patchState({
-            message: `JSON auto-save failed: ${error instanceof Error ? error.message : String(error)}`,
-          });
-        },
-      );
+      saveQueue.current = saveQueue.current
+        .catch(() => undefined)
+        .then(() => Promise.all(state.tabs.map((item) => window.hostsEditor.saveTab(item))));
+      void saveQueue.current.catch((error: unknown) => {
+        patchState({
+          message: `JSON auto-save failed: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      });
     }, 350);
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [patchState, state.tabs]);
+  }, [patchState, state.tabs, state.busy]);
 
   const setLines = (lines: readonly HostLine[]): void => {
     if (tab) patchTab({ ...tab, lines });
@@ -87,18 +120,19 @@ export const useHostsEditor = () => {
     return state.mode === "raw" ? { ...tab, lines: parseHostsText(state.raw) } : tab;
   };
 
-  const saveCurrent = async (): Promise<void> => {
+  const saveCurrent = async (): Promise<boolean> => {
     const current = materializeCurrentTab();
-    if (!current) return;
+    if (!current) return true;
 
     const invalid = current.lines.find((line) => getHostLineError(line));
     if (invalid) {
       patchState({ message: getHostLineError(invalid) ?? "Invalid hosts entry" });
-      return;
+      return false;
     }
 
     patchState({ busy: true, message: "" });
     try {
+      await saveQueue.current;
       await Promise.all(
         state.tabs
           .filter((item) => item.id !== current.id)
@@ -113,11 +147,45 @@ export const useHostsEditor = () => {
         savedTabs: Object.fromEntries(appliedTabs.map((item) => [item.id, item])),
         message: `Saved “${result.name}” and updated system hosts`,
       });
+      return true;
     } catch (error: unknown) {
       patchState({
         message: `Save failed: ${error instanceof Error ? error.message : String(error)}`,
       });
+      return false;
     } finally {
+      patchState({ busy: false });
+    }
+  };
+
+  const installUpdate = async (discard: boolean): Promise<void> => {
+    if (installing.current || state.busy) return;
+    installing.current = true;
+    patchState({ busy: true });
+    try {
+      await saveQueue.current;
+      if (dirtyIds.size > 0) {
+        if (discard) {
+          const restored = state.tabs.map((item) =>
+            dirtyIds.has(item.id) ? (state.savedTabs[item.id] ?? item) : item,
+          );
+          await Promise.all(restored.map((item) => window.hostsEditor.saveTab(item)));
+          setTabs(restored);
+          patchState({
+            raw: serializeLines(restored.find((item) => item.id === state.selected)?.lines ?? []),
+          });
+        } else if (!(await saveCurrent())) return;
+      } else {
+        await Promise.all(state.tabs.map((item) => window.hostsEditor.saveTab(item)));
+      }
+      await window.hostsEditor.setUpdateSafety(false, false);
+      await window.hostsEditor.installUpdate();
+    } catch (error: unknown) {
+      patchState({
+        message: `Update installation failed: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    } finally {
+      installing.current = false;
       patchState({ busy: false });
     }
   };
@@ -152,6 +220,7 @@ export const useHostsEditor = () => {
 
     patchState({ busy: true, message: "" });
     try {
+      await saveQueue.current;
       await Promise.all(
         state.tabs
           .filter((item) => item.id !== updated.id)
@@ -332,7 +401,10 @@ export const useHostsEditor = () => {
     patchState,
     setLines,
     switchMode,
-    saveCurrent,
+    saveCurrent: async (): Promise<void> => {
+      await saveCurrent();
+    },
+    installUpdate,
     addHosts,
     createTab,
     startRename,

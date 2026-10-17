@@ -22,6 +22,7 @@ export class FeedbackService {
   async captcha(): Promise<FeedbackCaptcha> {
     const response = await fetch(`${FEEDBACK_API}/captcha`, {
       headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(15_000),
     });
     return readJson<FeedbackCaptcha>(response);
   }
@@ -38,6 +39,7 @@ export class FeedbackService {
 
     const response = await fetch(FEEDBACK_API, {
       method: "POST",
+      signal: AbortSignal.timeout(20_000),
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
         product: "hosts-editor",

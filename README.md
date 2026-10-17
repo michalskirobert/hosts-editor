@@ -6,6 +6,8 @@ Manage your system `hosts` file through a modern desktop GUI instead of editing 
 
 Built for developers, testers, system administrators, and anyone who regularly works with local domains, development environments, DNS overrides, or custom hostname mappings.
 
+Version **2.3.0** is a release candidate. See [CHANGELOG.md](CHANGELOG.md), [TEST-RESULTS.md](TEST-RESULTS.md) and [RELEASING.md](RELEASING.md) for implemented changes, verification and platform limitations.
+
 ## Features
 
 ### Hosts file editing
@@ -249,11 +251,61 @@ Tabs are JSON-backed and act as the source of truth for configurations managed b
 
 ## Updates
 
-**GitHub Releases** is the distribution and update source for Hosts Editor.
+Hosts Editor uses `electron-updater` and GitHub Releases. The main process checks once after startup when enabled in Settings. Manual checks share the same request and cannot interrupt a running download.
 
-The application can check whether a newer version is available.
+On supported installations, Settings provides **Check for updates → Download update → download progress → Restart & Install**. Progress comes from updater events. Downloads and installation are explicit actions. Closing the app does not automatically install a downloaded update.
 
-Update installation behavior depends on the operating system and application signing configuration. For example, unsigned macOS builds can direct the user to the latest GitHub Release rather than silently installing an update.
+Before installation, changes in all tabs must be saved or discarded. **Save & Install** uses the existing system-hosts save; failed validation, denied elevation or a failed write prevents restart. **Discard & Install** restores the last saved snapshots. **Cancel** keeps the editor open.
+
+| Installation                                               | Update behavior in 2.3.0                                                                                                                          |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| macOS Intel / Apple Silicon                                | Manual DMG download for the running architecture. The current configuration disables signing; automatic installation is deliberately unavailable. |
+| Windows x64 / arm64, installed NSIS with signing publisher | In-app download and installation through electron-updater, with its normal signature verification. Native validation is still required.           |
+| Windows unsigned NSIS / ZIP / portable                     | Manual installer or ZIP download.                                                                                                                 |
+| Linux writable AppImage, x64 / arm64                       | In-app update through electron-updater with package checksum validation. End-to-end update from a published release still needs validation.       |
+| Linux DEB / read-only AppImage                             | Manual matching package download; install with the OS package manager or replace the AppImage.                                                    |
+| Development build                                          | Manual release downloads.                                                                                                                         |
+
+Fallback chooses an asset for the actual process architecture and platform; when no matching asset exists, it opens the verified GitHub release page. GitHub endpoints use HTTPS. No downloaded scripts are executed.
+
+A native update requires the package and its generated `latest*.yml` metadata to be published together. Package hashes are validated by electron-updater. This release uses electron-builder 26 / electron-updater 6 and does not claim the signed update-manifest features of newer major versions.
+
+## 2.3.0 editor and safety details
+
+- One persistent Search field. Objects mode filters rows; Text mode highlights literal, case-insensitive matches.
+- Enter / Shift+Enter and Previous / Next wrap through results without moving keyboard focus to the editor.
+- Shared overlay metrics include font, wrapping, padding, tabs and scrollbar width. Active wrapped matches scroll into view.
+- Search controls and the Objects / Text capsule keep stable positions. The sticky wrapper stays transparent.
+- Explicit Light / Dark themes now use a class-based Tailwind variant; System theme follows changes while the app is open.
+- Raw editing preserves spaces, tabs, comments and incomplete input. Unrecognized entries remain visible and block system-hosts writes until corrected; they are not silently commented out.
+- System-hosts writes are staged into a nonempty temporary file in the same directory, then replaced with elevated privileges. The preceding file is retained at `hosts.hosts-editor.backup`. A failed write or cancelled elevation is reported.
+- Concurrent JSON writes use unique temporary files and serialize per destination.
+- Backup import validates archive counts and expanded sizes before accepting entries. Imported backups do not change tabs or system hosts. Manual backups are excluded from automatic retention.
+- Toasts last 3 seconds for success/info, 4.5 seconds for warnings and 6 seconds for errors. Dismissal pauses while hovered or focused and resumes with remaining time.
+- Dialogs use native focus containment and restore focus on close. Feedback retains one Settings entry, CAPTCHA loading/retry and optional diagnostics, which default to off.
+
+## Tests
+
+```bash
+yarn install --immutable
+yarn typecheck
+yarn lint
+yarn format:check
+yarn test
+yarn build
+```
+
+`yarn test` uses Node's built-in test runner and esbuild to load services with isolated Electron, updater, network and privileged-command adapters. It operates in temporary directories, checks that the real system hosts file remains unchanged, and never executes a privileged write. See `TEST-RESULTS.md` for the separate renderer checks and the remaining native verification.
+
+### Optional renderer smoke test
+
+`tests/renderer.smoke.mjs` runs the built React application in Playwright Chromium with a mocked preload API. It does not modify system hosts or submit real feedback. Run it after `yarn build` with Playwright available to Node:
+
+```bash
+node tests/renderer.smoke.mjs
+```
+
+When using a separate test-tool installation, set `PLAYWRIGHT_PACKAGE_JSON` to that installation's package.json. `CHROMIUM_EXECUTABLE_PATH` can select an existing Chromium binary; `CHROMIUM_ARGS_JSON` accepts its launch-argument array. `QA_ARTIFACT_DIR` chooses where the test writes screenshots and its result JSON; the default is a temporary directory. These are test-runner options and do not affect the desktop app. Playwright is optional and is not added as a production dependency.
 
 ## Security and privacy
 
@@ -304,7 +356,7 @@ Please do not publish sensitive hosts file contents, private domains, internal I
 
 Hosts Editor is a free and open-source project by **NurByte**.
 
-See the repository's `LICENSE` file for the complete license terms.
+The package metadata declares the MIT license.
 
 ---
 

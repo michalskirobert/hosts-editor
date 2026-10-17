@@ -1,13 +1,14 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, shell, type IpcMainInvokeEvent } from "electron";
 
 import { IPC } from "../../shared/contracts/ipc";
-import type {
-  AppSettings,
-  BackupInfo,
-  BackupReason,
-  FeedbackSubmission,
-  HostTab,
-} from "../../shared/types";
+import { z } from "zod";
+import {
+  backupInfoSchema,
+  backupReasonSchema,
+  feedbackSubmissionSchema,
+  hostTabSchema,
+  settingsSchema,
+} from "../../shared/contracts/schemas";
 import type { HostsService } from "../services/hosts/hostsService";
 import type { StorageService } from "../services/storage/storageService";
 import type { UpdateService } from "../services/update/updateService";
@@ -19,49 +20,80 @@ export const registerIpc = (
   updates: UpdateService,
 ): void => {
   const feedback = new FeedbackService();
-  ipcMain.handle(IPC.bootstrap, async () => ({
+  const handle = <Args extends unknown[]>(
+    channel: string,
+    schema: z.ZodType<Args>,
+    listener: (event: IpcMainInvokeEvent, ...args: Args) => unknown,
+  ): void => {
+    ipcMain.handle(channel, (event, ...input: unknown[]) => {
+      const window = BrowserWindow.fromWebContents(event.sender);
+      if (!window || event.senderFrame !== event.sender.mainFrame)
+        throw new Error("Untrusted IPC sender.");
+      return listener(event, ...schema.parse(input));
+    });
+  };
+  const empty = z.tuple([]);
+  handle(IPC.bootstrap, empty, async () => ({
     tabs: await storage.listTabs(),
     settings: await storage.getSettings(),
     hostsPath: hosts.path(),
     version: app.getVersion(),
   }));
-  ipcMain.handle(IPC.tabCreate, (_event, name: string, text: string) =>
-    storage.createTab(name, text),
+  handle(
+    IPC.tabCreate,
+    z.tuple([z.string().max(200), z.string().max(2 * 1024 * 1024)]),
+    (_event, name, text) => storage.createTab(name, text),
   );
-  ipcMain.handle(IPC.tabSave, (_event, tab: HostTab) => storage.saveTab(tab, false));
-  ipcMain.handle(IPC.tabDelete, (_event, id: string, deleteBackups: boolean) =>
+  handle(IPC.tabSave, z.tuple([hostTabSchema]), (_event, tab) => storage.saveTab(tab, false));
+  handle(IPC.tabDelete, z.tuple([z.string().min(1), z.boolean()]), (_event, id, deleteBackups) =>
     storage.deleteTab(id, deleteBackups),
   );
-  ipcMain.handle(IPC.hostsImport, () => hosts.read());
-  ipcMain.handle(IPC.tabSaveAndApply, async (_event, tab: HostTab) => {
+  handle(IPC.hostsImport, empty, () => hosts.read());
+  handle(IPC.tabSaveAndApply, z.tuple([hostTabSchema]), async (_event, tab) => {
     const settings = await storage.getSettings();
     const saved = await storage.saveTab(tab, settings.autoBackupOnSave);
     await hosts.apply(await storage.listTabs());
     return saved;
   });
-  ipcMain.handle(IPC.backupsList, () => storage.listBackups());
-  ipcMain.handle(IPC.backupsCreate, (_event, tab: HostTab, reason: BackupReason) =>
+  handle(IPC.backupsList, empty, () => storage.listBackups());
+  handle(IPC.backupsCreate, z.tuple([hostTabSchema, backupReasonSchema]), (_event, tab, reason) =>
     storage.createBackup(tab, reason),
   );
-  ipcMain.handle(IPC.backupsRead, (_event, backup: BackupInfo) => storage.readBackup(backup));
-  ipcMain.handle(IPC.backupsRestore, (_event, backup: BackupInfo) => storage.restoreBackup(backup));
-  ipcMain.handle(IPC.backupsDelete, (_event, backup: BackupInfo) => storage.deleteBackup(backup));
-  ipcMain.handle(IPC.backupsExport, (_event, backup: BackupInfo) => storage.exportBackup(backup));
-  ipcMain.handle(IPC.backupsExportAll, () => storage.exportAllBackups());
-  ipcMain.handle(IPC.backupsImport, () => storage.importBackups());
-  ipcMain.handle(IPC.backupsOpen, () => storage.openBackups());
-  ipcMain.handle(IPC.settingsSave, async (_event, settings: AppSettings) => {
+  handle(IPC.backupsRead, z.tuple([backupInfoSchema]), (_event, backup) =>
+    storage.readBackup(backup),
+  );
+  handle(IPC.backupsRestore, z.tuple([backupInfoSchema]), (_event, backup) =>
+    storage.restoreBackup(backup),
+  );
+  handle(IPC.backupsDelete, z.tuple([backupInfoSchema]), (_event, backup) =>
+    storage.deleteBackup(backup),
+  );
+  handle(IPC.backupsExport, z.tuple([backupInfoSchema]), (_event, backup) =>
+    storage.exportBackup(backup),
+  );
+  handle(IPC.backupsExportAll, empty, () => storage.exportAllBackups());
+  handle(IPC.backupsImport, empty, () => storage.importBackups());
+  handle(IPC.backupsOpen, empty, () => storage.openBackups());
+  handle(IPC.settingsSave, z.tuple([settingsSchema]), async (_event, settings) => {
     await storage.saveSettings(settings);
     nativeTheme.themeSource = settings.theme;
     return settings;
   });
-  ipcMain.handle(IPC.updateCheck, () => updates.check());
-  ipcMain.handle(IPC.updateOpen, () => updates.open());
-  ipcMain.handle(IPC.fullscreen, (_event, value: boolean) =>
+  handle(IPC.updateGetState, empty, () => updates.getState());
+  handle(IPC.updateDownload, empty, () => updates.download());
+  handle(IPC.updateInstall, empty, () => updates.install());
+  handle(IPC.updateSafety, z.tuple([z.boolean(), z.boolean()]), (_event, dirty, busy) => {
+    if (typeof dirty !== "boolean" || typeof busy !== "boolean")
+      throw new Error("Invalid update safety state.");
+    updates.setSafety(dirty, busy);
+  });
+  handle(IPC.updateCheck, empty, () => updates.check());
+  handle(IPC.updateOpen, empty, () => updates.open());
+  handle(IPC.fullscreen, z.tuple([z.boolean()]), (_event, value) =>
     BrowserWindow.getFocusedWindow()?.setFullScreen(value),
   );
 
-  ipcMain.handle(IPC.feedbackCaptcha, async () => {
+  handle(IPC.feedbackCaptcha, empty, async () => {
     try {
       return { ok: true, captcha: await feedback.captcha() } as const;
     } catch (cause) {
@@ -71,7 +103,7 @@ export const registerIpc = (
       } as const;
     }
   });
-  ipcMain.handle(IPC.feedbackSubmit, async (_event, payload: FeedbackSubmission) => {
+  handle(IPC.feedbackSubmit, z.tuple([feedbackSubmissionSchema]), async (_event, payload) => {
     try {
       return { ok: true, result: await feedback.submit(payload) } as const;
     } catch (cause) {
@@ -81,7 +113,7 @@ export const registerIpc = (
       } as const;
     }
   });
-  ipcMain.handle(IPC.externalOpen, async (_event, url: string) => {
+  handle(IPC.externalOpen, z.tuple([z.string().max(2048)]), async (_event, url) => {
     const allowed = new URL(url);
     const isNurByte = allowed.protocol === "https:" && allowed.hostname === "nurbyte.dev";
     const isFeedbackEmail =

@@ -15,18 +15,18 @@ const bootstrap = async (): Promise<void> => {
 
   registerIpc(storage, hosts, updates);
 
-  await createWindow(await storage.getSettings());
+  const settings = await storage.getSettings();
+  await createWindow(settings);
+  if (settings.checkForUpdates) void updates.check();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      void createWindow({
-        theme: "system",
-        fullscreen: false,
-        checkForUpdates: true,
-        autoBackupOnSave: true,
-      }).catch((error: unknown) => {
-        console.error("Failed to recreate the application window:", error);
-      });
+      void storage
+        .getSettings()
+        .then(createWindow)
+        .catch((error: unknown) => {
+          console.error("Failed to recreate the application window:", error);
+        });
     }
   });
 };

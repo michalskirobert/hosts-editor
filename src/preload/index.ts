@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
 
 import { IPC } from "../shared/contracts/ipc";
 import type {
@@ -35,6 +35,20 @@ const api: HostsEditorApi = {
   saveSettings: (settings) =>
     ipcRenderer.invoke(IPC.settingsSave, settings) as Promise<AppSettings>,
   checkUpdate: () => ipcRenderer.invoke(IPC.updateCheck) as Promise<UpdateState>,
+  getUpdateState: () => ipcRenderer.invoke(IPC.updateGetState) as Promise<UpdateState>,
+  onUpdateState: (listener) => {
+    const handler = (_event: IpcRendererEvent, state: UpdateState): void => {
+      listener(state);
+    };
+    ipcRenderer.on(IPC.updateStateChanged, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC.updateStateChanged, handler);
+    };
+  },
+  downloadUpdate: () => ipcRenderer.invoke(IPC.updateDownload) as Promise<UpdateState>,
+  installUpdate: () => ipcRenderer.invoke(IPC.updateInstall) as Promise<UpdateState>,
+  setUpdateSafety: (dirty, busy) =>
+    ipcRenderer.invoke(IPC.updateSafety, dirty, busy) as Promise<void>,
   openUpdate: () => ipcRenderer.invoke(IPC.updateOpen) as Promise<void>,
   setFullscreen: (value) => ipcRenderer.invoke(IPC.fullscreen, value) as Promise<void>,
   openExternal: (url) => ipcRenderer.invoke(IPC.externalOpen, url) as Promise<void>,
