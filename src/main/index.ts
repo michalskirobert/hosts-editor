@@ -15,6 +15,8 @@ let mainWindow: BrowserWindow | undefined;
 let splashWindow: BrowserWindow | undefined;
 let opening = false;
 let quitting = false;
+let shutdownStarted = false;
+let shutdownComplete = false;
 
 const isQuitting = (): boolean => quitting;
 
@@ -88,6 +90,12 @@ const openMainWindow = async (): Promise<void> => {
     }
 
     mainWindow = window;
+    window.webContents.on("render-process-gone", (_event, details) => {
+      console.error("Hosts Editor renderer stopped.", {
+        reason: details.reason,
+        exitCode: details.exitCode,
+      });
+    });
 
     window.once("closed", () => {
       if (mainWindow === window) mainWindow = undefined;
@@ -120,7 +128,7 @@ const bootstrap = async (): Promise<void> => {
       const settings = await storage.getSettings();
 
       if (settings.checkForUpdates && !isQuitting()) {
-        await updates.check();
+        await updates.check("startup");
       }
     })
     .catch((error: unknown) => {
@@ -152,8 +160,21 @@ if (!primaryInstance) {
   void app.whenReady().then(bootstrap).catch(showStartupError);
 }
 
-app.on("before-quit", () => {
+app.on("before-quit", (event) => {
+  if (shutdownComplete) return;
+  event.preventDefault();
+  if (shutdownStarted) return;
+  shutdownStarted = true;
   quitting = true;
+  void updates
+    .shutdown()
+    .catch(() => {
+      console.warn("Update shutdown did not complete cleanly.");
+    })
+    .finally(() => {
+      shutdownComplete = true;
+      app.quit();
+    });
 });
 
 app.on("window-all-closed", () => {

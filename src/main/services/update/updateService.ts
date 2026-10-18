@@ -25,6 +25,10 @@ const failureMessage = (error: unknown): string => {
   if (error instanceof z.ZodError || error instanceof SyntaxError)
     return "The update service returned invalid release information. Please try again later.";
   const message = error instanceof Error ? error.message : "";
+  if (message.includes("ENOENT"))
+    return "The downloaded installer is missing. Download the update again.";
+  if (message.includes("EEXIST"))
+    return "An unexpected file already exists in the update folder. Check the update folder before trying again.";
   if (message.includes("ENOSPC")) return "Not enough disk space to download the update.";
   if (/EACCES|EPERM|EROFS/.test(message))
     return "The update folder is not writable. Check its permissions and try again.";
@@ -34,6 +38,13 @@ const failureMessage = (error: unknown): string => {
 };
 
 export class UpdateService {
+  private readonly checkAbort = new AbortController();
+  private origin: "startup" | "manual" = "manual";
+  private revision = 0;
+  private readonly acknowledgedVersions = new Set<string>();
+  private stopping = false;
+  private openingInstaller: Promise<void> | undefined;
+  private handoff: Promise<UpdateState> | undefined;
   private state: UpdateState = { status: "idle", currentVersion: app.getVersion() };
   private pending: Promise<UpdateState> | undefined;
   private safety = { dirty: true, busy: true };
@@ -51,6 +62,12 @@ export class UpdateService {
   getState(): UpdateState {
     return this.state;
   }
+  acknowledgeNotice(version: string): UpdateState {
+    if (version !== this.state.version) return this.state;
+    this.acknowledgedVersions.add(version);
+    return this.publish({ ...this.state });
+  }
+
   setSafety(dirty: boolean, busy: boolean): void {
     this.safety = { dirty, busy };
   }
@@ -60,7 +77,7 @@ export class UpdateService {
       this.downloader = new InstallerDownload(
         path.join(app.getPath("userData"), "updates", "installers"),
       );
-      await this.downloader.init();
+      await this.downloader.init(app.getVersion());
     })().catch((error: unknown) => {
       this.prepared = undefined;
       throw error;
@@ -69,14 +86,32 @@ export class UpdateService {
   }
 
   private publish(value: UpdateState): UpdateState {
-    this.state = { currentVersion: app.getVersion(), ...value };
+    if (this.stopping) return this.state;
+    this.state = {
+      currentVersion: app.getVersion(),
+      ...value,
+      origin: this.origin,
+      noticePending:
+        this.origin === "startup" &&
+        Boolean(value.version) &&
+        !this.acknowledgedVersions.has(value.version ?? ""),
+      revision: ++this.revision,
+    };
     for (const window of BrowserWindow.getAllWindows()) {
-      if (!window.isDestroyed()) window.webContents.send(IPC.updateStateChanged, this.state);
+      try {
+        if (!window.isDestroyed()) window.webContents.send(IPC.updateStateChanged, this.state);
+      } catch {
+        console.warn("Update state delivery skipped a closed renderer.");
+      }
     }
     return this.state;
   }
 
   private fail(error: unknown): UpdateState {
+    console.warn("Update operation failed.", {
+      phase: this.state.status,
+      type: error instanceof Error ? error.name : "UnknownError",
+    });
     return this.publish({ ...this.state, status: "error", message: failureMessage(error) });
   }
 
@@ -88,7 +123,7 @@ export class UpdateService {
     autoUpdater.allowPrerelease = false;
     autoUpdater.allowDowngrade = false;
     autoUpdater.on("download-progress", (progress) => {
-      if (this.state.status !== "downloading" || this.cancelled) return;
+      if (this.stopping || this.state.status !== "downloading" || this.cancelled) return;
       this.publish({
         ...this.state,
         progress: {
@@ -100,6 +135,7 @@ export class UpdateService {
     });
     autoUpdater.on("update-downloaded", (info) => {
       if (
+        this.stopping ||
         this.state.status !== "downloading" ||
         this.cancelled ||
         info.version !== this.state.version
@@ -112,7 +148,12 @@ export class UpdateService {
       });
     });
     autoUpdater.on("error", (error) => {
-      if (this.state.status === "downloading" && this.state.installSupported && !this.cancelled)
+      if (
+        !this.stopping &&
+        this.state.status === "downloading" &&
+        this.state.installSupported &&
+        !this.cancelled
+      )
         this.fail(error);
     });
   }
@@ -148,12 +189,18 @@ export class UpdateService {
     }
   }
 
-  check(): Promise<UpdateState> {
+  check(origin: "startup" | "manual" = "manual"): Promise<UpdateState> {
+    if (this.stopping) return Promise.resolve(this.state);
+    if (origin === "manual" && this.origin !== "manual") {
+      this.origin = "manual";
+      this.publish({ ...this.state });
+    }
     if (this.pending) return this.pending;
-    if (["downloaded", "installing"].includes(this.state.status))
+    if (["downloaded", "opening", "handoff", "installing"].includes(this.state.status))
       return Promise.resolve(this.state);
     if (Date.now() < this.nextCheck || (this.lastCheck > 0 && Date.now() - this.lastCheck < 15_000))
       return Promise.resolve(this.state);
+    this.origin = origin;
     this.lastCheck = Date.now();
     this.pending = this.performCheck()
       .catch((error: unknown) => this.fail(error))
@@ -171,7 +218,7 @@ export class UpdateService {
     await this.init();
     const response = await fetch(releaseApiUrl, {
       redirect: "error",
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.any([this.checkAbort.signal, AbortSignal.timeout(15_000)]),
       headers: {
         Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
@@ -230,6 +277,9 @@ export class UpdateService {
           normalizedVersion(this.nativeCheck.updateInfo.version) === version,
         );
       } catch {
+        console.warn(
+          "Native update metadata was unavailable; using the verified direct installer.",
+        );
         native = false;
       }
     }
@@ -238,6 +288,8 @@ export class UpdateService {
       status: "available",
       version,
       installSupported: native,
+      handoffSupported:
+        !native && process.platform === "darwin" && /\.(dmg|zip)$/.test(this.asset.name),
       releaseUrl,
       packageType: this.asset.name.split(".").at(-1),
       message: `Hosts Editor ${version} is available.`,
@@ -257,6 +309,7 @@ export class UpdateService {
   }
 
   download(): Promise<UpdateState> {
+    if (this.stopping) return Promise.resolve(this.state);
     if (this.pending) return this.pending;
     if (
       this.state.status !== "available" &&
@@ -338,11 +391,19 @@ export class UpdateService {
     return this.pending ?? this.state;
   }
 
-  install(): UpdateState {
+  install(): UpdateState | Promise<UpdateState> {
+    if (this.handoff) return this.handoff;
+    if (this.state.handoffSupported && this.state.status === "downloaded") {
+      this.assertSafe();
+      if (this.openingInstaller) throw new Error("An installer action is already in progress.");
+      this.handoff = this.performHandoff().finally(() => {
+        this.handoff = undefined;
+      });
+      return this.handoff;
+    }
     if (this.state.status !== "downloaded" || !this.state.installSupported)
       throw new Error("No automatic installation is available for this update.");
-    if (this.safety.dirty || this.safety.busy)
-      throw new Error("Save or discard all unsaved changes before installing the update.");
+    this.assertSafe();
     this.publish({ ...this.state, status: "installing", message: "Restarting to install update…" });
     setImmediate(() => {
       try {
@@ -352,6 +413,81 @@ export class UpdateService {
       }
     });
     return this.state;
+  }
+
+  private assertSafe(): void {
+    if (this.stopping || this.safety.dirty || this.safety.busy)
+      throw new Error("Save or discard all unsaved changes before installing the update.");
+  }
+
+  async shutdown(): Promise<void> {
+    this.stopping = true;
+    this.cancelled = true;
+    this.checkAbort.abort();
+    this.controller?.abort();
+    try {
+      if (this.state.status === "downloading" && this.state.installSupported)
+        this.nativeCheck?.cancellationToken?.cancel();
+    } catch {
+      console.warn("Native update cancellation failed during shutdown.");
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        this.pending
+          ?.then(() => undefined)
+          .catch(() => {
+            console.warn("An update operation ended during shutdown.");
+          }),
+        new Promise<void>((resolve) => {
+          timer = setTimeout(() => {
+            console.warn(
+              "Update shutdown reached its wait limit; tracked partials will be checked next startup.",
+            );
+            resolve();
+          }, 3000);
+        }),
+      ]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  private async performHandoff(): Promise<UpdateState> {
+    try {
+      const file = await this.verifiedInstaller();
+      this.assertSafe();
+      this.publish({ ...this.state, status: "opening", message: "Opening the installer…" });
+      const message = await shell.openPath(file);
+      if (message)
+        throw new Error(
+          "macOS could not open the installer. Hosts Editor will remain open. Use Show in Folder to locate the package.",
+        );
+      this.assertSafe();
+      const state = this.publish({
+        ...this.state,
+        status: "handoff",
+        message:
+          "The installer is open. Hosts Editor is closing so you can replace the app in Applications.",
+      });
+      setImmediate(() => {
+        if (this.stopping) return;
+        try {
+          app.quit();
+        } catch (error: unknown) {
+          this.fail(error);
+        }
+      });
+      return state;
+    } catch (error: unknown) {
+      console.warn("Installer handoff failed.", {
+        phase: this.state.status,
+        type: error instanceof Error ? error.name : "UnknownError",
+      });
+      if (!this.stopping && this.state.status !== "error")
+        this.publish({ ...this.state, status: "downloaded", message: failureMessage(error) });
+      throw error;
+    }
   }
 
   private async verifiedInstaller(): Promise<string> {
@@ -364,6 +500,17 @@ export class UpdateService {
     )
       throw new Error("Download and verify an installer first.");
     try {
+      if (
+        !this.state.version ||
+        !selectReleaseAssetInfo(
+          [this.asset],
+          this.state.version,
+          process.platform,
+          process.arch,
+          Boolean(process.env.APPIMAGE),
+        )
+      )
+        throw new Error("This installer is not compatible with the running system.");
       await this.downloader.verify(this.installer, this.asset);
       return this.installer;
     } catch (error: unknown) {
@@ -373,7 +520,16 @@ export class UpdateService {
     }
   }
 
-  async open(): Promise<void> {
+  open(): Promise<void> {
+    if (this.openingInstaller) return this.openingInstaller;
+    if (this.handoff) return this.handoff.then(() => undefined);
+    this.openingInstaller = this.performOpen().finally(() => {
+      this.openingInstaller = undefined;
+    });
+    return this.openingInstaller;
+  }
+
+  private async performOpen(): Promise<void> {
     const file = await this.verifiedInstaller();
     const message = await shell.openPath(file);
     if (message)
@@ -384,6 +540,8 @@ export class UpdateService {
       );
   }
   async showInFolder(): Promise<void> {
+    if (this.handoff || this.openingInstaller)
+      throw new Error("Wait for the current installer action to finish.");
     shell.showItemInFolder(await this.verifiedInstaller());
   }
 }

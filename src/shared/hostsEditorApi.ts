@@ -29,6 +29,7 @@ export interface HostsEditorApi {
   importBackups(): Promise<BackupImportResult | null>;
   openBackups(): Promise<void>;
   saveSettings(settings: AppSettings): Promise<AppSettings>;
+  dismissUpdateNotice(version: string): Promise<UpdateState>;
   checkUpdate(): Promise<UpdateState>;
   getUpdateState(): Promise<UpdateState>;
   onUpdateState(listener: (state: UpdateState) => void): () => void;

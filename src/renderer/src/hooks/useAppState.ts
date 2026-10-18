@@ -1,4 +1,4 @@
-import { useCallback, useReducer } from "react";
+import { useCallback, useLayoutEffect, useReducer, useRef } from "react";
 
 import type {
   AppSettings,
@@ -65,8 +65,12 @@ const initialState: AppState = {
 
 const reducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case "patch":
+    case "patch": {
+      const incoming = action.value.update;
+      if (incoming && (incoming.revision ?? 0) < (state.update.revision ?? 0))
+        return { ...state, ...action.value, update: state.update };
       return { ...state, ...action.value };
+    }
     case "set-tabs":
       return { ...state, tabs: action.tabs };
     case "patch-tab":
@@ -81,18 +85,25 @@ const reducer = (state: AppState, action: Action): AppState => {
 
 export const useAppState = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const mounted = useRef(true);
+  useLayoutEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const patchState = useCallback((value: Partial<AppState>): void => {
-    dispatch({ type: "patch", value });
+    if (mounted.current) dispatch({ type: "patch", value });
   }, []);
   const setTabs = useCallback((tabs: readonly HostTab[]): void => {
-    dispatch({ type: "set-tabs", tabs });
+    if (mounted.current) dispatch({ type: "set-tabs", tabs });
   }, []);
   const patchTab = useCallback((tab: HostTab): void => {
-    dispatch({ type: "patch-tab", tab });
+    if (mounted.current) dispatch({ type: "patch-tab", tab });
   }, []);
   const appendTab = useCallback((tab: HostTab): void => {
-    dispatch({ type: "append-tab", tab });
+    if (mounted.current) dispatch({ type: "append-tab", tab });
   }, []);
 
   return { state, patchState, setTabs, patchTab, appendTab };

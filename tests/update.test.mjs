@@ -17,7 +17,10 @@ let state;
 const env = {
   app: {
     isPackaged: false,
-    getVersion: () => "2.3.1",
+    getVersion: () => state.runningVersion ?? "2.3.1",
+    quit: () => {
+      state.quits = (state.quits ?? 0) + 1;
+    },
     getPath: (name) =>
       name === "exe" ? path.join(state.directory, "Hosts Editor.exe") : state.directory,
   },
@@ -404,13 +407,13 @@ test("a permitted GitHub asset redirect downloads and verifies normally", async 
       : streamed(dmg(), options.signal);
   assert.equal((await service.download()).status, "downloaded");
 });
-test("restart removes incomplete downloads and revalidates corrupted completed packages", async () => {
+test("restart preserves untracked partials and revalidates corrupted completed packages", async () => {
   const { service, selected } = await serviceFor();
   const directory = path.join(state.directory, "updates/installers");
   await fs.writeFile(path.join(directory, "interrupted.dmg.part"), "partial");
   const restarted = new api.UpdateService();
   await restarted.init();
-  assert.deepEqual(await fs.readdir(directory), []);
+  assert.deepEqual(await fs.readdir(directory), ["interrupted.dmg.part"]);
   await service.download();
   await fs.writeFile(path.join(directory, `${selected.id}-${selected.name}`), "damaged");
   const next = new api.UpdateService();
@@ -521,4 +524,325 @@ test("native cancellation uses a fresh token on retry and cannot install a cance
     return [];
   };
   assert.equal((await service.download()).status, "downloaded");
+});
+
+test("manual checks retain manual origin through download and repeated checks", async () => {
+  const { service } = await serviceFor();
+  assert.equal(service.getState().origin, "manual");
+  assert.equal((await service.check()).origin, "manual");
+  await service.download();
+  assert.ok(state.events.every((event) => event.origin === "manual"));
+});
+test("startup checks retain startup origin through download", async () => {
+  platform("darwin");
+  network(release([asset(dmg(), `Hosts-Editor-2.3.2-mac-${process.arch}.dmg`)]));
+  const service = new api.UpdateService();
+  assert.equal((await service.check("startup")).origin, "startup");
+  assert.equal((await service.download()).origin, "startup");
+});
+test("a manual check joins an in-flight startup check and suppresses a later startup notice", async () => {
+  platform("darwin");
+  network(release([asset(dmg(), `Hosts-Editor-2.3.2-mac-${process.arch}.dmg`)]));
+  const fetch = globalThis.fetch;
+  let releaseRequest;
+  const gate = new Promise((resolve) => {
+    releaseRequest = resolve;
+  });
+  globalThis.fetch = async (...args) => {
+    await gate;
+    return fetch(...args);
+  };
+  const service = new api.UpdateService();
+  const startup = service.check("startup");
+  const manual = service.check();
+  assert.equal(startup, manual);
+  releaseRequest();
+  assert.equal((await startup).origin, "manual");
+  assert.equal(state.requests.length, 1);
+});
+test("closed renderer delivery cannot reject a check or a completed download", async () => {
+  const windows = env.BrowserWindow.getAllWindows;
+  env.BrowserWindow.getAllWindows = () => [
+    {
+      isDestroyed: () => false,
+      get webContents() {
+        throw new Error("Object has been destroyed");
+      },
+    },
+  ];
+  try {
+    const { service } = await serviceFor();
+    assert.equal((await service.download()).status, "downloaded");
+  } finally {
+    env.BrowserWindow.getAllWindows = windows;
+  }
+});
+test("a revision increases monotonically across all update events", async () => {
+  const { service } = await serviceFor();
+  await service.download();
+  for (let i = 1; i < state.events.length; i++)
+    assert.ok(state.events[i].revision > state.events[i - 1].revision);
+});
+test("DMG installation is blocked by unsaved or busy editor state", async () => {
+  const { service } = await serviceFor();
+  await service.download();
+  assert.equal(service.getState().handoffSupported, true);
+  assert.throws(() => service.install(), /unsaved/);
+  service.setSafety(false, true);
+  assert.throws(() => service.install(), /unsaved/);
+  assert.equal(state.quits ?? 0, 0);
+});
+test("DMG handoff opens successfully before one graceful quit and deduplicates requests", async () => {
+  const { service } = await serviceFor();
+  await service.download();
+  service.setSafety(false, false);
+  const first = service.install(),
+    second = service.install();
+  assert.equal(first, second);
+  assert.equal((await first).status, "handoff");
+  assert.ok(state.opened.endsWith(".dmg"));
+  assert.equal(state.quits ?? 0, 0);
+  await new Promise(setImmediate);
+  assert.equal(state.quits, 1);
+  assert.ok(state.events.some((event) => event.status === "opening"));
+});
+test("a failed DMG opening retains the installer and never quits", async () => {
+  const { service } = await serviceFor();
+  await service.download();
+  state.openError = "Blocked";
+  service.setSafety(false, false);
+  await assert.rejects(service.install(), /remain open/);
+  await new Promise(setImmediate);
+  assert.equal(state.quits ?? 0, 0);
+  assert.equal(service.getState().status, "downloaded");
+  await service.showInFolder();
+  assert.ok(state.shown);
+});
+test("missing installer prevents handoff and permits a fresh download", async () => {
+  const { service, selected } = await serviceFor();
+  await service.download();
+  await fs.unlink(
+    path.join(state.directory, "updates/installers", `${selected.id}-${selected.name}`),
+  );
+  service.setSafety(false, false);
+  await assert.rejects(service.install());
+  assert.equal(state.quits ?? 0, 0);
+  assert.equal((await service.download()).status, "downloaded");
+});
+test("ordinary installer opening is deduplicated and cannot race handoff", async () => {
+  const { service } = await serviceFor();
+  await service.download();
+  service.setSafety(false, false);
+  let finish;
+  const original = env.shell.openPath;
+  env.shell.openPath = async () =>
+    new Promise((resolve) => {
+      finish = () => resolve("");
+    });
+  try {
+    const first = service.open(),
+      second = service.open();
+    assert.equal(first, second);
+    assert.throws(() => service.install(), /already in progress/);
+    while (!finish) await new Promise(setImmediate);
+    finish();
+    await first;
+    assert.equal(state.quits ?? 0, 0);
+  } finally {
+    env.shell.openPath = original;
+  }
+});
+test("restarting without installation retains a verified future installer", async () => {
+  const { service } = await serviceFor();
+  await service.download();
+  const restarted = new api.UpdateService();
+  assert.equal((await restarted.check()).status, "downloaded");
+  assert.equal(state.requests.filter((url) => !url.includes("api.github.com")).length, 1);
+});
+test("running the installed version cleans only tracked obsolete packages", async () => {
+  const { service } = await serviceFor();
+  await service.download();
+  const directory = path.join(state.directory, "updates/installers");
+  await fs.writeFile(path.join(directory, "untracked.dmg"), "leave me");
+  state.runningVersion = "2.3.2";
+  const restarted = new api.UpdateService();
+  await restarted.init();
+  assert.deepEqual(await fs.readdir(directory), ["untracked.dmg"]);
+});
+test("tracked interrupted downloads are removed while unrelated partials survive", async () => {
+  const { service, selected } = await serviceFor();
+  network(release([selected]), dmg(), { delay: 20 });
+  const pending = service.download();
+  await new Promise((resolve) => setTimeout(resolve, 45));
+  await service.cancel();
+  await pending;
+  const directory = path.join(state.directory, "updates/installers");
+  await fs.writeFile(path.join(directory, `${selected.id}-${selected.name}.part`), "interrupted");
+  await fs.writeFile(path.join(directory, "not-owned.part"), "preserve");
+  await new api.UpdateService().init();
+  assert.deepEqual(await fs.readdir(directory), ["not-owned.part"]);
+});
+test("cleanup refuses a tracked symlink and does not touch its external target", async () => {
+  const { service, selected } = await serviceFor();
+  await service.download();
+  const file = path.join(state.directory, "updates/installers", `${selected.id}-${selected.name}`);
+  const outside = path.join(state.directory, "outside.txt");
+  await fs.writeFile(outside, "preserve");
+  await fs.unlink(file);
+  await fs.symlink(outside, file);
+  state.runningVersion = "2.3.2";
+  await new api.UpdateService().init();
+  assert.equal(await fs.readFile(outside, "utf8"), "preserve");
+  assert.equal((await fs.lstat(file)).isSymbolicLink(), true);
+});
+test("malicious cleanup metadata cannot traverse outside the managed directory", async () => {
+  const { service } = await serviceFor();
+  const outside = path.join(state.directory, "outside.dmg");
+  await fs.writeFile(outside, "preserve");
+  await fs.writeFile(
+    path.join(state.directory, "updates/installer-index.json"),
+    JSON.stringify({
+      format: 1,
+      entries: [{ version: "2.3.2", asset: { ...asset(), name: "../../outside.dmg" } }],
+    }),
+  );
+  await assert.rejects(new api.UpdateService().init(), /index/);
+  assert.equal(await fs.readFile(outside, "utf8"), "preserve");
+  assert.ok(service);
+});
+test("cleanup failures do not block initialization and keep the package for retry", async () => {
+  const { service, selected } = await serviceFor();
+  await service.download();
+  state.runningVersion = "2.3.2";
+  const unlink = fs.unlink;
+  mock.method(fs, "unlink", async (file) => {
+    if (String(file).endsWith(".dmg")) throw Object.assign(new Error("Busy"), { code: "EBUSY" });
+    return unlink(file);
+  });
+  try {
+    await new api.UpdateService().init();
+    assert.ok(
+      await fs.stat(
+        path.join(state.directory, "updates/installers", `${selected.id}-${selected.name}`),
+      ),
+    );
+  } finally {
+    mock.restoreAll();
+  }
+});
+test("shutdown cancels active streams and suppresses later renderer events", async () => {
+  const { service, selected } = await serviceFor();
+  network(release([selected]), dmg(), { delay: 20 });
+  const pending = service.download();
+  await new Promise((resolve) => setTimeout(resolve, 45));
+  const count = state.events.length;
+  await service.shutdown();
+  await pending;
+  assert.equal(state.events.length, count);
+  assert.deepEqual(await fs.readdir(path.join(state.directory, "updates/installers")), []);
+  assert.equal(state.quits ?? 0, 0);
+});
+test("2.3.3 DMGs are recognized on both supported macOS architectures", () => {
+  for (const arch of ["arm64", "x64"]) {
+    const name = `Hosts-Editor-2.3.3-mac-${arch}.dmg`;
+    const selected = {
+      ...asset(dmg(), name),
+      browser_download_url: `https://github.com/michalskirobert/hosts-editor/releases/download/v2.3.3/${name}`,
+    };
+    assert.equal(api.selectReleaseAssetInfo([selected], "2.3.3", "darwin", arch)?.name, name);
+  }
+});
+
+test("startup notification acknowledgement survives another check in the same main-process session", async () => {
+  platform("darwin");
+  network(release([asset(dmg(), `Hosts-Editor-2.3.2-mac-${process.arch}.dmg`)]));
+  const service = new api.UpdateService();
+  assert.equal((await service.check("startup")).noticePending, true);
+  assert.equal(service.acknowledgeNotice("2.3.2").noticePending, false);
+  assert.equal((await service.download()).noticePending, false);
+  assert.equal(service.getState().origin, "startup");
+});
+
+test("macOS ZIP fallback also requires the guarded graceful handoff", async () => {
+  platform("darwin");
+  const bytes = Buffer.alloc(2048);
+  bytes.writeUInt32LE(0x04034b50);
+  const selected = asset(bytes, `Hosts-Editor-2.3.2-mac-${process.arch}.zip`);
+  network(release([selected]), bytes);
+  const service = new api.UpdateService();
+  assert.equal((await service.check()).handoffSupported, true);
+  await service.download();
+  service.setSafety(false, false);
+  assert.equal((await service.install()).status, "handoff");
+  await new Promise(setImmediate);
+  assert.equal(state.quits, 1);
+});
+
+for (const target of ["win32", "linux"]) {
+  test(`${target} direct installer keeps open/reveal behavior without quitting`, async () => {
+    const bytes = Buffer.alloc(2048);
+    bytes.write(target === "win32" ? "MZ" : "!<arch>\n");
+    const { service } = await serviceFor(target, bytes);
+    assert.equal(service.getState().installSupported, false);
+    assert.equal(service.getState().handoffSupported, false);
+    assert.equal((await service.download()).status, "downloaded");
+    await service.open();
+    await service.showInFolder();
+    assert.equal(state.opened, state.shown);
+    assert.equal(state.quits ?? 0, 0);
+  });
+}
+
+test("signed installed Windows NSIS retains explicit native installation", async () => {
+  platform("win32");
+  const descriptor = Object.getOwnPropertyDescriptor(process, "resourcesPath");
+  Object.defineProperty(process, "resourcesPath", { value: state.directory, configurable: true });
+  env.app.isPackaged = true;
+  try {
+    await fs.writeFile(path.join(state.directory, "Uninstall Hosts Editor.exe"), "fixture");
+    await fs.writeFile(path.join(state.directory, "app-update.yml"), "publisherName: NurByte\n");
+    const bytes = Buffer.alloc(2048);
+    bytes.write("MZ");
+    const { service } = await serviceFor("win32", bytes);
+    assert.equal(service.getState().installSupported, true);
+    await service.download();
+    assert.equal(state.installed, undefined);
+    service.setSafety(false, false);
+    service.install();
+    await new Promise(setImmediate);
+    assert.equal(state.installed, true);
+    assert.equal(state.quits ?? 0, 0);
+  } finally {
+    if (descriptor) Object.defineProperty(process, "resourcesPath", descriptor);
+    else delete process.resourcesPath;
+  }
+});
+
+test("handoff rejects an installer if the current process architecture no longer matches", async () => {
+  const { service } = await serviceFor();
+  await service.download();
+  service.setSafety(false, false);
+  const descriptor = Object.getOwnPropertyDescriptor(process, "arch");
+  try {
+    Object.defineProperty(process, "arch", { value: process.arch === "arm64" ? "x64" : "arm64" });
+    await assert.rejects(service.install(), /not compatible/);
+    assert.equal(state.quits ?? 0, 0);
+  } finally {
+    Object.defineProperty(process, "arch", descriptor);
+  }
+});
+
+test("a failed exclusive finalization never claims or later deletes an untracked existing file", async () => {
+  const { service, selected } = await serviceFor();
+  const directory = path.join(state.directory, "updates/installers");
+  const target = path.join(directory, `${selected.id}-${selected.name}`);
+  await fs.writeFile(target, "untracked existing content");
+  assert.equal((await service.download()).status, "error");
+  state.runningVersion = "2.3.2";
+  await new api.UpdateService().init();
+  assert.equal(await fs.readFile(target, "utf8"), "untracked existing content");
+  assert.equal(
+    (await fs.readdir(directory)).some((name) => name.endsWith(".part")),
+    false,
+  );
 });

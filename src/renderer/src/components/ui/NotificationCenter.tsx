@@ -91,19 +91,22 @@ export const NotificationCenter = () => {
     previousMessage.current = message;
     if (!message) return;
 
+    const updateFailure = /^Update (?:installation )?failed:\s*/i.test(message);
     dispatch({
       type: "add",
       notification: {
         id: crypto.randomUUID(),
-        message,
+        message: updateFailure
+          ? message.replace(/^Update (?:installation )?failed:\s*/i, "")
+          : message,
         level: getNotificationLevel(message),
         createdAt: new Date().toISOString(),
         read: false,
-        source: "application",
-        eventKey: "",
+        source: updateFailure ? "update" : "application",
+        eventKey: updateFailure ? `update:error:${state.update.version ?? "unknown"}` : "",
       },
     });
-  }, [state.message]);
+  }, [state.message, state.update.version]);
 
   useEffect(() => {
     const { status, version, message } = state.update;
@@ -129,7 +132,9 @@ export const NotificationCenter = () => {
         read: false,
         source: "update",
         eventKey:
-          status === "error" ? `update:error:${key}` : `update:release:${version ?? "unknown"}`,
+          status === "error"
+            ? `update:error:${version ?? "unknown"}`
+            : `update:release:${version ?? "unknown"}`,
       },
     });
   }, [state.update]);

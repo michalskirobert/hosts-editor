@@ -15,6 +15,7 @@ export const IPC = {
   backupsImport: "backups:import",
   backupsOpen: "backups:open",
   settingsSave: "settings:save",
+  updateDismissNotice: "update:dismiss-notice",
   updateCheck: "update:check",
   updateGetState: "update:get-state",
   updateStateChanged: "update:state-changed",

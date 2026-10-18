@@ -95,7 +95,7 @@ const checks = [];
             autoBackupOnSave: true,
           },
           hostsPath: "/isolated/hosts",
-          version: "2.3.1",
+          version: "2.3.3",
         }),
         saveTab: async (tab) => {
           qa.saves++;
@@ -123,10 +123,22 @@ const checks = [];
         getUpdateState: async () => window.qa.updates,
         onUpdateState: (listener) => {
           listeners.add(listener);
+          qa.maxSubscriptions = Math.max(qa.maxSubscriptions ?? 0, listeners.size);
+          qa.subscriptionCount = () => listeners.size;
           return () => listeners.delete(listener);
         },
+        dismissUpdateNotice: async () => {
+          qa.updates.noticePending = false;
+          return qa.updates;
+        },
         checkUpdate: async () => {
+          qa.emit({ status: "checking", origin: "manual", message: "Checking for updates…" });
+          if (qa.deferCheck)
+            await new Promise((resolve) => {
+              qa.finishCheck = resolve;
+            });
           qa.emit({
+            origin: "manual",
             status: "available",
             version: "2.4.0",
             packageType: "dmg",
@@ -143,6 +155,7 @@ const checks = [];
           return qa.updates;
         },
         installUpdate: async () => {
+          if (qa.installError) throw Error(qa.installError);
           qa.installs++;
           return qa.updates;
         },
@@ -286,8 +299,26 @@ const checks = [];
     await page.getByRole("button", { name: "Restart & Install", exact: true }).waitFor();
     checks.push("Update available/download/progress/ready UI states");
     await page.getByRole("button", { name: "Hosts", exact: true }).click();
-    const notice = page.getByRole("dialog", { name: "Update ready to install" });
+    await page.waitForTimeout(100);
+    assert.equal(await page.getByRole("dialog").count(), 0);
+    checks.push("Manual update result does not open a modal after leaving Settings");
+    await page.evaluate(() =>
+      window.qa.emit({
+        status: "available",
+        version: "2.5.0",
+        origin: "startup",
+        noticePending: true,
+      }),
+    );
+    const notice = page.getByRole("dialog", { name: "A new version is available" });
     await notice.getByRole("button", { name: "Later", exact: true }).click();
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
+    await page.getByRole("button", { name: "Hosts", exact: true }).click();
+    assert.equal(await page.getByRole("dialog").count(), 0);
+    checks.push("Startup notice appears once and dismissal survives navigation");
+    await page.evaluate(() =>
+      window.qa.emit({ status: "downloaded", version: "2.4.0", origin: "manual" }),
+    );
     await raw.fill(text + "\n127.0.0.1 new.test");
     await page.getByRole("button", { name: "Settings", exact: true }).click();
     await page.getByRole("button", { name: "Restart & Install", exact: true }).click();
@@ -373,6 +404,93 @@ const checks = [];
       .click();
     await notificationDialog.waitFor({ state: "hidden" });
     checks.push("One update notification advances from available to downloaded and opens Updates");
+
+    await page.evaluate(() =>
+      window.qa.emit({
+        status: "downloaded",
+        origin: "manual",
+        version: "2.4.1",
+        packageType: "dmg",
+        installSupported: false,
+        handoffSupported: true,
+      }),
+    );
+    await page.getByRole("button", { name: "Install Update", exact: true }).click();
+    const ready = page.getByRole("dialog", { name: "Ready to Install", exact: true });
+    await ready.waitFor();
+    const installsBefore = await page.evaluate(() => window.qa.installs);
+    await ready.getByRole("button", { name: "Cancel", exact: true }).click();
+    assert.equal(await page.evaluate(() => window.qa.installs), installsBefore);
+    checks.push("Cancel from Ready to Install leaves the application running");
+    await page.evaluate(() => {
+      window.qa.installError = "Installer handoff failed";
+    });
+    await page.getByRole("button", { name: "Install Update", exact: true }).click();
+    await ready.getByRole("button", { name: "Quit & Open Installer", exact: true }).click();
+    await ready.getByRole("alert").waitFor();
+    await ready.getByRole("button", { name: "Cancel", exact: true }).click();
+    await page.evaluate(() =>
+      window.qa.emit({ status: "error", message: "Installer handoff failed" }),
+    );
+    await page.getByRole("button", { name: /^Notifications/ }).click();
+    const failures = page.getByRole("dialog", { name: "Notifications", exact: true });
+    assert.equal(
+      await failures.getByRole("listitem").filter({ hasText: "Installer handoff failed" }).count(),
+      1,
+    );
+    await failures.getByRole("button", { name: "Close", exact: true }).click();
+    await page.evaluate(() =>
+      window.qa.emit({ status: "downloaded", message: "Hosts Editor 2.4.1 is ready." }),
+    );
+    await page.getByRole("button", { name: "Install Update", exact: true }).click();
+    checks.push("Update error events and guarded installation failures share one notification");
+    assert.equal(await page.evaluate(() => window.qa.installs), installsBefore);
+    await ready.getByRole("button", { name: "Cancel", exact: true }).click();
+    await page.evaluate(() => {
+      window.qa.installError = "";
+    });
+    await page.getByRole("button", { name: "Install Update", exact: true }).click();
+    await ready.getByRole("button", { name: "Quit & Open Installer", exact: true }).click();
+    await page.waitForFunction((count) => window.qa.installs === count + 1, installsBefore);
+    await ready.getByRole("button", { name: "Cancel", exact: true }).click();
+    checks.push(
+      "Confirmed DMG handoff uses the existing guarded install action; failure remains visible",
+    );
+
+    await page.evaluate(() => window.qa.emit({ status: "current", handoffSupported: false }));
+    await page.evaluate(() => {
+      window.qa.deferCheck = true;
+    });
+    await page.getByRole("button", { name: "Check for updates", exact: true }).click();
+    await page.getByRole("button", { name: "Hosts", exact: true }).click();
+    await page.evaluate(() => {
+      window.qa.finishCheck();
+      window.qa.deferCheck = false;
+    });
+    await page.waitForFunction(() => window.qa.updates.status === "available");
+    assert.equal(await page.getByRole("dialog").count(), 0);
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
+    await page.getByRole("button", { name: "Download Update", exact: true }).waitFor();
+    checks.push(
+      "Manual check completing after Settings unmounts preserves its result without a modal",
+    );
+    await page.getByRole("button", { name: "Download Update", exact: true }).click();
+    await page.getByRole("button", { name: "Hosts", exact: true }).click();
+    await page.evaluate(() =>
+      window.qa.emit({
+        status: "downloading",
+        progress: { percent: 73, transferred: 73, total: 100 },
+      }),
+    );
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
+    assert.equal(await page.getByRole("progressbar").getAttribute("value"), "73");
+    await page.getByRole("button", { name: "Cancel download", exact: true }).click();
+    await page.getByRole("button", { name: "Download Update", exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => window.qa.subscriptionCount()), 1);
+    assert.equal(await page.evaluate(() => window.qa.maxSubscriptions), 1);
+    checks.push(
+      "Progress survives navigation, cancellation remains available and IPC subscription stays singular",
+    );
     await page.evaluate(() => window.qa.emit({ status: "current" }));
     await page.getByRole("button", { name: "Send feedback", exact: true }).click();
     let feedback = page.getByRole("dialog", { name: "Report a bug", exact: true });
@@ -382,7 +500,7 @@ const checks = [];
         .locator("textarea")
         .first()
         .evaluate((el) => getComputedStyle(el).resize),
-      "none",
+      "vertical",
     );
     const modalGeometry = await feedback.evaluate((el) => ({
       top: el.getBoundingClientRect().top,
@@ -392,7 +510,7 @@ const checks = [];
     }));
     assert.ok(modalGeometry.top >= 15 && modalGeometry.bottom <= modalGeometry.viewport - 15);
     assert.equal(modalGeometry.scroll, 0);
-    checks.push("Feedback dialog opens at the top and textareas have no resize handle");
+    checks.push("Feedback dialog opens at the top and textareas retain vertical resizing");
     await page.screenshot({ path: path.join(artifacts, "report-bug.png") });
 
     assert.equal(await feedback.getByPlaceholder("Loading security check…").isDisabled(), true);

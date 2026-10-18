@@ -34,7 +34,11 @@ export const useHostsEditor = () => {
       .then((update) => {
         patchState({ update });
       })
-      .catch(() => undefined);
+      .catch(() => {
+        patchState({
+          message: "The update state could not be loaded. Try checking for updates again.",
+        });
+      });
     if (!bootstrapped.current) {
       bootstrapped.current = true;
       patchState({ busy: true });
@@ -66,8 +70,13 @@ export const useHostsEditor = () => {
   useEffect(() => {
     void window.hostsEditor
       .setUpdateSafety(dirtyIds.size > 0, state.busy || !state.version)
-      .catch(() => undefined);
-  }, [dirtyIds, state.busy, state.version]);
+      .catch(() => {
+        patchState({
+          message:
+            "The update safety state could not be synchronized. Try again before installing.",
+        });
+      });
+  }, [dirtyIds, state.busy, state.version, patchState]);
 
   useEffect(() => {
     const media = matchMedia("(prefers-color-scheme: dark)");

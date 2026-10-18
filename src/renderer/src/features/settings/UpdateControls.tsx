@@ -1,5 +1,5 @@
 import { Download, FolderOpen, PackageOpen, RefreshCw, RotateCw, X } from "lucide-react";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { useHostsEditorContext } from "../../context/useHostsEditorContext";
 import { Button } from "../../components/ui/Button";
@@ -9,21 +9,31 @@ import { Modal } from "../../components/ui/Modal";
 const bytes = (value: number): string => `${(value / 1024 / 1024).toFixed(1)} MB`;
 
 export const UpdateControls = () => {
-  const { state, dirtyIds, patchState, installUpdate, saveSettings } = useHostsEditorContext();
-  const [confirm, setConfirm] = useState(false);
+  const { state, dirtyIds, installUpdate, saveSettings } = useHostsEditorContext();
+  const [confirm, setConfirm] = useState<"none" | "ready" | "unsaved">("none");
   const [actionError, setActionError] = useState("");
+  const mounted = useRef(true);
+  useLayoutEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const update = state.update;
-  const working = ["checking", "downloading", "installing"].includes(update.status);
+  const working = ["checking", "downloading", "opening", "handoff", "installing"].includes(
+    update.status,
+  );
   const canDownload =
     ["available", "cancelled", "error"].includes(update.status) &&
     Boolean(update.version && update.packageType);
   const run = (operation: () => Promise<unknown>): void => {
     setActionError("");
-    void operation().catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      setActionError(message);
-      patchState({ message: `Update failed: ${message}` });
-    });
+    void Promise.resolve()
+      .then(operation)
+      .catch((error: unknown) => {
+        if (mounted.current)
+          setActionError(error instanceof Error ? error.message : "The update action failed.");
+      });
   };
 
   return (
@@ -106,18 +116,19 @@ export const UpdateControls = () => {
           </Button>
         )}
         {update.status === "downloaded" &&
-          (update.installSupported ? (
+          (update.installSupported || update.handoffSupported ? (
             <Button
               className="h-10"
               variant="primary"
               disabled={state.busy}
               icon={<RotateCw size={15} />}
               onClick={() => {
-                if (dirtyIds.size) setConfirm(true);
+                if (update.handoffSupported) setConfirm("ready");
+                else if (dirtyIds.size) setConfirm("unsaved");
                 else run(() => installUpdate(false));
               }}
             >
-              Restart & Install
+              {update.handoffSupported ? "Install Update" : "Restart & Install"}
             </Button>
           ) : (
             <>
@@ -146,6 +157,18 @@ export const UpdateControls = () => {
               </Button>
             </>
           ))}
+        {update.status === "downloaded" && update.handoffSupported && (
+          <Button
+            className="h-10"
+            icon={<FolderOpen size={15} />}
+            disabled={state.busy}
+            onClick={() => {
+              run(() => window.hostsEditor.showUpdateInFolder());
+            }}
+          >
+            Show in Folder
+          </Button>
+        )}
       </div>
       {actionError && (
         <p
@@ -155,11 +178,53 @@ export const UpdateControls = () => {
           {actionError}
         </p>
       )}
-      {confirm && (
+      {confirm === "ready" && (
+        <Modal
+          title="Ready to Install"
+          onClose={() => {
+            if (!state.busy) setConfirm("none");
+          }}
+        >
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Hosts Editor needs to close before installing the update. The installer will open
+            automatically.
+          </p>
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+            After Hosts Editor closes, replace Hosts Editor.app in Applications using the opened
+            installer.
+          </p>
+          {state.message && /failed|could not/i.test(state.message) && (
+            <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-300">
+              {state.message}
+            </p>
+          )}
+          <div className="mt-5 flex flex-wrap justify-end gap-2">
+            <Button
+              disabled={state.busy}
+              onClick={() => {
+                setConfirm("none");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              disabled={state.busy || working}
+              onClick={() => {
+                if (dirtyIds.size) setConfirm("unsaved");
+                else run(() => installUpdate(false));
+              }}
+            >
+              Quit &amp; Open Installer
+            </Button>
+          </div>
+        </Modal>
+      )}
+      {confirm === "unsaved" && (
         <Modal
           title="Unsaved changes before restart"
           onClose={() => {
-            if (!state.busy) setConfirm(false);
+            if (!state.busy) setConfirm("none");
           }}
         >
           <p className="text-sm text-slate-600 dark:text-slate-300">
@@ -175,7 +240,7 @@ export const UpdateControls = () => {
             <Button
               disabled={state.busy}
               onClick={() => {
-                setConfirm(false);
+                setConfirm("none");
               }}
             >
               Cancel

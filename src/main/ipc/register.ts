@@ -87,6 +87,9 @@ export const registerIpc = (
       throw new Error("Invalid update safety state.");
     updates.setSafety(dirty, busy);
   });
+  handle(IPC.updateDismissNotice, z.tuple([z.string().min(1).max(100)]), (_event, version) =>
+    updates.acknowledgeNotice(version),
+  );
   handle(IPC.updateCheck, empty, () => updates.check());
   handle(IPC.updateCancel, empty, () => updates.cancel());
   handle(IPC.updateShowInFolder, empty, () => updates.showInFolder());

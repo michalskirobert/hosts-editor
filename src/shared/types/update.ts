@@ -6,9 +6,15 @@ export interface UpdateState {
     | "current"
     | "downloading"
     | "downloaded"
+    | "opening"
+    | "handoff"
     | "installing"
     | "error"
     | "cancelled";
+  readonly noticePending?: boolean;
+  readonly origin?: "startup" | "manual";
+  readonly revision?: number;
+  readonly handoffSupported?: boolean;
   readonly currentVersion?: string;
   readonly version?: string;
   readonly message?: string;

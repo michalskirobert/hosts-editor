@@ -34,6 +34,8 @@ const api: HostsEditorApi = {
   openBackups: () => ipcRenderer.invoke(IPC.backupsOpen) as Promise<void>,
   saveSettings: (settings) =>
     ipcRenderer.invoke(IPC.settingsSave, settings) as Promise<AppSettings>,
+  dismissUpdateNotice: (version) =>
+    ipcRenderer.invoke(IPC.updateDismissNotice, version) as Promise<UpdateState>,
   checkUpdate: () => ipcRenderer.invoke(IPC.updateCheck) as Promise<UpdateState>,
   getUpdateState: () => ipcRenderer.invoke(IPC.updateGetState) as Promise<UpdateState>,
   onUpdateState: (listener) => {

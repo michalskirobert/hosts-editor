@@ -6,6 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { maxInstallerBytes, sha256Digest, validateDownloadUrl } from "./release";
 import type { ReleaseAsset } from "./release";
+import { InstallerRegistry } from "./installerRegistry";
 
 const exec = promisify(execFile);
 export interface InstallerProgress {
@@ -14,16 +15,19 @@ export interface InstallerProgress {
   readonly percent: number;
 }
 export class InstallerDownload {
+  private registry: InstallerRegistry | undefined;
   constructor(
     private readonly root: string,
     private readonly platform = process.platform,
   ) {}
 
-  async init(): Promise<void> {
+  async init(runningVersion?: string): Promise<void> {
     await fs.mkdir(this.root, { recursive: true, mode: 0o700 });
-    for (const name of await fs.readdir(this.root)) {
-      if (name.endsWith(".part")) await fs.rm(path.join(this.root, name), { force: true });
-    }
+    this.registry = new InstallerRegistry(this.root);
+    await this.registry.init();
+    await this.registry.cleanup(runningVersion).catch(() => {
+      console.warn("Update cleanup could not finish; startup will continue.");
+    });
   }
 
   private destination(asset: ReleaseAsset): string {
@@ -94,11 +98,15 @@ export class InstallerDownload {
     const file = this.destination(asset);
     try {
       await this.verify(file, asset);
-      return file;
     } catch {
-      await fs.rm(file, { force: true });
+      if (this.registry?.owns(asset)) {
+        const stat = await fs.lstat(file).catch(() => undefined);
+        if (stat?.isFile() && !stat.isSymbolicLink()) await fs.rm(file, { force: true });
+      }
       return undefined;
     }
+    await this.registry?.track(asset, true);
+    return file;
   }
 
   private async response(url: string, signal: AbortSignal): Promise<Response> {
@@ -147,6 +155,7 @@ export class InstallerDownload {
       const handle = await fs.open(partial, "wx", 0o600);
       owned = true;
       try {
+        await this.registry?.track(asset);
         const response = await this.response(asset.browser_download_url, signal);
         if (!response.body) throw new Error("The update server returned an empty response.");
         const length = response.headers.get("content-length");
@@ -197,7 +206,7 @@ export class InstallerDownload {
         await handle.close();
       }
       signal.throwIfAborted();
-      await fs.rename(partial, file);
+      await fs.link(partial, file);
       try {
         await this.verify(file, asset);
       } catch (error: unknown) {
@@ -205,6 +214,7 @@ export class InstallerDownload {
         throw error;
       }
       if (this.platform === "linux" && file.endsWith(".AppImage")) await fs.chmod(file, 0o700);
+      await this.registry?.track(asset, true);
       signal.throwIfAborted();
       return file;
     } finally {
