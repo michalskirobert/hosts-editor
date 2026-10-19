@@ -1,16 +1,15 @@
 import { app, dialog } from "electron";
 import type { BrowserWindow } from "electron";
 
-import { createSplashWindow, createWindow } from "./app/window";
-import { registerIpc } from "./ipc/register";
-import { HostsService } from "./services/hosts/hostsService";
-import { StorageService } from "./services/storage/storageService";
-import { UpdateService } from "./services/update/updateService";
+import type * as WindowModule from "./app/window";
+import type { StorageService } from "./services/storage/storageService";
+import type { UpdateService } from "./services/update/updateService";
 
-const storage = new StorageService();
-const hosts = new HostsService();
-const updates = new UpdateService();
+const development = !app.isPackaged;
 
+let storage: StorageService | undefined;
+let updates: UpdateService | undefined;
+let windows: typeof WindowModule | undefined;
 let mainWindow: BrowserWindow | undefined;
 let splashWindow: BrowserWindow | undefined;
 let opening = false;
@@ -18,38 +17,46 @@ let quitting = false;
 let shutdownStarted = false;
 let shutdownComplete = false;
 
+const trace = (stage: string): void => {
+  if (development) console.info("[startup] " + stage);
+};
+
+trace("main entry loaded");
+
+process.on("uncaughtExceptionMonitor", (error, origin) => {
+  console.error("[startup] uncaught exception", origin, error);
+});
+
 const isQuitting = (): boolean => quitting;
 
 const closeSplash = (): void => {
   const window = splashWindow;
   splashWindow = undefined;
 
-  if (window && !window.isDestroyed()) {
-    window.destroy();
-  }
+  if (window && !window.isDestroyed()) window.destroy();
 };
 
 const showStartupError = (error: unknown): void => {
+  console.error("[startup] failed", error);
+
   if (isQuitting()) return;
 
-  console.error("Failed to start Hosts Editor:", error);
+  closeSplash();
 
   dialog.showErrorBox(
     "Hosts Editor could not start",
-    error instanceof Error
-      ? error.message
-      : "An unexpected error occurred while loading the application.",
+    error instanceof Error ? error.message : "An unexpected startup error occurred.",
   );
 
   app.quit();
 };
 
-const initializeStorage = async (): Promise<void> => {
+const initializeStorage = async (service: StorageService): Promise<void> => {
   let timeout: ReturnType<typeof setTimeout> | undefined;
 
   try {
     await Promise.race([
-      storage.init(),
+      service.init(),
       new Promise<never>((_resolve, reject) => {
         timeout = setTimeout(() => {
           reject(new Error("The application data could not be loaded in time."));
@@ -71,18 +78,29 @@ const openMainWindow = async (): Promise<void> => {
     return;
   }
 
+  const service = storage;
+  const factory = windows;
+
+  if (!service || !factory) {
+    throw new Error("Application services are not initialized.");
+  }
+
   opening = true;
 
   try {
-    splashWindow ??= await createSplashWindow();
+    splashWindow ??= await factory.createSplashWindow();
 
     if (isQuitting()) return;
 
-    const settings = await storage.getSettings();
+    trace("loading settings");
+
+    const settings = await service.getSettings();
 
     if (isQuitting()) return;
 
-    const window = await createWindow(settings);
+    trace("creating main window");
+
+    const window = await factory.createWindow(settings);
 
     if (isQuitting()) {
       window.destroy();
@@ -90,6 +108,7 @@ const openMainWindow = async (): Promise<void> => {
     }
 
     mainWindow = window;
+
     window.webContents.on("render-process-gone", (_event, details) => {
       console.error("Hosts Editor renderer stopped.", {
         reason: details.reason,
@@ -98,37 +117,73 @@ const openMainWindow = async (): Promise<void> => {
     });
 
     window.once("closed", () => {
+      trace("main window closed");
       if (mainWindow === window) mainWindow = undefined;
     });
 
     closeSplash();
+    trace("main window ready");
   } finally {
     opening = false;
   }
 };
 
 const bootstrap = async (): Promise<void> => {
-  splashWindow = await createSplashWindow();
+  if (isQuitting()) return;
+
+  trace("Electron ready; loading window module");
+
+  windows = await import("./app/window");
 
   if (isQuitting()) return;
 
-  await initializeStorage();
+  trace("creating splash");
+
+  splashWindow = await windows.createSplashWindow();
 
   if (isQuitting()) return;
 
-  registerIpc(storage, hosts, updates);
+  trace("loading services");
+
+  const [storageModule, hostsModule, updateModule, ipcModule] = await Promise.all([
+    import("./services/storage/storageService"),
+    import("./services/hosts/hostsService"),
+    import("./services/update/updateService"),
+    import("./ipc/register"),
+  ]);
+
+  if (isQuitting()) return;
+
+  storage = new storageModule.StorageService();
+
+  const hosts = new hostsModule.HostsService();
+  const updater = new updateModule.UpdateService();
+
+  updates = updater;
+
+  trace("initializing storage");
+
+  await initializeStorage(storage);
+
+  if (isQuitting()) return;
+
+  trace("registering IPC");
+
+  ipcModule.registerIpc(storage, hosts, updater);
 
   await openMainWindow();
 
   if (isQuitting()) return;
 
-  void updates
+  const settingsService = storage;
+
+  void updater
     .init()
     .then(async () => {
-      const settings = await storage.getSettings();
+      const settings = await settingsService.getSettings();
 
       if (settings.checkForUpdates && !isQuitting()) {
-        await updates.check("startup");
+        await updater.check("startup");
       }
     })
     .catch((error: unknown) => {
@@ -140,11 +195,56 @@ const bootstrap = async (): Promise<void> => {
   });
 };
 
-const primaryInstance = app.requestSingleInstanceLock();
+app.on("before-quit", (event) => {
+  trace("before-quit");
 
-if (!primaryInstance) {
-  app.quit();
-} else {
+  if (development && !shutdownComplete && !shutdownStarted) {
+    console.trace("[startup] quit requested");
+  }
+
+  if (shutdownComplete) return;
+
+  event.preventDefault();
+
+  if (shutdownStarted) return;
+
+  shutdownStarted = true;
+  quitting = true;
+
+  void (updates?.shutdown() ?? Promise.resolve())
+    .catch(() => {
+      console.warn("Update shutdown did not complete cleanly.");
+    })
+    .finally(() => {
+      shutdownComplete = true;
+      app.quit();
+    });
+});
+
+app.on("will-quit", () => {
+  trace("will-quit");
+});
+
+app.on("quit", (_event, exitCode) => {
+  if (development) console.info("[startup] quit completed", { exitCode });
+});
+
+app.on("window-all-closed", () => {
+  trace("window-all-closed");
+
+  if (process.platform !== "darwin") app.quit();
+});
+
+const start = (): void => {
+  const primaryInstance = app.requestSingleInstanceLock();
+  trace("single-instance lock: " + String(primaryInstance));
+
+  if (!primaryInstance) {
+    console.warn("Hosts Editor is already running for this application profile.");
+    app.quit();
+    return;
+  }
+
   app.on("second-instance", () => {
     if (isQuitting()) return;
 
@@ -157,28 +257,11 @@ if (!primaryInstance) {
     window.focus();
   });
 
+  trace("waiting for Electron ready");
   void app.whenReady().then(bootstrap).catch(showStartupError);
+};
+try {
+  start();
+} catch (error: unknown) {
+  showStartupError(error);
 }
-
-app.on("before-quit", (event) => {
-  if (shutdownComplete) return;
-  event.preventDefault();
-  if (shutdownStarted) return;
-  shutdownStarted = true;
-  quitting = true;
-  void updates
-    .shutdown()
-    .catch(() => {
-      console.warn("Update shutdown did not complete cleanly.");
-    })
-    .finally(() => {
-      shutdownComplete = true;
-      app.quit();
-    });
-});
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});

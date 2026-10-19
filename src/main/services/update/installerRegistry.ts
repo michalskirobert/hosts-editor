@@ -67,16 +67,35 @@ export class InstallerRegistry {
     return version;
   }
 
+  async assertDirectory(): Promise<void> {
+    const stat = await fs.lstat(this.root);
+    if (
+      !stat.isDirectory() ||
+      stat.isSymbolicLink() ||
+      !this.canonicalRoot ||
+      (await fs.realpath(this.root)) !== this.canonicalRoot
+    )
+      throw new Error("The update directory changed or is unsafe.");
+  }
+
   private async persist(): Promise<void> {
+    await this.assertDirectory();
     const temporary = `${this.index}.${randomUUID()}.tmp`;
+    let created = false;
     try {
       await fs.writeFile(temporary, JSON.stringify({ format: 1, entries: this.entries }), {
         flag: "wx",
         mode: 0o600,
       });
+      created = true;
+      await this.assertDirectory();
       await fs.rename(temporary, this.index);
+      created = false;
     } finally {
-      await fs.rm(temporary, { force: true });
+      if (created) {
+        await this.assertDirectory();
+        await fs.unlink(temporary);
+      }
     }
   }
 
@@ -113,13 +132,13 @@ export class InstallerRegistry {
   private async remove(name: string): Promise<void> {
     if (name !== path.basename(name) || /[/\\\0]/.test(name))
       throw new Error("Unsafe cleanup destination.");
-    if ((await fs.realpath(this.root)) !== this.canonicalRoot)
-      throw new Error("The update directory changed during cleanup.");
+    await this.assertDirectory();
     const file = path.join(this.root, name);
     try {
       const stat = await fs.lstat(file);
       if (!stat.isFile() || stat.isSymbolicLink())
         throw new Error("Cleanup refused a non-regular update file.");
+      await this.assertDirectory();
       await fs.unlink(file);
     } catch (error: unknown) {
       if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;

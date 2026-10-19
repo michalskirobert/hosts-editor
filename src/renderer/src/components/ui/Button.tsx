@@ -15,15 +15,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "border-amber-300/55 bg-gradient-to-b from-amber-300 to-amber-500 font-semibold text-slate-950 shadow-[0_12px_28px_-14px_rgba(245,158,11,0.72)] hover:border-amber-200/85 hover:from-amber-200 hover:to-amber-400 hover:shadow-[0_18px_38px_-14px_rgba(245,158,11,0.82)] dark:border-amber-200/25 dark:from-amber-300 dark:to-amber-400",
+    "border-amber-300/55 bg-gradient-to-b from-amber-300 to-amber-500 font-semibold text-slate-950 shadow-[0_12px_28px_-14px_rgba(245,158,11,0.72)] enabled:hover:border-amber-200/85 enabled:hover:from-amber-200 enabled:hover:to-amber-400 enabled:hover:shadow-[0_18px_38px_-14px_rgba(245,158,11,0.82)] dark:border-amber-200/25 dark:from-amber-300 dark:to-amber-400",
   secondary:
-    "border-slate-300/70 bg-white/58 text-slate-800 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.48)] backdrop-blur-xl hover:border-amber-300/35 hover:bg-amber-50/70 hover:text-slate-950 hover:shadow-[0_14px_32px_-20px_rgba(245,158,11,0.34)] dark:border-white/[0.075] dark:bg-white/[0.045] dark:text-slate-200 dark:hover:border-amber-300/[0.16] dark:hover:bg-amber-300/[0.075] dark:hover:text-amber-50 dark:hover:shadow-[0_14px_34px_-20px_rgba(245,158,11,0.22)]",
+    "border-slate-300/70 bg-white/58 text-slate-800 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.48)] backdrop-blur-xl enabled:hover:border-amber-300/35 enabled:hover:bg-amber-50/70 enabled:hover:text-slate-950 enabled:hover:shadow-[0_14px_32px_-20px_rgba(245,158,11,0.34)] dark:border-white/[0.075] dark:bg-white/[0.045] dark:text-slate-200 dark:enabled:hover:border-amber-300/[0.16] dark:enabled:hover:bg-amber-300/[0.075] dark:enabled:hover:text-amber-50 dark:enabled:hover:shadow-[0_14px_34px_-20px_rgba(245,158,11,0.22)]",
   warning:
-    "border-orange-300/40 bg-gradient-to-b from-orange-300 to-orange-500 font-semibold text-slate-950 shadow-[0_10px_24px_-14px_rgba(249,115,22,0.65)] hover:from-orange-200 hover:to-orange-400 hover:shadow-[0_16px_30px_-14px_rgba(249,115,22,0.68)]",
+    "border-orange-300/40 bg-gradient-to-b from-orange-300 to-orange-500 font-semibold text-slate-950 shadow-[0_10px_24px_-14px_rgba(249,115,22,0.65)] enabled:hover:from-orange-200 enabled:hover:to-orange-400 enabled:hover:shadow-[0_16px_30px_-14px_rgba(249,115,22,0.68)]",
   danger:
-    "border-red-400/15 bg-red-500/[0.045] font-medium text-red-600 hover:border-red-400/35 hover:bg-red-500 hover:text-white hover:shadow-[0_14px_30px_-16px_rgba(239,68,68,0.72)] dark:text-red-400 dark:hover:text-white",
+    "border-red-400/15 bg-red-500/[0.045] font-medium text-red-600 enabled:hover:border-red-400/35 enabled:hover:bg-red-500 enabled:hover:text-white enabled:hover:shadow-[0_14px_30px_-16px_rgba(239,68,68,0.72)] dark:text-red-400 dark:enabled:hover:text-white",
   ghost:
-    "border-transparent bg-transparent text-slate-500 hover:border-amber-300/25 hover:bg-amber-50/60 hover:text-slate-900 dark:text-slate-400 dark:hover:border-amber-300/[0.12] dark:hover:bg-amber-300/[0.055] dark:hover:text-slate-100",
+    "border-transparent bg-transparent text-slate-500 enabled:hover:border-amber-300/25 enabled:hover:bg-amber-50/60 enabled:hover:text-slate-900 dark:text-slate-400 dark:enabled:hover:border-amber-300/[0.12] dark:enabled:hover:bg-amber-300/[0.055] dark:enabled:hover:text-slate-100",
 };
 
 const sizes: Record<ButtonSize, string> = {
@@ -39,16 +39,19 @@ export const Button = ({
   children,
   type = "button",
   disabled,
+  "aria-disabled": ariaDisabled,
   disabledReason,
   ...props
 }: ButtonProps) => {
+  const unavailable = disabled === true || ariaDisabled === true || ariaDisabled === "true";
   const button = (
     <button
       type={type}
-      disabled={disabled}
+      disabled={unavailable}
+      aria-disabled={ariaDisabled}
       className={cn(
-        "group relative isolate inline-flex cursor-pointer items-center justify-center gap-2 overflow-hidden border transition-[background-color,border-color,color,box-shadow,opacity] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:shadow-none",
-        "before:pointer-events-none before:absolute before:inset-y-0 before:-left-1/2 before:-z-10 before:w-1/3 before:-skew-x-12 before:bg-gradient-to-r before:from-transparent before:via-white/35 before:to-transparent before:opacity-0 before:transition-[left,opacity] before:duration-500 motion-safe:hover:before:left-[120%] motion-safe:hover:before:opacity-70 motion-reduce:before:hidden",
+        "group relative isolate inline-flex cursor-pointer items-center justify-center gap-2 overflow-hidden border transition-[background-color,border-color,color,box-shadow,opacity] duration-300 ease-out motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:cursor-not-allowed disabled:opacity-45 disabled:transition-none",
+        "before:pointer-events-none before:absolute before:inset-y-0 before:-left-1/2 before:-z-10 before:w-1/3 before:-skew-x-12 before:bg-gradient-to-r before:from-transparent before:via-white/35 before:to-transparent before:opacity-0 before:transition-[left,opacity] before:duration-500 disabled:before:transition-none motion-safe:enabled:hover:before:left-[120%] motion-safe:enabled:hover:before:opacity-70 motion-reduce:before:hidden",
         "[&_svg]:transition-colors [&_svg]:duration-200 motion-reduce:[&_svg]:transition-none",
         variants[variant],
         sizes[size],
@@ -61,7 +64,7 @@ export const Button = ({
     </button>
   );
 
-  if (!disabled || !disabledReason) return button;
+  if (!unavailable || !disabledReason) return button;
 
   return (
     <Tooltip label={disabledReason}>

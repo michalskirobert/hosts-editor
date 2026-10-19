@@ -128,7 +128,7 @@ export const UpdateControls = () => {
                 else run(() => installUpdate(false));
               }}
             >
-              {update.handoffSupported ? "Install Update" : "Restart & Install"}
+              {update.handoffSupported ? "Quit & Open Installer" : "Restart & Install"}
             </Button>
           ) : (
             <>
@@ -186,8 +186,10 @@ export const UpdateControls = () => {
           }}
         >
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Hosts Editor needs to close before installing the update. The installer will open
-            automatically.
+            Hosts Editor needs to close before you can install the update.
+          </p>
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+            The installer will open automatically.
           </p>
           <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
             After Hosts Editor closes, replace Hosts Editor.app in Applications using the opened

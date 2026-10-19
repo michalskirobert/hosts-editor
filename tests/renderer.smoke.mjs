@@ -415,7 +415,7 @@ const checks = [];
         handoffSupported: true,
       }),
     );
-    await page.getByRole("button", { name: "Install Update", exact: true }).click();
+    await page.getByRole("button", { name: "Quit & Open Installer", exact: true }).click();
     const ready = page.getByRole("dialog", { name: "Ready to Install", exact: true });
     await ready.waitFor();
     const installsBefore = await page.evaluate(() => window.qa.installs);
@@ -425,7 +425,7 @@ const checks = [];
     await page.evaluate(() => {
       window.qa.installError = "Installer handoff failed";
     });
-    await page.getByRole("button", { name: "Install Update", exact: true }).click();
+    await page.getByRole("button", { name: "Quit & Open Installer", exact: true }).click();
     await ready.getByRole("button", { name: "Quit & Open Installer", exact: true }).click();
     await ready.getByRole("alert").waitFor();
     await ready.getByRole("button", { name: "Cancel", exact: true }).click();
@@ -442,14 +442,14 @@ const checks = [];
     await page.evaluate(() =>
       window.qa.emit({ status: "downloaded", message: "Hosts Editor 2.4.1 is ready." }),
     );
-    await page.getByRole("button", { name: "Install Update", exact: true }).click();
+    await page.getByRole("button", { name: "Quit & Open Installer", exact: true }).click();
     checks.push("Update error events and guarded installation failures share one notification");
     assert.equal(await page.evaluate(() => window.qa.installs), installsBefore);
     await ready.getByRole("button", { name: "Cancel", exact: true }).click();
     await page.evaluate(() => {
       window.qa.installError = "";
     });
-    await page.getByRole("button", { name: "Install Update", exact: true }).click();
+    await page.getByRole("button", { name: "Quit & Open Installer", exact: true }).click();
     await ready.getByRole("button", { name: "Quit & Open Installer", exact: true }).click();
     await page.waitForFunction((count) => window.qa.installs === count + 1, installsBefore);
     await ready.getByRole("button", { name: "Cancel", exact: true }).click();

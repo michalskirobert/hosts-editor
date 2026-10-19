@@ -30,6 +30,25 @@ export class InstallerDownload {
     });
   }
 
+  private async assertDirectory(): Promise<void> {
+    if (!this.registry) throw new Error("The update directory is not initialized.");
+    await this.registry.assertDirectory();
+  }
+
+  private async removeRegular(file: string): Promise<void> {
+    if (path.dirname(file) !== this.root) throw new Error("Invalid cleanup location.");
+    await this.assertDirectory();
+    try {
+      const stat = await fs.lstat(file);
+      if (!stat.isFile() || stat.isSymbolicLink())
+        throw new Error("Cleanup refused a non-regular update file.");
+      await this.assertDirectory();
+      await fs.unlink(file);
+    } catch (error: unknown) {
+      if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;
+    }
+  }
+
   private destination(asset: ReleaseAsset): string {
     if (
       path.basename(asset.name) !== asset.name ||
@@ -48,6 +67,7 @@ export class InstallerDownload {
   }
 
   async verify(file: string, asset: ReleaseAsset): Promise<void> {
+    await this.assertDirectory();
     if (file !== this.destination(asset)) throw new Error("Invalid installer location.");
     const stat = await fs.lstat(file);
     if (
@@ -65,10 +85,12 @@ export class InstallerDownload {
     if (hash.digest("hex") !== sha256Digest(asset))
       throw new Error("Installer checksum validation failed. Download the update again.");
     await this.validateFormat(file, asset.name);
+    await this.assertDirectory();
     await this.quarantine(file);
   }
 
   private async validateFormat(file: string, name: string): Promise<void> {
+    await this.assertDirectory();
     const handle = await fs.open(file, "r");
     try {
       const stat = await handle.stat();
@@ -95,13 +117,14 @@ export class InstallerDownload {
   }
 
   async cached(asset: ReleaseAsset): Promise<string | undefined> {
+    await this.assertDirectory();
     const file = this.destination(asset);
     try {
       await this.verify(file, asset);
     } catch {
       if (this.registry?.owns(asset)) {
         const stat = await fs.lstat(file).catch(() => undefined);
-        if (stat?.isFile() && !stat.isSymbolicLink()) await fs.rm(file, { force: true });
+        if (stat?.isFile() && !stat.isSymbolicLink()) await this.removeRegular(file);
       }
       return undefined;
     }
@@ -141,6 +164,7 @@ export class InstallerDownload {
     signal: AbortSignal,
     progress: (value: InstallerProgress) => void,
   ): Promise<string> {
+    await this.assertDirectory();
     sha256Digest(asset);
     const cached = await this.cached(asset);
     signal.throwIfAborted();
@@ -152,6 +176,7 @@ export class InstallerDownload {
       const disk = await fs.statfs(this.root);
       if (disk.bavail * disk.bsize < asset.size + 16 * 1024 * 1024)
         throw new Error("Not enough disk space to download the update.");
+      await this.assertDirectory();
       const handle = await fs.open(partial, "wx", 0o600);
       owned = true;
       try {
@@ -206,19 +231,23 @@ export class InstallerDownload {
         await handle.close();
       }
       signal.throwIfAborted();
+      await this.assertDirectory();
       await fs.link(partial, file);
       try {
         await this.verify(file, asset);
       } catch (error: unknown) {
-        await fs.rm(file, { force: true });
+        await this.removeRegular(file);
         throw error;
       }
-      if (this.platform === "linux" && file.endsWith(".AppImage")) await fs.chmod(file, 0o700);
+      if (this.platform === "linux" && file.endsWith(".AppImage")) {
+        await this.assertDirectory();
+        await fs.chmod(file, 0o700);
+      }
       await this.registry?.track(asset, true);
       signal.throwIfAborted();
       return file;
     } finally {
-      if (owned) await fs.rm(partial, { force: true });
+      if (owned) await this.removeRegular(partial);
     }
   }
 }

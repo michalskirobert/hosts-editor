@@ -8,7 +8,7 @@ import {
   Send,
   ShieldCheck,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { Checkbox, Input, Textarea } from "@renderer/components/shared/form";
@@ -85,22 +85,27 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
     },
   });
 
+  const kindId = useId();
   const kind = watch("kind");
   const email = watch("email");
 
   const loadCaptcha = useCallback(async (): Promise<void> => {
     if (captchaLoading.current) return;
+
     captchaLoading.current = true;
     setLoadingCaptcha(true);
     setCaptcha(null);
     setCaptchaError("");
+
     try {
       const result = await window.hostsEditor.getFeedbackCaptcha();
+
       if (!result.ok) {
         setCaptcha(null);
         setCaptchaError(result.message);
         return;
       }
+
       setCaptcha(result.captcha);
       resetField("captchaAnswer", { defaultValue: "" });
     } catch (cause) {
@@ -116,6 +121,7 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
 
   useEffect(() => {
     if (initialCaptchaRequested.current) return;
+
     initialCaptchaRequested.current = true;
     void loadCaptcha();
   }, [loadCaptcha]);
@@ -127,8 +133,10 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
     }
 
     if (sending.current) return;
+
     sending.current = true;
     setRequestError("");
+
     try {
       const result = await window.hostsEditor.submitFeedback({
         kind: values.kind,
@@ -141,20 +149,28 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
         captchaToken: captcha.token,
         captchaAnswer: values.captchaAnswer.trim(),
       });
+
       if (!result.ok) {
         if (/captcha/i.test(result.message)) {
           setError("captchaAnswer", { type: "server", message: result.message });
           await loadCaptcha();
           return;
         }
+
         setRequestError(result.message);
         return;
       }
+
       setReportId(result.result.reportId);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "The report could not be sent.";
-      if (/captcha/i.test(message)) setError("captchaAnswer", { type: "server", message });
-      else setRequestError(message);
+
+      if (/captcha/i.test(message)) {
+        setError("captchaAnswer", { type: "server", message });
+      } else {
+        setRequestError(message);
+      }
+
       await loadCaptcha();
     } finally {
       sending.current = false;
@@ -252,28 +268,62 @@ export const FeedbackDialog = ({ version, initialKind, onClose }: FeedbackDialog
                 ] as const
               ).map(({ id, label, caption, icon: Icon }) => {
                 const active = field.value === id;
+
                 return (
-                  <button
+                  <label
                     key={id}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => {
-                      field.onChange(id);
-                    }}
                     className={cn(
-                      "rounded-xl border px-4 py-3 text-left transition-[background-color,border-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40",
-                      active
-                        ? "border-amber-400/45 bg-amber-400/[0.09] shadow-[0_12px_30px_-24px_rgba(245,158,11,0.75)] dark:border-amber-300/20"
-                        : "border-slate-300/55 bg-white/35 hover:border-amber-400/30 hover:bg-amber-400/[0.045] dark:border-white/[0.065] dark:bg-white/[0.025]",
+                      "group/feedback-type relative block min-w-0",
+                      isSubmitting ? "cursor-not-allowed" : "cursor-pointer",
                     )}
                   >
-                    <Icon size={18} className={active ? "text-amber-500" : "text-slate-500"} />
-                    <div className="mt-1 font-semibold">{label}</div>
-                    <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                      {caption}
-                    </div>
-                  </button>
+                    <input
+                      ref={field.ref}
+                      type="radio"
+                      name={field.name}
+                      value={id}
+                      checked={active}
+                      disabled={isSubmitting}
+                      onChange={() => {
+                        field.onChange(id);
+                      }}
+                      onBlur={field.onBlur}
+                      aria-labelledby={`${kindId}-${id}-label`}
+                      aria-describedby={`${kindId}-${id}-caption`}
+                      className="peer sr-only"
+                    />
+                    <span
+                      className={cn(
+                        "flex h-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors duration-150 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-amber-500/70 peer-disabled:opacity-50 peer-disabled:transition-none motion-reduce:transition-none",
+                        active
+                          ? "border-amber-500/60 bg-amber-500/[0.07] dark:border-amber-400/45 dark:bg-amber-400/[0.06]"
+                          : "border-slate-300/70 bg-white/35 dark:border-white/10 dark:bg-white/[0.025]",
+                        !active &&
+                          !isSubmitting &&
+                          "group-hover/feedback-type:border-slate-400 group-hover/feedback-type:bg-slate-50 dark:group-hover/feedback-type:border-white/20 dark:group-hover/feedback-type:bg-white/[0.045]",
+                      )}
+                    >
+                      <Icon
+                        size={18}
+                        aria-hidden="true"
+                        className={cn(
+                          "shrink-0",
+                          active ? "text-amber-600 dark:text-amber-400" : "text-slate-500",
+                        )}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span id={`${kindId}-${id}-label`} className="block text-sm font-semibold">
+                          {label}
+                        </span>
+                        <span
+                          id={`${kindId}-${id}-caption`}
+                          className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400"
+                        >
+                          {caption}
+                        </span>
+                      </span>
+                    </span>
+                  </label>
                 );
               })}
             </div>
