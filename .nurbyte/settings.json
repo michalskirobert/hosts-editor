@@ -1,0 +1,48 @@
+{
+  "notice": "Dane środowisk podał użytkownik 2026-11-01. Adresy i mapowanie wdrożeń niezweryfikowane narzędziowo. null = brak środowiska. Nigdy nie wpisuj tu sekretów.",
+  "github": {
+    "owner": "michalskirobert",
+    "plan": "Free",
+    "codex_identity": "michalskirobert",
+    "human_approver": "michalskirobert",
+    "codex_identity_verified": false
+  },
+  "vercel": {
+    "plan": "Uzupełnij tutaj — Hobby do potwierdzenia",
+    "team": "michalskiroberts-projects",
+    "display_name": "michalskirobert’s projects",
+    "team_verified": false
+  },
+  "projects": {
+    "hosts-editor": {
+      "github_repo": "michalskirobert/hosts-editor",
+      "vercel_project": "nie dotyczy — desktop Electron",
+      "dev_url": null,
+      "production_url": null,
+      "local_url": null,
+      "testing": "Lokalne buildy/testy Electron; istnieje gałąź dev, brak webowego DEV."
+    },
+    "nurbyte-backoffice": {
+      "github_repo": "michalskirobert/nurbyte-backoffice",
+      "vercel_project": "Uzupełnij tutaj — nazwa konkretnego projektu, nie zespołu",
+      "dev_url": null,
+      "production_url": "https://panel.nurbyte.dev",
+      "local_url": "http://localhost:3000"
+    },
+    "docflow": {
+      "github_repo": "michalskirobert/docflow",
+      "vercel_project": "Uzupełnij tutaj — nazwa konkretnego projektu, nie zespołu",
+      "dev_url": "https://docflow-dev.nurbyte.dev",
+      "production_url": "https://docflow.nurbyte.dev",
+      "local_url": "http://localhost:3001"
+    },
+    "nurbyte": {
+      "github_repo": "michalskirobert/nurbyte",
+      "vercel_project": "Uzupełnij tutaj — nazwa konkretnego projektu, nie zespołu",
+      "dev_url": null,
+      "production_url": "https://www.nurbyte.dev",
+      "local_url": "http://localhost:3000"
+    }
+  },
+  "remote_guard_verified": false
+}

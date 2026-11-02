@@ -5,3 +5,8 @@ dist/
 .DS_Store
 *.log
 .env
+
+# NurByte local task state; never contains credentials
+/.nurbyte/task.json
+/.nurbyte/bootstrap.json
+/.nurbyte/__pycache__/
