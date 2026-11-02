@@ -1,0 +1,25 @@
+model = "gpt-5.6-luna"
+model_reasoning_effort = "low"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+sandbox_mode = "workspace-write"
+
+[sandbox_workspace_write]
+network_access = false
+
+[shell_environment_policy]
+inherit = "none"
+experimental_use_profile = false
+ignore_default_excludes = false
+set = { NURBYTE_AGENT = "1", PATH = "/Users/robertmichalski/.volta/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" }
+
+[features]
+default_mode_request_user_input = true
+multi_agent = true
+
+[tui]
+notifications = true
+notification_method = "auto"
+notification_condition = "always"
+
+status_line = ["run-state", "task-progress", "model-with-reasoning", "project", "git-branch", "context-remaining", "used-tokens", "five-hour-limit", "weekly-limit"]

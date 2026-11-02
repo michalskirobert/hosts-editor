@@ -1,0 +1,12 @@
+# Supplementary prompts outside the sandbox; not an exhaustive security boundary.
+prefix_rule(pattern = ["git", "push"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["git", "merge"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["git", "rebase"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["git", "cherry-pick"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["git", "tag"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["gh", "pr", "merge"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["gh", "release"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["gh", "api"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["vercel"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["curl"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
+prefix_rule(pattern = ["wget"], decision = "prompt", justification = "Wymagane zatwierdzenie działania zewnętrznego lub zmiany historii.")
